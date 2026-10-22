@@ -1,0 +1,540 @@
+@import 'tailwindcss';
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../../../vendor/bezhansalleh/filament-google-analytics/resources/views/**/*';
+@source '../../../../vendor/bezhansalleh/filament-google-analytics/src/{Widgets,Support}/*';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: 'Rubik', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Skular brand palette */
+    --color-brand-amber: #f2c94c;
+    --color-brand-gold: #f0b34b;
+    --color-brand-orange: #f2994a;
+    --color-brand-teal: #277c93;
+    --color-brand-teal-light: #56a5b2;
+    --color-brand-ink: #1b1b18;
+    --color-brand-cream: #fdfaef;
+    --color-brand-cream-deep: #f9f1dc;
+
+    /* Extended Gen Z accents layered on the core Skular identity. */
+    --color-brand-peach: #f7c9a3;
+    --color-brand-peach-soft: #fce4d0;
+    --color-brand-teal-deep: #1c5f73;
+    --color-brand-teal-soft: #d8ebef;
+    --color-brand-amber-soft: #fdf1cd;
+    --color-brand-mint-soft: #dcf0e5;
+    --color-brand-rose-soft: #fbdfd9;
+    --color-brand-charcoal: #24241f;
+
+    /* Semantic surface tokens so pages share one warm base, not plain white. */
+    --color-warm-cream: var(--color-brand-cream);
+    --color-warm-sand: var(--color-brand-cream-deep);
+
+    /* One elevation language for cards, spotlights, and popovers. */
+    --shadow-soft: 0 1px 2px rgb(27 27 24 / 0.05), 0 10px 24px -14px rgb(27 27 24 / 0.22);
+    --shadow-lift: 0 2px 6px rgb(27 27 24 / 0.06), 0 20px 44px -20px rgb(39 124 147 / 0.35);
+    --shadow-pop: 0 12px 34px -12px rgb(242 153 74 / 0.5);
+
+    --radius-4xl: 2rem;
+    --radius-5xl: 2.75rem;
+
+    --color-zinc-50: #fafafa;
+    --color-zinc-100: #f5f5f5;
+    --color-zinc-200: #e5e5e5;
+    --color-zinc-300: #d4d4d4;
+    --color-zinc-400: #a3a3a3;
+    --color-zinc-500: #737373;
+    --color-zinc-600: #525252;
+    --color-zinc-700: #404040;
+    --color-zinc-800: #262626;
+    --color-zinc-900: #171717;
+    --color-zinc-950: #0a0a0a;
+
+    /* Amber is the Skular call-to-action colour, teal carries supporting text. */
+    --color-accent: var(--color-brand-orange);
+    --color-accent-content: var(--color-brand-teal);
+    --color-accent-foreground: var(--color-brand-ink);
+}
+
+@layer theme {
+    .dark {
+        --color-accent: var(--color-brand-gold);
+        --color-accent-content: var(--color-brand-teal-light);
+        --color-accent-foreground: var(--color-brand-ink);
+    }
+}
+
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-gray-200, currentColor);
+    }
+}
+
+@utility brand-gradient {
+    background-image: linear-gradient(135deg, var(--color-brand-amber), var(--color-brand-orange));
+}
+
+@utility card-brand {
+    background-image: linear-gradient(150deg, color-mix(in oklab, var(--color-brand-amber) 14%, white 86%), white 55%, color-mix(in oklab, var(--color-brand-teal) 7%, white 93%));
+}
+
+/* Alpine keeps pre-hydration panels out of the layout until it boots. */
+[x-cloak] {
+    display: none !important;
+}
+
+/* Rich FAQ answers: keep lists, links and emphasis readable without pulling
+   in a typography plugin for a single component. The HTML is sanitized by
+   Filament's `sanitizeHtml()` before it reaches this container. */
+.faq-answer > * + * {
+    margin-top: 0.75rem;
+}
+
+.faq-answer p {
+    margin: 0;
+}
+
+.faq-answer ul,
+.faq-answer ol {
+    padding-inline-start: 1.25rem;
+}
+
+.faq-answer ul {
+    list-style: disc;
+}
+
+.faq-answer ol {
+    list-style: decimal;
+}
+
+.faq-answer li + li {
+    margin-top: 0.35rem;
+}
+
+.faq-answer strong,
+.faq-answer b {
+    font-weight: 600;
+    color: var(--color-zinc-900);
+}
+
+.faq-answer a {
+    color: var(--color-brand-teal);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.faq-answer a:hover {
+    color: var(--color-brand-teal-deep);
+}
+
+.faq-answer h3,
+.faq-answer h4 {
+    font-weight: 700;
+    color: var(--color-zinc-900);
+}
+
+.faq-answer blockquote {
+    border-inline-start: 3px solid var(--color-brand-amber);
+    padding-inline-start: 0.9rem;
+    color: var(--color-zinc-600);
+}
+
+.dark .faq-answer strong,
+.dark .faq-answer b,
+.dark .faq-answer h3,
+.dark .faq-answer h4 {
+    color: var(--color-white);
+}
+
+.dark .faq-answer a {
+    color: var(--color-brand-teal-light);
+}
+
+.dark .faq-answer a:hover {
+    color: var(--color-brand-amber);
+}
+
+.dark .faq-answer blockquote {
+    color: var(--color-zinc-300);
+}
+
+@utility brand-grid {
+    background-image:
+        linear-gradient(to right, color-mix(in oklab, var(--color-brand-teal) 12%, transparent) 1px, transparent 1px),
+        linear-gradient(to bottom, color-mix(in oklab, var(--color-brand-teal) 12%, transparent) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+/* Teal counterpart of the amber CTA gradient, for supporting actions. */
+@utility brand-gradient-teal {
+    background-image: linear-gradient(135deg, var(--color-brand-teal-light), var(--color-brand-teal));
+}
+
+/* Warm wash used for celebratory surfaces (checkpoint done, twibbon). */
+@utility brand-gradient-warm {
+    background-image: linear-gradient(135deg, var(--color-brand-amber), var(--color-brand-peach));
+}
+
+/* A soft multi-stop backdrop so page heroes feel colourful without noise. */
+@utility hero-mesh {
+    background-image:
+        radial-gradient(120% 120% at 0% 0%, color-mix(in oklab, var(--color-brand-amber) 40%, transparent) 0%, transparent 55%),
+        radial-gradient(120% 120% at 100% 0%, color-mix(in oklab, var(--color-brand-teal-light) 34%, transparent) 0%, transparent 50%),
+        radial-gradient(140% 140% at 50% 120%, color-mix(in oklab, var(--color-brand-orange) 26%, transparent) 0%, transparent 60%);
+}
+
+/* Tinted card surfaces. Each maps to one functional role, not decoration. */
+@utility tint-amber {
+    background-image: linear-gradient(150deg, color-mix(in oklab, var(--color-brand-amber) 18%, white 82%), white 70%);
+}
+
+@utility tint-teal {
+    background-image: linear-gradient(150deg, color-mix(in oklab, var(--color-brand-teal-light) 16%, white 84%), white 70%);
+}
+
+@utility tint-peach {
+    background-image: linear-gradient(150deg, color-mix(in oklab, var(--color-brand-peach) 22%, white 78%), white 70%);
+}
+
+/* Motion primitives: transform/opacity only, so they stay on the compositor. */
+@keyframes skular-rise {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 1rem, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes skular-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.94);
+    }
+    60% {
+        transform: scale(1.02);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes skular-shimmer {
+    from {
+        background-position: -200% 0;
+    }
+    to {
+        background-position: 200% 0;
+    }
+}
+
+/* Entrance animation for section blocks. Delay is opt-in per element.
+   The fill mode is `backwards`, not `both`: once the animation ends the
+   element must not keep a transform, because a retained transform makes the
+   element a containing block for `position: fixed` descendants. */
+.sk-rise {
+    animation: skular-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: var(--sk-delay, 0ms);
+}
+
+.sk-pop {
+    animation: skular-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Interactive card lift shared by every clickable tile in the mentee app. */
+.sk-lift {
+    transition:
+        transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.2s ease;
+}
+
+.sk-lift:hover {
+    transform: translate3d(0, -3px, 0);
+    box-shadow: var(--shadow-lift);
+}
+
+/* Thin page-navigation progress bar, driven by resources/js/app.js. */
+.sk-page-progress {
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: 200;
+    height: 3px;
+    pointer-events: none;
+    transform: scaleX(0);
+    transform-origin: left center;
+    opacity: 0;
+    background-image: linear-gradient(
+        90deg,
+        var(--color-brand-amber),
+        var(--color-brand-orange),
+        var(--color-brand-teal)
+    );
+    transition:
+        transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.2s ease;
+    box-shadow: 0 0 12px color-mix(in oklab, var(--color-brand-orange) 55%, transparent);
+}
+
+.sk-page-progress.is-active {
+    opacity: 1;
+}
+
+.sk-page-progress.is-done {
+    opacity: 1;
+}
+
+/* Brand-coloured loader dots shared by every inline/AI loading indicator.
+   Transform and opacity only, so they never trigger layout. */
+@keyframes skular-loading-dot {
+    0%,
+    100% {
+        opacity: 0.35;
+        transform: translate3d(0, 0, 0);
+    }
+    40% {
+        opacity: 1;
+        transform: translate3d(0, -3px, 0);
+    }
+}
+
+.sk-loading-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.sk-loading-dots > span {
+    display: block;
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+    animation: skular-loading-dot 1.2s ease-in-out infinite;
+}
+
+.sk-loading-dots > span:nth-child(2) {
+    animation-delay: 0.16s;
+}
+
+.sk-loading-dots > span:nth-child(3) {
+    animation-delay: 0.32s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sk-loading-dots > span {
+        animation: none;
+        opacity: 0.7;
+    }
+}
+
+/* Skeleton shimmer for loading placeholders. */
+.sk-skeleton {
+    background-image: linear-gradient(
+        90deg,
+        color-mix(in oklab, var(--color-brand-teal) 8%, white 92%) 0%,
+        color-mix(in oklab, var(--color-brand-amber) 16%, white 84%) 50%,
+        color-mix(in oklab, var(--color-brand-teal) 8%, white 92%) 100%
+    );
+    background-size: 200% 100%;
+    animation: skular-shimmer 1.6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sk-rise,
+    .sk-pop,
+    .sk-skeleton {
+        animation: none;
+    }
+
+    /* Keep the spinner as a calm activity signal instead of removing it. */
+    .animate-spin {
+        animation-duration: 3s;
+    }
+
+    .sk-lift,
+    .sk-lift:hover {
+        transform: none;
+        transition: none;
+    }
+
+    .sk-page-progress {
+        transition: opacity 0.15s linear;
+    }
+}
+
+/* Printing a page (the CV, for instance) drops the navigation chrome only. */
+@media print {
+    aside,
+    header.sticky,
+    button {
+        display: none !important;
+    }
+
+    body,
+    html {
+        background: #fff !important;
+    }
+
+    main {
+        padding: 0 !important;
+    }
+}
+
+/* ==========================================================================
+   Landing page motion system
+
+   Everything below animates transform/opacity only, so it stays on the
+   compositor and never triggers layout. The scroll reveal is opt-in: the
+   `js` class is only added on the client when IntersectionObserver exists and
+   the visitor has not asked for reduced motion, so the content is always
+   readable when JavaScript is unavailable.
+   ========================================================================== */
+
+@keyframes skular-marquee-scroll {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+    to {
+        transform: translate3d(-50%, 0, 0);
+    }
+}
+
+@keyframes skular-word-cycle {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 100%, 0);
+    }
+    4%,
+    30% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+    33.33%,
+    100% {
+        opacity: 0;
+        transform: translate3d(0, -100%, 0);
+    }
+}
+
+@keyframes skular-float {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0);
+    }
+    50% {
+        transform: translate3d(0, -0.75rem, 0);
+    }
+}
+
+@keyframes skular-drift {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+        transform: translate3d(0, -1.25rem, 0) scale(1.05);
+    }
+}
+
+/* The marquee wrapper holds two identical tracks, so shifting it by exactly
+   half of its own width lands on a seam-free loop. */
+.sk-marquee {
+    display: flex;
+    width: max-content;
+    animation: skular-marquee-scroll var(--sk-marquee-duration, 40s) linear infinite;
+    will-change: transform;
+}
+
+.sk-marquee--reverse {
+    animation-direction: reverse;
+}
+
+.sk-word {
+    opacity: 0;
+}
+
+.sk-float {
+    animation: skular-float 7s ease-in-out infinite;
+}
+
+.sk-float--late {
+    animation-delay: -2.5s;
+    animation-duration: 9s;
+}
+
+.sk-drift {
+    animation: skular-drift 18s ease-in-out infinite;
+}
+
+.sk-drift--late {
+    animation-delay: -6s;
+    animation-duration: 22s;
+}
+
+.sk-reveal {
+    opacity: 1;
+}
+
+.js .sk-reveal {
+    opacity: 0;
+    transform: translate3d(0, 1.5rem, 0);
+    transition:
+        opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--sk-reveal-delay, 0ms);
+}
+
+.js .sk-reveal.is-revealed {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .sk-word {
+        animation: skular-word-cycle 9s infinite both;
+    }
+
+    .sk-word:nth-child(2) {
+        animation-delay: 3s;
+    }
+
+    .sk-word:nth-child(3) {
+        animation-delay: 6s;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sk-marquee,
+    .sk-float,
+    .sk-drift,
+    .sk-word {
+        animation: none;
+    }
+
+    /* Only the first rotating phrase stays: the others would overlap it. */
+    .sk-word:first-child {
+        opacity: 1;
+    }
+
+    .sk-word:not(:first-child) {
+        display: none;
+    }
+
+    .js .sk-reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}
