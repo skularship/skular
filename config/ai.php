@@ -145,7 +145,7 @@ return [
             'key' => env('OPENROUTER_API_KEY'),
             'models' => [
                 'text' => [
-                    'default' => 'dots-studio/dots-3-note-preview:free',
+                    'default' => 'deepseek/deepseek-v4.1-flash',
                 ],
             ],
         ],
