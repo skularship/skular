@@ -151,14 +151,11 @@
                                         <x-icons.app-icon name="spinner" class="size-6" />
                                     </div>
                                 @else
-                                <div x-data class="flex items-center justify-center h-full p-4">
-                                    <div
-                                        class="bg-white p-3 rounded"
-                                        :style="$store.appearance.dark ? 'filter: invert(1) brightness(1.5)' : ''"
-                                    >
-                                            {!! $qrCodeSvg !!}
-                                        </div>
+                                <div class="flex items-center justify-center h-full p-4">
+                                    <div class="bg-white p-3 rounded">
+                                        {!! $qrCodeSvg !!}
                                     </div>
+                                </div>
                                 @endempty
                             </div>
                         </div>

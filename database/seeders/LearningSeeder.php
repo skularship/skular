@@ -9,6 +9,7 @@ use App\Models\Fase;
 use App\Models\Module;
 use App\Models\PracticeForm;
 use App\Models\QuickQuestion;
+use App\Models\Scholarship;
 use App\Models\TwibbonTemplate;
 use GdImage;
 use Illuminate\Database\Seeder;
@@ -193,6 +194,33 @@ class LearningSeeder extends Seeder
                         ],
                     ],
                 ],
+                [
+                    'title' => 'Video: Memulai Cerita Motivasi',
+                    'modul_order' => 3,
+                    'type' => 'video',
+                    'duration' => 15,
+                    'goal' => 'Mentee memahami cara membangun cerita motivasi yang meyakinkan lewat contoh video.',
+                    'summary_material' => 'Video ini membahas bagaimana minat yang konsisten dan kegigihan membentuk cerita motivasi yang kuat.',
+                    'insights' => [
+                        'Perhatikan bagaimana pembicara menghubungkan pengalaman pribadi dengan tujuan besar.',
+                        'Catat dua gagasan yang bisa kamu adaptasi, bukan kalimat yang disalin.',
+                        'Tulis satu paragraf reaksi setelah menonton.',
+                    ],
+                    'inti_material' => 'Setelah menonton, tuliskan satu momen yang paling relevan dengan hidupmu. Gunakan momen itu sebagai pembuka esai motivasi.',
+                    'link_video' => 'https://www.youtube.com/embed/H14bBuluwB8',
+                    'ai_knowledge' => 'Fokus bantuan: cara mengadaptasi pesan video menjadi cerita personal. Ingatkan mentee untuk tidak menyalin kalimat pembicara.',
+                    'quick_questions' => [
+                        [
+                            'question' => 'Video contoh boleh disalin langsung ke dalam esai.',
+                            'answer' => false,
+                            'explanation' => 'Gunakan video sebagai inspirasi, bukan untuk disalin mentah-mentah.',
+                        ],
+                    ],
+                    'practice_form' => [
+                        'title' => 'Refleksi Video',
+                        'description' => 'Tuliskan bagian video yang paling relevan dan rencana memakainya di esai.',
+                    ],
+                ],
             ],
         ],
         [
@@ -341,9 +369,122 @@ class LearningSeeder extends Seeder
     ];
 
     /**
+     * Scholarship-specific modules seeded for every demo scholarship.
+     *
+     * The `:beasiswa` and `:institusi` placeholders are replaced with the
+     * scholarship name and institution, so each scholarship gets its own
+     * tailored copy of the module instead of generic shared content.
+     *
+     * @var array<int, array{fase_order: int, title: string, type: string, modul_order: int, duration: int, goal: string, introduction: string, summary_material: string, insights: array<int, string>, inti_material: string, ai_knowledge: string, quick_questions: array<int, array{question: string, answer: bool, explanation: string}>, practice_form: array{title: string, description: string, fields: array<int, array{name: string, label: string, type: string, required: bool, placeholder: string|null, help_text: string|null, options: array<int, string>}>}}>
+     */
+    public const TEMPLATE_MODULES = [
+        [
+            'fase_order' => 2,
+            'title' => 'Esai Khusus :beasiswa',
+            'type' => 'mixed',
+            'modul_order' => 4,
+            'duration' => 30,
+            'goal' => 'Mentee mampu menyusun esai yang menjawab kriteria :beasiswa.',
+            'introduction' => 'Modul ini adalah versi khusus esai motivasi untuk :beasiswa. Baca kembali panduan resmi dari :institusi sebelum mulai menulis.',
+            'summary_material' => ':beasiswa menilai kesesuaian motivasi, rencana belajar, dan kontribusi dengan program yang ditawarkan. Esai yang kuat menjawab ketiganya secara eksplisit.',
+            'insights' => [
+                'Sebutkan nama program dan alasan memilihnya di paragraf pembuka.',
+                'Hubungkan pengalamanmu dengan nilai yang dicari :beasiswa.',
+                'Tutup dengan kontribusi konkret setelah lulus.',
+            ],
+            'inti_material' => 'Mulai dari satu kalimat tesis yang menghubungkan pengalamanmu dengan tujuan :beasiswa. Kembangkan tiga bukti pendukung, lalu akhiri dengan rencana studi dan kontribusi yang terukur.',
+            'ai_knowledge' => 'Nilai esai berdasarkan kesesuaian dengan kriteria :beasiswa: kejelasan tesis, bukti pendukung, dan kontribusi setelah lulus. Tandai bagian yang masih generik atau tidak spesifik.',
+            'quick_questions' => [
+                [
+                    'question' => 'Esai khusus :beasiswa sebaiknya menyebut nama program secara eksplisit.',
+                    'answer' => true,
+                    'explanation' => 'Menyebut program secara eksplisit menunjukkan esai tidak memakai template umum.',
+                ],
+                [
+                    'question' => 'Cukup menjelaskan bahwa :beasiswa adalah satu-satunya beasiswa yang masih buka.',
+                    'answer' => false,
+                    'explanation' => 'Alasan administratif tidak menunjukkan motivasi dan kesesuaian dengan program.',
+                ],
+            ],
+            'practice_form' => [
+                'title' => 'Draft Esai :beasiswa',
+                'description' => 'Tulis draft esai motivasi khusus untuk :beasiswa.',
+                'fields' => [
+                    [
+                        'name' => 'nilai_yang_dicari',
+                        'label' => 'Nilai yang dicari :beasiswa',
+                        'type' => 'textarea',
+                        'required' => true,
+                        'placeholder' => 'Contoh: kepemimpinan, dampak sosial, dan kemandirian.',
+                        'help_text' => 'Ringkas dari panduan resmi penyelenggara.',
+                        'options' => [],
+                    ],
+                    [
+                        'name' => 'draft_esai',
+                        'label' => 'Draft Esai',
+                        'type' => 'textarea',
+                        'required' => true,
+                        'placeholder' => 'Tulis esai empat paragraf di sini...',
+                        'help_text' => 'Maksimal 500 kata.',
+                        'options' => [],
+                    ],
+                ],
+            ],
+        ],
+        [
+            'fase_order' => 3,
+            'title' => 'Berkas dan Seleksi :beasiswa',
+            'type' => 'practice',
+            'modul_order' => 3,
+            'duration' => 35,
+            'goal' => 'Mentee menyiapkan berkas dan latihan seleksi sesuai ketentuan :beasiswa.',
+            'introduction' => 'Setiap beasiswa punya format berkas dan tahapan seleksi sendiri. Modul ini mengumpulkan persiapan khusus :beasiswa dalam satu tempat.',
+            'summary_material' => ':beasiswa biasanya meminta dokumen tambahan seperti surat rekomendasi, esai, atau portofolio. Lengkapi semuanya sebelum tenggat dari :institusi.',
+            'insights' => [
+                'Baca panduan berkas :beasiswa baris per baris.',
+                'Minta surat rekomendasi minimal dua minggu sebelum tenggat.',
+                'Latih pertanyaan seleksi yang khas untuk program ini.',
+            ],
+            'inti_material' => 'Susun daftar berkas khusus :beasiswa, tandai mana yang sudah siap, dan jadwalkan pengiriman lebih awal. Setelah berkas lengkap, latih dua pertanyaan seleksi yang paling sering muncul.',
+            'ai_knowledge' => 'Fokus bantuan: kelengkapan berkas khusus :beasiswa, kesesuaian format, dan kesiapan jawaban seleksi. Jangan mengarang persyaratan yang tidak disebutkan mentee.',
+            'quick_questions' => [
+                [
+                    'question' => 'Berkas khusus :beasiswa sebaiknya disiapkan setelah pengumuman seleksi.',
+                    'answer' => false,
+                    'explanation' => 'Berkas harus lengkap sebelum tenggat pendaftaran, bukan setelah seleksi.',
+                ],
+            ],
+            'practice_form' => [
+                'title' => 'Checklist Berkas :beasiswa',
+                'description' => 'Catat status setiap berkas khusus yang diminta :beasiswa.',
+                'fields' => [
+                    [
+                        'name' => 'berkas',
+                        'label' => 'Nama berkas',
+                        'type' => 'text',
+                        'required' => true,
+                        'placeholder' => 'Contoh: Surat rekomendasi dosen',
+                        'help_text' => 'Tulis satu berkas per jawaban.',
+                        'options' => [],
+                    ],
+                    [
+                        'name' => 'status',
+                        'label' => 'Status',
+                        'type' => 'select',
+                        'required' => true,
+                        'placeholder' => null,
+                        'help_text' => null,
+                        'options' => ['Belum dimulai', 'Sedang diproses', 'Selesai'],
+                    ],
+                ],
+            ],
+        ],
+    ];
+
+    /**
      * Get the curriculum with an explicit shape so optional module sections stay visible.
      *
-     * @return array<int, array{title: string, subtitle: string, fase_order: int, short_description: string, modules: array<int, array{title: string, modul_order: int, type: string, category?: string, duration: int, goal: string, summary_material: string, insights: array<int, string>, inti_material: string, ai_knowledge: string, quick_questions?: array<int, array{question: string, answer: bool, explanation: string}>, practice_form?: array{title: string, description: string, include_in_cv?: bool, cv_ordering?: int, fields?: array<int, array{name: string, label: string, type: string, required: bool, placeholder: string|null, help_text: string|null, options: array<int, string>}>}}>}>
+     * @return array<int, array{title: string, subtitle: string, fase_order: int, short_description: string, modules: array<int, array{title: string, modul_order: int, type: string, category?: string, duration: int, goal: string, summary_material: string, insights: array<int, string>, inti_material: string, ai_knowledge: string, link_video?: string, quick_questions?: array<int, array{question: string, answer: bool, explanation: string}>, practice_form?: array{title: string, description: string, include_in_cv?: bool, cv_ordering?: int, fields?: array<int, array{name: string, label: string, type: string, required: bool, placeholder: string|null, help_text: string|null, options: array<int, string>}>}}>}>
      */
     public static function curriculum(): array
     {
@@ -379,53 +520,143 @@ class LearningSeeder extends Seeder
                         'summary_material' => $module_data['summary_material'],
                         'insights' => $module_data['insights'],
                         'inti_material' => $module_data['inti_material'],
+                        'link_video' => $module_data['link_video'] ?? null,
                         'ai_knowledge' => $module_data['ai_knowledge'],
                     ],
                 );
 
-                foreach ($module_data['quick_questions'] ?? [] as $index => $question_data) {
-                    QuickQuestion::query()->updateOrCreate(
-                        ['module_id' => $module->id, 'question' => $question_data['question']],
-                        [
-                            'answer' => $question_data['answer'],
-                            'explanation' => $question_data['explanation'],
-                            'ordering' => $index + 1,
-                            'is_active' => true,
-                        ],
-                    );
-                }
-
-                $form_data = $module_data['practice_form'] ?? null;
-
-                if ($form_data === null) {
-                    continue;
-                }
-
-                PracticeForm::query()->updateOrCreate(
-                    ['module_id' => $module->id, 'title' => $form_data['title']],
-                    [
-                        'description' => $form_data['description'],
-                        'fields' => $form_data['fields'] ?? [
-                            [
-                                'name' => 'jawaban',
-                                'label' => 'Jawabanmu',
-                                'type' => 'textarea',
-                                'required' => true,
-                                'placeholder' => 'Tulis jawabanmu di sini...',
-                                'help_text' => 'Gunakan bahasa yang jelas dan runtut.',
-                                'options' => [],
-                            ],
-                        ],
-                        'ordering' => 1,
-                        'is_active' => true,
-                        'include_in_cv' => $form_data['include_in_cv'] ?? false,
-                        'cv_ordering' => $form_data['cv_ordering'] ?? 0,
-                    ],
-                );
+                $this->seedQuickQuestions($module, $module_data['quick_questions'] ?? []);
+                $this->seedPracticeForm($module, $module_data['practice_form'] ?? null);
             }
         }
 
+        $this->seedTemplateModules();
         $this->seedDefaultTwibbonTemplate();
+    }
+
+    /**
+     * Seed the scholarship-tailored Template modules.
+     *
+     * Each demo scholarship receives its own copy of every template module so
+     * the tailored curriculum can be demonstrated for any of them.
+     */
+    private function seedTemplateModules(): void
+    {
+        $scholarships = Scholarship::query()->orderBy('id')->get();
+
+        foreach ($scholarships as $scholarship) {
+            foreach (self::TEMPLATE_MODULES as $module_data) {
+                $fase = Fase::query()->where('fase_order', $module_data['fase_order'])->first();
+
+                if ($fase === null) {
+                    continue;
+                }
+
+                $module = Module::query()->updateOrCreate(
+                    [
+                        'scholarship_id' => $scholarship->id,
+                        'title' => $this->templateText($module_data['title'], $scholarship),
+                    ],
+                    [
+                        'fase_id' => $fase->id,
+                        'modul_order' => $module_data['modul_order'],
+                        'type' => ModuleType::from($module_data['type']),
+                        'content_status' => ContentStatus::Published,
+                        'category' => ModuleCategory::Template,
+                        'duration' => $module_data['duration'],
+                        'goal' => $this->templateText($module_data['goal'], $scholarship),
+                        'introduction' => $this->templateText($module_data['introduction'], $scholarship),
+                        'summary_material' => $this->templateText($module_data['summary_material'], $scholarship),
+                        'insights' => array_map(
+                            fn (string $insight): string => $this->templateText($insight, $scholarship),
+                            $module_data['insights'],
+                        ),
+                        'inti_material' => $this->templateText($module_data['inti_material'], $scholarship),
+                        'ai_knowledge' => $this->templateText($module_data['ai_knowledge'], $scholarship),
+                    ],
+                );
+
+                $this->seedQuickQuestions($module, array_map(
+                    fn (array $question): array => [
+                        'question' => $this->templateText($question['question'], $scholarship),
+                        'answer' => $question['answer'],
+                        'explanation' => $this->templateText($question['explanation'], $scholarship),
+                    ],
+                    $module_data['quick_questions'],
+                ));
+
+                $this->seedPracticeForm($module, [
+                    'title' => $this->templateText($module_data['practice_form']['title'], $scholarship),
+                    'description' => $this->templateText($module_data['practice_form']['description'], $scholarship),
+                    'fields' => $module_data['practice_form']['fields'],
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Replace the scholarship placeholders used by the template modules.
+     */
+    private function templateText(string $text, Scholarship $scholarship): string
+    {
+        return strtr($text, [
+            ':beasiswa' => $scholarship->scholarship_name,
+            ':institusi' => $scholarship->institution ?? $scholarship->scholarship_name,
+        ]);
+    }
+
+    /**
+     * Seed the answerable quick questions of a module.
+     *
+     * @param  array<int, array{question: string, answer: bool, explanation: string}>  $questions
+     */
+    private function seedQuickQuestions(Module $module, array $questions): void
+    {
+        foreach ($questions as $index => $question_data) {
+            QuickQuestion::query()->updateOrCreate(
+                ['module_id' => $module->id, 'question' => $question_data['question']],
+                [
+                    'answer' => $question_data['answer'],
+                    'explanation' => $question_data['explanation'],
+                    'ordering' => $index + 1,
+                    'is_active' => true,
+                ],
+            );
+        }
+    }
+
+    /**
+     * Seed the written exercise of a module.
+     *
+     * @param  array{title: string, description: string, include_in_cv?: bool, cv_ordering?: int, fields?: array<int, array{name: string, label: string, type: string, required: bool, placeholder: string|null, help_text: string|null, options: array<int, string>}>}|null  $form_data
+     */
+    private function seedPracticeForm(Module $module, ?array $form_data): void
+    {
+        if ($form_data === null) {
+            return;
+        }
+
+        PracticeForm::query()->updateOrCreate(
+            ['module_id' => $module->id, 'title' => $form_data['title']],
+            [
+                'description' => $form_data['description'],
+                'fields' => $form_data['fields'] ?? [
+                    [
+                        'name' => 'jawaban',
+                        'label' => 'Jawabanmu',
+                        'type' => 'textarea',
+                        'required' => true,
+                        'placeholder' => 'Tulis jawabanmu di sini...',
+                        'help_text' => 'Gunakan bahasa yang jelas dan runtut.',
+                        'options' => [],
+                    ],
+                ],
+                'ordering' => 1,
+                'is_active' => true,
+                'include_in_cv' => $form_data['include_in_cv'] ?? false,
+                'cv_ordering' => $form_data['cv_ordering'] ?? 0,
+            ],
+        );
     }
 
     /**

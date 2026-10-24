@@ -33,6 +33,8 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->brandName('Skular Admin')
             ->font('Rubik')
+            // The whole product is light-only, including the admin panel.
+            ->darkMode(false)
             ->colors([
                 // Skular amber-to-orange primary palette.
                 'primary' => [

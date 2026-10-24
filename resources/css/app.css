@@ -5,6 +5,9 @@
 @source '../../../../vendor/bezhansalleh/filament-google-analytics/resources/views/**/*';
 @source '../../../../vendor/bezhansalleh/filament-google-analytics/src/{Widgets,Support}/*';
 
+/* Skular is a light-only interface. The dark variant stays scoped to a `.dark`
+   class that is never applied, so neither the OS preference nor a stale
+   localStorage value can switch the UI to dark. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -69,6 +72,10 @@
 }
 
 @layer base {
+    html {
+        color-scheme: light;
+    }
+
     *,
     ::after,
     ::before,

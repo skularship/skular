@@ -258,7 +258,6 @@ Semua butuh `auth` + `verified` kecuali disebutkan lain.
 | GET | `/scholarships/{application}/twibbon` | `twibbon.show` | `application` (path, id) | — |
 | GET | `/scholarships/{application}/proof` | `applications.proof` | `application` (path, id) | — |
 | GET | `/settings/profile` | `profile.edit` | — | — |
-| GET | `/settings/appearance` | `appearance.edit` | — | — |
 | GET | `/settings/security` | `security.edit` | — (butuh konfirmasi password) | — |
 | GET | `/settings` | — (redirect) | — | — |
 
