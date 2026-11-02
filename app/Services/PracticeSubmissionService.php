@@ -9,6 +9,7 @@ use App\Data\PracticeFieldData;
 use App\Enums\AiFeedbackStatus;
 use App\Enums\PracticeFieldType;
 use App\Exceptions\AiFeedbackException;
+use App\Jobs\EvaluatePracticeFeedback;
 use App\Models\Module;
 use App\Models\PracticeForm;
 use App\Models\User;
@@ -27,7 +28,12 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
     ) {}
 
     /**
-     * Validate and store a practice submission, then request AI feedback.
+     * Validate and store a practice submission, then queue the AI feedback.
+     *
+     * The submission itself is durable before the response leaves the web
+     * request: the answers are saved in one transaction, then the evaluation
+     * runs in the queue after the commit. That is what keeps the practice
+     * save instant even when the provider is slow.
      *
      * @param  array<string, mixed>  $answers
      */
@@ -75,11 +81,41 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
             return $response;
         });
 
-        return $this->requestFeedback($response, $practice_form);
+        EvaluatePracticeFeedback::dispatch($response->getKey(), $practice_form->id);
+
+        return $response;
+    }
+
+    /**
+     * Evaluate a stored submission from the background job.
+     *
+     * A submission that already has feedback is skipped, so a replayed job can
+     * never overwrite a completed evaluation nor bill the provider twice.
+     */
+    public function evaluateSubmission(int $response_id, int $practice_form_id): void
+    {
+        /** @var UserPracticeResponse|null $response */
+        $response = UserPracticeResponse::query()->find($response_id);
+
+        $practice_form = PracticeForm::query()->find($practice_form_id);
+
+        if ($response === null || $practice_form === null) {
+            return;
+        }
+
+        if ($response->ai_status === AiFeedbackStatus::Completed) {
+            return;
+        }
+
+        $this->requestFeedback($response, $practice_form);
     }
 
     /**
      * Request AI feedback again for a stored submission.
+     *
+     * This stays synchronous: the mentee pressed an explicit retry button and
+     * expects the outcome, and the shared provider lock below still prevents
+     * duplicated provider calls.
      */
     public function retryAiFeedback(UserPracticeResponse $response): UserPracticeResponse
     {

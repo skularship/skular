@@ -11,12 +11,18 @@ enum LocationScope: string implements HasLabel
 
     case DalamNegeri = 'dalam_negeri';
     case LuarNegeri = 'luar_negeri';
+    case TunjanganSaja = 'Tunjangan saja';
+    case Parsial = 'Parsial';
+    case Penuh = 'Penuh';
 
     public function getLabel(): string
     {
         return match ($this) {
             self::DalamNegeri => 'Dalam Negeri',
             self::LuarNegeri => 'Luar Negeri',
+            self::TunjanganSaja => 'Tunjangan Saja',
+            self::Parsial => 'Parsial',
+            self::Penuh => 'Penuh'
         };
     }
 }

@@ -11,20 +11,28 @@ use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
+ * The eight question profiling wizard of the onboarding flow.
+ *
+ * Answers are collected in the browser while the mentee walks the steps and
+ * are only sent to the backend once, from submit(), at the end of the wizard.
+ * Moving between steps never touches Livewire, the session or the database.
+ *
  * @property-read array<int, string> $steps
+ * @property-read array<string, string> $stepLabels
  * @property-read string $activeStep
  * @property-read string $currentLabel
  * @property-read Collection<int, Cluster> $clusters
  * @property-read array<string, string> $levelOptions
  * @property-read array<string, string> $locationOptions
- * @property-read array{completed: int, total: int, percentage: int} $progress
+ * @property-read array<string, mixed> $initialAnswers
+ * @property-read string $storageKey
  */
 #[Title('Profiling')]
 class Wizard extends Component
@@ -47,171 +55,72 @@ class Wizard extends Component
         'phone' => 'Telepon',
     ];
 
+    /**
+     * Base browser storage key for an unfinished wizard.
+     */
+    public const STORAGE_KEY = 'skular.profiling.wizard.v1';
+
     #[Url(as: 'step')]
     public int $step = 1;
 
-    public ?string $level = null;
-
-    public ?string $age = null;
-
-    public ?string $gpa = null;
-
-    public ?bool $has_sktm = null;
-
-    public ?string $desired_level = null;
-
-    public ?string $desired_location = null;
-
-    public ?string $cluster = null;
-
-    public string $phone = '';
+    /**
+     * Seed values for the temporary browser state.
+     *
+     * @var array<string, mixed>
+     */
+    public array $answers = [];
 
     /**
-     * Hydrate the wizard from the session draft and persisted profile.
+     * Hydrate the wizard from the persisted profile.
      */
     public function mount(ProfilingServiceInterface $profiling_service): void
     {
-        $values = $profiling_service->values($this->user());
-
-        $this->level = $this->stringValue($values['level'] ?? null);
-        $this->age = $this->stringValue($values['age'] ?? null);
-        $this->gpa = $this->stringValue($values['gpa'] ?? null);
-        $this->has_sktm = is_bool($values['has_sktm'] ?? null) ? $values['has_sktm'] : null;
-        $this->desired_level = $this->stringValue($values['desired_level'] ?? null);
-        $this->desired_location = $this->stringValue($values['desired_location'] ?? null);
-        $this->cluster = $this->stringValue($values['cluster'] ?? null);
-        $this->phone = $this->stringValue($values['phone'] ?? null) ?? '';
+        $this->answers = $profiling_service->values($this->user());
 
         $this->step = max(1, min(count($profiling_service->steps()), $this->step));
     }
 
     /**
-     * Validate the current step, store it in the session and advance.
-     */
-    public function next(ProfilingServiceInterface $profiling_service): void
-    {
-        $step = $this->activeStep;
-
-        $this->validate($this->profilingRules($step), [], $this->profilingAttributes());
-
-        $profiling_service->put($step, $this->valueFor($step));
-
-        $this->resetErrorBag();
-
-        if ($this->step < count($this->steps)) {
-            $this->moveToStep($this->step + 1);
-        }
-    }
-
-    /**
-     * Advance to the recommendations when Enter is pressed on the last step.
-     */
-    public function submitStep(ProfilingServiceInterface $profiling_service): void
-    {
-        if ($this->step >= count($this->steps)) {
-            $this->finish($profiling_service);
-
-            return;
-        }
-
-        $this->next($profiling_service);
-    }
-
-    /**
-     * Step back to the previous question.
-     */
-    public function goBack(): void
-    {
-        $this->resetErrorBag();
-        $this->moveToStep($this->step - 1);
-    }
-
-    /**
-     * Point the wizard at another step.
+     * Validate and persist the whole profile from one batch submission.
      *
-     * Computed properties are memoized for the whole request, and the step on
-     * screen is read while validating (and storing) the answer to the previous
-     * one. Without dropping that memo, the render right after the action would
-     * keep showing the step we just left.
+     * Called once, from the last step. Nothing is trusted: each answer is
+     * re-validated against the backend rules and the profile is written in a
+     * single transaction by the service. The redirect only happens after the
+     * write succeeded, so a retry never produces a duplicate profile.
+     *
+     * @param  array<string, mixed>  $answers
+     * @return array{ok: bool, step?: int, message?: string}
      */
-    protected function moveToStep(int $step): void
+    public function submit(array $answers, ProfilingServiceInterface $profiling_service): array
     {
-        $this->step = max(1, min(count($this->steps), $step));
-
-        unset($this->activeStep, $this->currentLabel);
-    }
-
-    /**
-     * Persist the whole profile and continue to the recommendations.
-     */
-    public function finish(ProfilingServiceInterface $profiling_service): void
-    {
-        $steps = $this->steps;
+        $steps = $profiling_service->steps();
+        $payload = [];
 
         foreach ($steps as $step) {
-            $profiling_service->put($step, $this->valueFor($step));
+            $payload[$step] = $this->normaliseValue($step, $answers[$step] ?? null);
         }
 
-        $this->validate($this->profilingRules($this->activeStep), [], $this->profilingAttributes());
+        $validator = Validator::make($payload, $this->profilingRules(), [], $this->profilingAttributes());
 
-        try {
-            $profiling_service->complete($this->user());
-        } catch (ValidationException $exception) {
-            // Send the mentee to the first question that still needs an answer.
-            $this->moveToStep($this->firstInvalidStep($exception, $steps));
-            $this->resetErrorBag();
+        if ($validator->fails()) {
+            $errors = $validator->errors();
+            $this->setErrorBag($errors);
 
-            throw $exception;
+            return [
+                'ok' => false,
+                'step' => $this->firstInvalidStep($errors->toArray(), $steps),
+                'message' => (string) $errors->first(),
+            ];
         }
+
+        $this->answers = $payload;
+        $this->resetErrorBag();
+
+        $profiling_service->complete($this->user(), $payload);
 
         $this->redirect(route('profiling.recommendation'), navigate: true);
-    }
 
-    /**
-     * Jump directly to a step that has already been answered.
-     */
-    public function goToStep(int $step): void
-    {
-        $this->resetErrorBag();
-        $this->moveToStep($step);
-    }
-
-    /**
-     * Select or release a choice on a selection card step.
-     *
-     * Every profiling card step holds a single answer, so choosing
-     * another card releases the previous pick.
-     */
-    public function selectChoice(string $step, string $value): void
-    {
-        if (! in_array($step, ['level', 'has_sktm', 'desired_level', 'desired_location'], true)) {
-            return;
-        }
-
-        if ($step === 'has_sktm') {
-            $current = $this->has_sktm === true ? '1' : ($this->has_sktm === false ? '0' : null);
-            $next = $current === $value ? null : $value;
-
-            $this->has_sktm = $next === null ? null : $next === '1';
-        } elseif ($step === 'level') {
-            $this->level = (string) $this->level === $value ? null : $value;
-        } elseif ($step === 'desired_level') {
-            $this->desired_level = (string) $this->desired_level === $value ? null : $value;
-        } elseif ($step === 'desired_location') {
-            $this->desired_location = (string) $this->desired_location === $value ? null : $value;
-        }
-
-        $this->resetErrorBag($step);
-    }
-
-    /**
-     * Select a cluster card, releasing the previous pick.
-     */
-    public function selectCluster(string $cluster_id): void
-    {
-        $this->cluster = (string) $this->cluster === $cluster_id ? null : $cluster_id;
-
-        $this->resetErrorBag('cluster');
+        return ['ok' => true];
     }
 
     /**
@@ -223,6 +132,23 @@ class Wizard extends Component
     public function steps(): array
     {
         return app(ProfilingServiceInterface::class)->steps();
+    }
+
+    /**
+     * Get the label of every step, keyed by step.
+     *
+     * @return array<string, string>
+     */
+    #[Computed]
+    public function stepLabels(): array
+    {
+        $labels = [];
+
+        foreach ($this->steps as $step) {
+            $labels[$step] = self::STEP_LABELS[$step] ?? '';
+        }
+
+        return $labels;
     }
 
     /**
@@ -259,6 +185,28 @@ class Wizard extends Component
     }
 
     /**
+     * Get the temporary answers the browser starts from.
+     *
+     * @return array<string, mixed>
+     */
+    #[Computed]
+    public function initialAnswers(): array
+    {
+        $answers = [];
+
+        foreach ($this->steps as $step) {
+            $value = $this->answers[$step] ?? null;
+
+            $answers[$step] = match ($step) {
+                'has_sktm' => $value === true ? '1' : ($value === false ? '0' : null),
+                default => $value === null || $value === '' ? null : (string) $value,
+            };
+        }
+
+        return $answers;
+    }
+
+    /**
      * Get the key of the step currently displayed.
      */
     #[Computed]
@@ -279,7 +227,10 @@ class Wizard extends Component
     }
 
     /**
-     * Get the completion progress of the wizard.
+     * Get the completion progress of the persisted profile.
+     *
+     * Only used for the first paint: the wizard repaints its progress from the
+     * temporary answers in the browser, without asking the server.
      *
      * @return array{completed: int, total: int, percentage: int}
      */
@@ -287,6 +238,15 @@ class Wizard extends Component
     public function progress(): array
     {
         return app(ProfilingServiceInterface::class)->progress($this->user());
+    }
+
+    /**
+     * Get the browser storage key of the signed-in mentee's draft.
+     */
+    #[Computed]
+    public function storageKey(): string
+    {
+        return self::STORAGE_KEY.':'.$this->user()->getKey();
     }
 
     public function render(): View
@@ -297,14 +257,16 @@ class Wizard extends Component
     /**
      * Find the step index that holds the first validation error.
      *
+     * @param  array<string, array<int, string>>  $errors
      * @param  array<int, string>  $steps
      */
-    private function firstInvalidStep(ValidationException $exception, array $steps): int
+    private function firstInvalidStep(array $errors, array $steps): int
     {
-        $errors = $exception->errors();
+        foreach (array_keys($errors) as $key) {
+            $step = explode('.', (string) $key)[0];
+            $index = array_search($step, $steps, true);
 
-        foreach ($steps as $index => $step) {
-            if (array_key_exists($step, $errors)) {
+            if ($index !== false) {
                 return $index + 1;
             }
         }
@@ -313,21 +275,25 @@ class Wizard extends Component
     }
 
     /**
-     * Read the wizard value backing a step.
+     * Shape one submitted answer into the type the validation rules expect.
      */
-    private function valueFor(string $step): mixed
+    private function normaliseValue(string $step, mixed $value): mixed
     {
-        return match ($step) {
-            'level' => $this->level,
-            'age' => $this->age,
-            'gpa' => $this->gpa,
-            'has_sktm' => $this->has_sktm,
-            'desired_level' => $this->desired_level,
-            'desired_location' => $this->desired_location,
-            'cluster' => $this->cluster,
-            'phone' => $this->phone,
-            default => null,
-        };
+        if ($step === 'has_sktm') {
+            return match (true) {
+                $value === true, $value === '1', $value === 1 => true,
+                $value === false, $value === '0', $value === 0 => false,
+                default => null,
+            };
+        }
+
+        if (is_bool($value) || ! is_scalar($value)) {
+            return null;
+        }
+
+        $normalised = trim((string) $value);
+
+        return $normalised === '' ? null : $normalised;
     }
 
     /**
@@ -342,21 +308,5 @@ class Wizard extends Component
         }
 
         return $user;
-    }
-
-    /**
-     * Normalise a scalar session value into a nullable string.
-     */
-    private function stringValue(mixed $value): ?string
-    {
-        if (is_bool($value)) {
-            return $value ? '1' : '0';
-        }
-
-        if (! is_scalar($value)) {
-            return null;
-        }
-
-        return (string) $value;
     }
 }

@@ -22,18 +22,24 @@ class Library extends Component
     {
         $user = $this->user();
 
-        // Library progress is read-only here: opening the catalog must never
-        // create progress rows or touch the scholarship path.
-        /** @var array<int, Checkpoint|null> $checkpoints */
-        $checkpoints = $user->checkpoints()->get()->keyBy('module_id')->all();
+        $modules = $learning_path->libraryModules();
 
-        $modules = $learning_path->libraryModules()->map(fn (Module $module): array => [
-            'module' => $module,
-            'checkpoint' => $checkpoints[$module->id] ?? null,
-        ]);
+        // Library progress is read-only here: opening the catalog must never
+        // create progress rows or touch the scholarship path. Only the
+        // checkpoints of the catalogised modules are read, not the whole
+        // checkpoint history of the mentee.
+        /** @var array<int, Checkpoint> $checkpoints */
+        $checkpoints = $user->checkpoints()
+            ->whereIn('module_id', $modules->pluck('id')->all())
+            ->get()
+            ->keyBy('module_id')
+            ->all();
 
         return view('livewire.learning.library', [
-            'modules' => $modules,
+            'modules' => $modules->map(fn (Module $module): array => [
+                'module' => $module,
+                'checkpoint' => $checkpoints[$module->id] ?? null,
+            ]),
         ]);
     }
 

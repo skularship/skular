@@ -57,6 +57,35 @@
             'text' => 'Gunakan skor, catatan kekuatan, dan hal yang perlu diperbaiki dari setiap latihan untuk menyempurnakan persiapanmu.',
         ],
     ];
+
+    /*
+     * JSON-LD contains only facts that exist in this codebase: the brand, the
+     * public URL and the logo. No ratings, awards, addresses or success
+     * statistics are invented.
+     */
+    $homeUrl = \App\Support\Seo::url('/');
+
+    $structuredData = [
+        [
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            '@id' => $homeUrl.'#organization',
+            'name' => 'Skular',
+            'url' => $homeUrl,
+            'logo' => \App\Support\Seo::url('/skular-logo.png'),
+            'description' => config('seo.defaults.description'),
+        ],
+        [
+            '@context' => 'https://schema.org',
+            '@type' => 'WebSite',
+            '@id' => $homeUrl.'#website',
+            'name' => 'Skular',
+            'url' => $homeUrl,
+            'description' => config('seo.defaults.description'),
+            'inLanguage' => 'id-ID',
+            'publisher' => ['@id' => $homeUrl.'#organization'],
+        ],
+    ];
 @endphp
 
 <!DOCTYPE html>
@@ -65,7 +94,7 @@
     class="scroll-smooth motion-reduce:scroll-auto"
 >
     <head>
-        @include('partials.head')
+        @include('partials.head', ['structuredData' => $structuredData])
 
         <script>
             /*
@@ -513,8 +542,8 @@
             {{-- Journey --}}
             <section id="cara-kerja" class="relative scroll-mt-24 overflow-hidden bg-warm-sand py-20 sm:py-28 dark:bg-zinc-900/50">
                 <div class="relative mx-auto w-full max-w-6xl px-4 sm:px-6">
-                    <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between" data-reveal>
-                        <div class="max-w-2xl">
+                    <div class="flex flex-col gap-6" data-reveal>
+                        <div class="max-w-2xl md:max-w-6xl">
                             <x-ui.pill variant="brand" icon="arrows-right-left">{{ __('Cara Kerja') }}</x-ui.pill>
 
                             <h2 class="mt-5 text-3xl leading-[1.08] font-extrabold tracking-tight text-zinc-900 sm:text-5xl dark:text-white">
@@ -522,7 +551,7 @@
                             </h2>
                         </div>
 
-                        <p class="max-w-sm text-sm text-zinc-600 sm:text-base dark:text-zinc-300">
+                        <p class="max-w-sm md:max-w-6xl text-sm text-zinc-600 sm:text-base dark:text-zinc-300">
                             {{ __('Skular mengikuti alur yang sama seperti yang kamu jalani di dalam aplikasi, dari profiling sampai evaluasi latihan.') }}
                         </p>
                     </div>

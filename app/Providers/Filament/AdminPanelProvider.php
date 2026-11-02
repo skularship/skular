@@ -35,6 +35,7 @@ class AdminPanelProvider extends PanelProvider
             ->font('Rubik')
             // The whole product is light-only, including the admin panel.
             ->darkMode(false)
+            ->favicon('skular-logo.png')
             ->colors([
                 // Skular amber-to-orange primary palette.
                 'primary' => [

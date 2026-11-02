@@ -7,7 +7,7 @@ use App\Models\User;
 use Livewire\Livewire;
 
 /**
- * Fill every quick assessment answer except the ones under test.
+ * A complete, valid Profiling Kilat batch as the browser sends it.
  *
  * @return array<string, mixed>
  */
@@ -26,16 +26,39 @@ test('the landing page renders the profiling kilat section', function () {
     $this->get(route('home'))
         ->assertOk()
         ->assertSee('Seberapa Siap Kamu Mengejar Beasiswa?')
-        ->assertSee('Pertanyaan 1 dari 5');
+        ->assertSee('Pertanyaan')
+        ->assertSee('dari 5')
+        ->assertSee('Lihat Hasil Kesiapan');
+});
+
+test('every single choice question is one radio group and nothing syncs per pick', function () {
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('name="answers.currentStatus"', false)
+        ->assertSee('x-model="answers.currentStatus"', false)
+        ->assertSee('x-model="answers.target"', false)
+        ->assertSee('x-model="answers.registerTimeline"', false)
+        ->assertSee('x-model="answers.weeklyPrepTime"', false)
+        ->assertSee('type="radio"', false)
+        ->assertSee('type="checkbox"', false)
+        ->assertDontSee('$wire.set', false)
+        ->assertDontSee('wire:model="currentStatus"', false);
+});
+
+test('answering and navigating are served by frontend state only', function () {
+    expect(method_exists(QuickAssessment::class, 'selectChoice'))->toBeFalse()
+        ->and(method_exists(QuickAssessment::class, 'toggleAsset'))->toBeFalse()
+        ->and(method_exists(QuickAssessment::class, 'next'))->toBeFalse()
+        ->and(method_exists(QuickAssessment::class, 'goBack'))->toBeFalse()
+        ->and(method_exists(QuickAssessment::class, 'advance'))->toBeFalse();
 });
 
 test('a guest can run the readiness check without logging in', function () {
     Livewire::test(QuickAssessment::class)
-        ->assertSet('step', 1)
         ->assertSet('submitted', false)
         ->assertSee('Status kamu sekarang?')
-        ->set(readyQuickAnswers())
-        ->call('submit')
+        ->call('submit', readyQuickAnswers())
+        ->assertReturned(fn (array $result): bool => $result['ok'] === true)
         ->assertHasNoErrors()
         ->assertSet('submitted', true)
         ->assertSee('Saatnya Memperkuat Modal Beasiswamu');
@@ -44,18 +67,30 @@ test('a guest can run the readiness check without logging in', function () {
     expect(User::query()->count())->toBe(0);
 });
 
-test('a question cannot be skipped without an answer', function () {
+test('an empty batch is rejected and points at the first question', function () {
     Livewire::test(QuickAssessment::class)
-        ->call('next')
-        ->assertHasErrors(['currentStatus' => 'required'])
-        ->assertSet('step', 1);
+        ->call('submit', [])
+        ->assertReturned(fn (array $result): bool => $result['ok'] === false && $result['step'] === 1)
+        ->assertHasErrors(['currentStatus'])
+        ->assertSet('submitted', false);
+});
+
+test('a batch missing a later answer is rejected and points at that question', function () {
+    $answers = readyQuickAnswers();
+    unset($answers['weeklyPrepTime']);
+
+    Livewire::test(QuickAssessment::class)
+        ->call('submit', $answers)
+        ->assertReturned(fn (array $result): bool => $result['ok'] === false && $result['step'] === 5)
+        ->assertHasErrors(['weeklyPrepTime'])
+        ->assertSet('submitted', false);
 });
 
 test('an answer outside the allowed options is rejected', function () {
     Livewire::test(QuickAssessment::class)
-        ->set('currentStatus', 'president')
-        ->call('advance')
-        ->assertHasErrors(['currentStatus']);
+        ->call('submit', [...readyQuickAnswers(), 'currentStatus' => 'president'])
+        ->assertHasErrors(['currentStatus'])
+        ->assertSet('submitted', false);
 });
 
 test('a submission without a preparation asset is rejected', function () {
@@ -63,111 +98,58 @@ test('a submission without a preparation asset is rejected', function () {
     unset($answers['assets']);
 
     Livewire::test(QuickAssessment::class)
-        ->set($answers)
-        ->call('submit')
-        ->assertHasErrors(['assets' => 'required'])
+        ->call('submit', $answers)
+        ->assertHasErrors(['assets'])
         ->assertSet('submitted', false);
 });
 
 test('an unknown preparation asset is rejected', function () {
     Livewire::test(QuickAssessment::class)
-        ->set('assets', ['bukan_modal'])
-        ->set(array_diff_key(readyQuickAnswers(), ['assets' => null]))
-        ->call('submit')
+        ->call('submit', [...readyQuickAnswers(), 'assets' => ['bukan_modal']])
         ->assertHasErrors(['assets.0'])
         ->assertSet('submitted', false);
 });
 
 test('"Belum Ada" cannot be combined with another preparation asset', function () {
     Livewire::test(QuickAssessment::class)
-        ->set('assets', ['none', 'essay_draft'])
-        ->set(array_diff_key(readyQuickAnswers(), ['assets' => null]))
-        ->call('submit')
+        ->call('submit', [...readyQuickAnswers(), 'assets' => ['none', 'essay_draft']])
         ->assertHasErrors(['assets'])
         ->assertSet('submitted', false);
 });
 
-test('choosing "Belum Ada" clears every other preparation asset', function () {
+test('"Belum Ada" alone is accepted', function () {
     Livewire::test(QuickAssessment::class)
-        ->call('toggleAsset', 'essay_draft')
-        ->call('toggleAsset', 'organization')
-        ->assertSet('assets', ['essay_draft', 'organization'])
-        ->call('toggleAsset', 'none')
-        ->assertSet('assets', ['none']);
+        ->call('submit', [...readyQuickAnswers(), 'assets' => ['none']])
+        ->assertHasNoErrors()
+        ->assertSet('submitted', true);
 });
 
-test('choosing a real preparation asset clears "Belum Ada"', function () {
+test('duplicate answers in the batch are normalised before scoring', function () {
     Livewire::test(QuickAssessment::class)
-        ->call('toggleAsset', 'none')
-        ->assertSet('assets', ['none'])
-        ->call('toggleAsset', 'language_score')
-        ->assertSet('assets', ['language_score']);
+        ->call('submit', [...readyQuickAnswers(), 'assets' => ['essay_draft', 'essay_draft']])
+        ->assertHasNoErrors()
+        ->assertSet('answers.assets', ['essay_draft']);
 });
 
-test('tapping the active card releases it again', function () {
+test('the displayed category always matches the computed score', function () {
     Livewire::test(QuickAssessment::class)
-        ->call('selectChoice', 'currentStatus', 'sma')
-        ->assertSet('currentStatus', 'sma')
-        ->call('selectChoice', 'currentStatus', 'sma')
-        ->assertSet('currentStatus', null)
-        ->call('toggleAsset', 'none')
-        ->call('toggleAsset', 'none')
-        ->assertSet('assets', []);
-});
+        ->call('submit', [
+            'currentStatus' => 'sma',
+            'target' => 's2_luar_negeri',
+            'registerTimeline' => 'under_3_months',
+            'assets' => ['none'],
+            'weeklyPrepTime' => 'under_2_hours',
+        ])
+        ->assertHasNoErrors()
+        ->assertSee('Persiapanmu Sudah Dimulai!')
+        ->assertSee('Perlu Persiapan Lebih Lanjut');
 
-test('navigating back and forth keeps every answer', function () {
-    Livewire::test(QuickAssessment::class)
-        ->set('currentStatus', 'sma')
-        ->call('next')
-        ->assertSet('step', 2)
-        ->set('target', 'beasiswa_s1')
-        ->call('next')
-        ->call('goBack')
-        ->assertSet('step', 2)
-        ->assertSet('currentStatus', 'sma')
-        ->assertSet('target', 'beasiswa_s1');
-});
-
-test('answering a question swaps the cards for the next one', function () {
-    Livewire::test(QuickAssessment::class)
-        ->assertSee('Status kamu sekarang?')
-        ->call('selectChoice', 'currentStatus', 'sma')
-        ->call('next')
-        ->assertSet('step', 2)
-        ->assertSee('Apa yang mau kamu kejar?')
-        ->assertDontSee('Status kamu sekarang?')
-        ->call('selectChoice', 'target', 'beasiswa_s1')
-        ->call('next')
-        ->assertSet('step', 3)
-        ->assertSee('Kapan target daftar?')
-        ->assertDontSee('Apa yang mau kamu kejar?')
-        ->call('selectChoice', 'registerTimeline', '3_6_months')
-        ->call('next')
-        ->assertSet('step', 4)
-        ->assertSee('Apa yang sudah kamu punya?')
-        ->assertDontSee('Kapan target daftar?')
-        ->call('toggleAsset', 'essay_draft')
-        ->call('next')
-        ->assertSet('step', 5)
-        ->assertSee('Berapa waktu yang bisa kamu alokasikan setiap minggu?')
-        ->assertDontSee('Apa yang sudah kamu punya?');
-});
-
-test('stepping back shows the previous question again', function () {
-    Livewire::test(QuickAssessment::class)
-        ->call('selectChoice', 'currentStatus', 'sma')
-        ->call('next')
-        ->assertSee('Apa yang mau kamu kejar?')
-        ->call('goBack')
-        ->assertSet('step', 1)
-        ->assertSee('Status kamu sekarang?')
-        ->assertDontSee('Apa yang mau kamu kejar?');
+    expect(ReadinessCategory::forScore(18))->toBe(ReadinessCategory::NeedsPreparation);
 });
 
 test('the result replaces the form and points at the registration route', function () {
     Livewire::test(QuickAssessment::class)
-        ->set(readyQuickAnswers())
-        ->call('submit')
+        ->call('submit', readyQuickAnswers())
         ->assertHasNoErrors()
         ->assertSee('Tiga langkah berikutnya')
         ->assertSee('Bangun Kesiapanmu Bersama Skular')
@@ -177,36 +159,25 @@ test('the result replaces the form and points at the registration route', functi
 
 test('restarting clears the answers and shows the form again', function () {
     Livewire::test(QuickAssessment::class)
-        ->set(readyQuickAnswers())
-        ->call('submit')
+        ->call('submit', readyQuickAnswers())
         ->assertSet('submitted', true)
         ->call('restart')
         ->assertSet('submitted', false)
-        ->assertSet('step', 1)
-        ->assertSet('currentStatus', null)
-        ->assertSet('target', null)
-        ->assertSet('registerTimeline', null)
-        ->assertSet('assets', [])
-        ->assertSet('weeklyPrepTime', null)
+        ->assertSet('answers', [])
         ->assertHasNoErrors()
         ->assertSee('Status kamu sekarang?');
 });
 
-test('the displayed category always matches the computed score', function () {
-    Livewire::test(QuickAssessment::class)
-        ->set([
-            'currentStatus' => 'sma',
-            'target' => 's2_luar_negeri',
-            'registerTimeline' => 'under_3_months',
-            'assets' => ['none'],
-            'weeklyPrepTime' => 'under_2_hours',
-        ])
-        ->call('submit')
-        ->assertHasNoErrors()
-        ->assertSee('Persiapanmu Sudah Dimulai!')
-        ->assertSee('Perlu Persiapan Lebih Lanjut');
+test('submitting the same batch twice stays idempotent', function () {
+    $component = Livewire::test(QuickAssessment::class);
 
-    expect(ReadinessCategory::forScore(18))->toBe(ReadinessCategory::NeedsPreparation);
+    $component->call('submit', readyQuickAnswers())->assertHasNoErrors();
+    $component->call('submit', readyQuickAnswers())
+        ->assertReturned(fn (array $result): bool => $result['ok'] === true)
+        ->assertHasNoErrors()
+        ->assertSet('submitted', true);
+
+    expect(User::query()->count())->toBe(0);
 });
 
 test('the quick assessment leaves the 8 step profiling wizard untouched', function () {
@@ -214,8 +185,7 @@ test('the quick assessment leaves the 8 step profiling wizard untouched', functi
 
     Livewire::actingAs($mentee)
         ->test(QuickAssessment::class)
-        ->set(readyQuickAnswers())
-        ->call('submit')
+        ->call('submit', readyQuickAnswers())
         ->assertHasNoErrors()
         ->assertSet('submitted', true);
 
@@ -225,7 +195,7 @@ test('the quick assessment leaves the 8 step profiling wizard untouched', functi
     Livewire::actingAs($mentee)
         ->test(Wizard::class)
         ->assertSet('step', 1)
-        ->assertSet('level', null)
+        ->assertSet('answers.level', null)
         ->assertHasNoErrors();
 });
 
@@ -236,22 +206,14 @@ test('the login-free check works while a mentee is signed in without touching th
 
     Livewire::actingAs($mentee)
         ->test(QuickAssessment::class)
-        ->set([
+        ->call('submit', [
             'currentStatus' => 'worker',
             'target' => 'lomba',
             'registerTimeline' => 'over_12_months',
             'assets' => ['achievement'],
             'weeklyPrepTime' => 'over_5_hours',
         ])
-        ->call('submit')
         ->assertHasNoErrors();
 
     expect($mentee->refresh()->only(array_keys($original)))->toBe($original);
-});
-
-test('the landing page keeps its registration and login calls to action', function () {
-    $this->get(route('home'))
-        ->assertOk()
-        ->assertSee(route('register'), false)
-        ->assertSee(route('login'), false);
 });

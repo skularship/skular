@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SubmissionProofController;
 use App\Livewire\Cv\Show as CvShow;
 use App\Livewire\Dashboard;
@@ -19,6 +20,11 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'welcome')->name('home');
 
 Route::get('health', HealthCheckController::class)->name('health');
+
+// Only pages reachable without authenticating are listed. Scholarship and
+// module pages sit behind auth + verified, so crawlers would only see a login
+// redirect; listing them would waste crawl budget and leak no value.
+Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 
 Route::livewire('faq', FaqIndex::class)->name('faq.index');
 

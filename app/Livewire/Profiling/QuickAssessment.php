@@ -11,6 +11,7 @@ use App\Enums\QuickProfilingTimeline;
 use App\Enums\QuickProfilingWeeklyTime;
 use Closure;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -21,12 +22,12 @@ use Livewire\Component;
  * This is a marketing mini-assessment. It never touches the 8-step profiling
  * wizard, the mentee profile or the scholarship matching data.
  *
- * @property-read array<int, string> $steps
- * @property-read string $activeField
- * @property-read string $currentTitle
- * @property-read string $currentDescription
- * @property-read int $progressPercentage
- * @property-read array{title: string, description: string} $stepMeta
+ * Answers live in the browser (Alpine state, optionally restored from
+ * sessionStorage) while the visitor walks the questions. Nothing is written
+ * server-side until the visitor finishes and submit() receives the whole batch.
+ *
+ * @property-read array<int, array{field: string, title: string, description: string}> $questions
+ * @property-read array<string, mixed> $initialAnswers
  * @property-read ReadinessResultData|null $result
  */
 class QuickAssessment extends Component
@@ -72,145 +73,54 @@ class QuickAssessment extends Component
         ],
     ];
 
-    public int $step = 1;
+    /**
+     * Browser storage key for an unfinished attempt.
+     */
+    public const STORAGE_KEY = 'skular.quick-assessment.v1';
 
-    public ?string $currentStatus = null;
-
-    public ?string $target = null;
-
-    public ?string $registerTimeline = null;
-
-    /** @var array<int, string> */
-    public array $assets = [];
-
-    public ?string $weeklyPrepTime = null;
+    /**
+     * The validated batch of answers. Empty until submit() accepts a batch.
+     *
+     * @var array<string, mixed>
+     */
+    public array $answers = [];
 
     public bool $submitted = false;
 
     /**
-     * Run the primary action of the current question: advance or submit.
-     */
-    public function advance(): void
-    {
-        if ($this->step >= count(self::STEP_FIELDS)) {
-            $this->submit();
-
-            return;
-        }
-
-        $this->next();
-    }
-
-    /**
-     * Validate the current question and move forward.
-     */
-    public function next(): void
-    {
-        $this->validate($this->stepRules($this->activeField), [], $this->quizAttributes());
-
-        $this->resetErrorBag();
-
-        if ($this->step < count(self::STEP_FIELDS)) {
-            $this->moveToStep($this->step + 1);
-        }
-    }
-
-    /**
-     * Step back to the previous question, keeping every answer.
-     */
-    public function goBack(): void
-    {
-        $this->resetErrorBag();
-        $this->moveToStep($this->step - 1);
-    }
-
-    /**
-     * Point the mini wizard at another question.
+     * Validate the batch of answers collected by the browser, then score it.
      *
-     * Computed properties are memoized for the whole request, and the question
-     * currently on screen is read while validating the answer to the previous
-     * one. Without dropping that memo, the render right after the action would
-     * keep showing the question we just left.
+     * The frontend only ever calls this once, when the visitor presses the
+     * final button. Nothing is trusted: every question and option is
+     * re-validated here and the score is always recomputed server-side.
+     *
+     * @param  array<string, mixed>  $answers
+     * @return array{ok: bool, step?: int, message?: string}
      */
-    protected function moveToStep(int $step): void
-    {
-        $this->step = max(1, min(count(self::STEP_FIELDS), $step));
-
-        unset(
-            $this->activeField,
-            $this->stepMeta,
-            $this->currentTitle,
-            $this->currentDescription,
-            $this->progressPercentage,
-        );
-    }
-
-    /**
-     * Pick or release a single-choice answer.
-     */
-    public function selectChoice(string $field, string $value): void
-    {
-        match ($field) {
-            'currentStatus' => $this->currentStatus = $this->currentStatus === $value ? null : $value,
-            'target' => $this->target = $this->target === $value ? null : $value,
-            'registerTimeline' => $this->registerTimeline = $this->registerTimeline === $value ? null : $value,
-            'weeklyPrepTime' => $this->weeklyPrepTime = $this->weeklyPrepTime === $value ? null : $value,
-            default => null,
-        };
-
-        $this->resetErrorBag($field);
-    }
-
-    /**
-     * Toggle a preparation asset, keeping "Belum Ada" exclusive.
-     */
-    public function toggleAsset(string $value): void
-    {
-        $asset = QuickProfilingAsset::tryFrom($value);
-
-        if ($asset === null) {
-            return;
-        }
-
-        $selected = array_values(array_filter(
-            $this->assets,
-            fn (string $item): bool => QuickProfilingAsset::tryFrom($item) instanceof QuickProfilingAsset,
-        ));
-
-        if ($asset->isExclusive()) {
-            $this->assets = in_array($asset->value, $selected, true) ? [] : [$asset->value];
-            $this->resetErrorBag('assets');
-
-            return;
-        }
-
-        // Picking a real asset always releases the "Belum Ada" answer.
-        $selected = array_values(array_diff($selected, [QuickProfilingAsset::None->value]));
-
-        if (in_array($asset->value, $selected, true)) {
-            $selected = array_values(array_diff($selected, [$asset->value]));
-        } else {
-            $selected[] = $asset->value;
-        }
-
-        $this->assets = $selected;
-        $this->resetErrorBag('assets');
-    }
-
-    /**
-     * Validate every answer, then reveal the result.
-     */
-    public function submit(): void
+    public function submit(array $answers): array
     {
         if ($this->submitted) {
-            return;
+            return ['ok' => true];
         }
 
-        $this->validate($this->quizRules(), [], $this->quizAttributes());
+        $validator = Validator::make($this->normalise($answers), $this->quizRules(), [], $this->quizAttributes());
 
-        $this->resetErrorBag();
+        if ($validator->fails()) {
+            $errors = $validator->errors();
+            $this->setErrorBag($errors);
+
+            return [
+                'ok' => false,
+                'step' => $this->firstInvalidStep($errors->toArray()),
+                'message' => (string) $errors->first(),
+            ];
+        }
+
+        $this->answers = $validator->validated();
         $this->submitted = true;
-        $this->moveToStep(count(self::STEP_FIELDS));
+        $this->resetErrorBag();
+
+        return ['ok' => true];
     }
 
     /**
@@ -218,71 +128,46 @@ class QuickAssessment extends Component
      */
     public function restart(): void
     {
-        $this->reset('currentStatus', 'target', 'registerTimeline', 'assets', 'weeklyPrepTime', 'submitted');
-        $this->moveToStep(1);
+        $this->reset('answers', 'submitted');
         $this->resetErrorBag();
     }
 
     /**
-     * Get the ordered question field names.
+     * Get the ordered questions rendered as one Alpine panel per question.
      *
-     * @return array<int, string>
+     * @return array<int, array{field: string, title: string, description: string}>
      */
     #[Computed]
-    public function steps(): array
+    public function questions(): array
     {
-        return array_values(self::STEP_FIELDS);
+        $questions = [];
+
+        foreach (self::STEP_FIELDS as $field) {
+            $questions[] = [
+                'field' => $field,
+                'title' => self::STEP_META[$field]['title'],
+                'description' => self::STEP_META[$field]['description'],
+            ];
+        }
+
+        return $questions;
     }
 
     /**
-     * Get the field backing the question currently displayed.
-     */
-    #[Computed]
-    public function activeField(): string
-    {
-        return self::STEP_FIELDS[$this->step] ?? self::STEP_FIELDS[1];
-    }
-
-    /**
-     * Get the copy of the active question.
+     * Get the temporary answers the browser starts from.
      *
-     * @return array<string, string>
+     * @return array<string, mixed>
      */
     #[Computed]
-    public function stepMeta(): array
+    public function initialAnswers(): array
     {
-        $meta = self::STEP_META;
-
-        return $meta[$this->activeField] ?? ['title' => '', 'description' => ''];
-    }
-
-    /**
-     * Get the title of the active question.
-     */
-    #[Computed]
-    public function currentTitle(): string
-    {
-        return $this->stepMeta['title'];
-    }
-
-    /**
-     * Get the helper text of the active question.
-     */
-    #[Computed]
-    public function currentDescription(): string
-    {
-        return $this->stepMeta['description'];
-    }
-
-    /**
-     * Get the completion percentage of the mini wizard.
-     */
-    #[Computed]
-    public function progressPercentage(): int
-    {
-        $total = count(self::STEP_FIELDS);
-
-        return (int) round($this->step / $total * 100);
+        return [
+            'currentStatus' => $this->stringValue($this->answers['currentStatus'] ?? null),
+            'target' => $this->stringValue($this->answers['target'] ?? null),
+            'registerTimeline' => $this->stringValue($this->answers['registerTimeline'] ?? null),
+            'assets' => $this->assetValues($this->answers['assets'] ?? []),
+            'weeklyPrepTime' => $this->stringValue($this->answers['weeklyPrepTime'] ?? null),
+        ];
     }
 
     /**
@@ -295,10 +180,10 @@ class QuickAssessment extends Component
             return null;
         }
 
-        $status = QuickProfilingStatus::tryFrom((string) $this->currentStatus);
-        $goal = QuickProfilingGoal::tryFrom((string) $this->target);
-        $timeline = QuickProfilingTimeline::tryFrom((string) $this->registerTimeline);
-        $weekly = QuickProfilingWeeklyTime::tryFrom((string) $this->weeklyPrepTime);
+        $status = QuickProfilingStatus::tryFrom((string) ($this->answers['currentStatus'] ?? ''));
+        $goal = QuickProfilingGoal::tryFrom((string) ($this->answers['target'] ?? ''));
+        $timeline = QuickProfilingTimeline::tryFrom((string) ($this->answers['registerTimeline'] ?? ''));
+        $weekly = QuickProfilingWeeklyTime::tryFrom((string) ($this->answers['weeklyPrepTime'] ?? ''));
 
         if ($status === null || $goal === null || $timeline === null || $weekly === null) {
             return null;
@@ -306,7 +191,7 @@ class QuickAssessment extends Component
 
         $assets = [];
 
-        foreach ($this->assets as $asset) {
+        foreach ($this->assetValues($this->answers['assets'] ?? []) as $asset) {
             $enum = QuickProfilingAsset::tryFrom($asset);
 
             if ($enum instanceof QuickProfilingAsset) {
@@ -324,6 +209,51 @@ class QuickAssessment extends Component
     }
 
     /**
+     * Shape the submitted batch into the exact payload the rules expect.
+     *
+     * @param  array<string, mixed>  $answers
+     * @return array<string, mixed>
+     */
+    protected function normalise(array $answers): array
+    {
+        $payload = [];
+
+        foreach (array_values(self::STEP_FIELDS) as $field) {
+            $value = $answers[$field] ?? null;
+
+            if ($field === 'assets') {
+                $payload[$field] = is_array($value) ? $this->assetValues($value) : null;
+
+                continue;
+            }
+
+            $payload[$field] = is_scalar($value) ? trim((string) $value) : null;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Keep the submitted asset values as a clean list of strings.
+     *
+     * Unknown values are kept so the enum rule rejects them instead of the
+     * backend silently dropping a tampered answer.
+     *
+     * @return array<int, string>
+     */
+    protected function assetValues(mixed $value): array
+    {
+        if (! is_array($value)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(
+            $value,
+            fn (mixed $item): bool => is_string($item) && $item !== '',
+        )));
+    }
+
+    /**
      * Get the validation rules for the whole assessment.
      *
      * @return array<string, array<int, mixed>>
@@ -338,18 +268,6 @@ class QuickAssessment extends Component
             'assets.*' => [Rule::enum(QuickProfilingAsset::class)],
             'weeklyPrepTime' => ['required', Rule::enum(QuickProfilingWeeklyTime::class)],
         ];
-    }
-
-    /**
-     * Get the validation rules for a single question.
-     *
-     * @return array<string, array<int, mixed>>
-     */
-    protected function stepRules(string $field): array
-    {
-        $rules = $this->quizRules();
-
-        return isset($rules[$field]) ? [$field => $rules[$field]] : [];
     }
 
     /**
@@ -384,5 +302,34 @@ class QuickAssessment extends Component
             'assets' => 'modal persiapan',
             'weeklyPrepTime' => 'waktu persiapan mingguan',
         ];
+    }
+
+    /**
+     * Find the question number that holds the first validation error.
+     *
+     * @param  array<string, array<int, string>>  $errors
+     */
+    protected function firstInvalidStep(array $errors): int
+    {
+        $fields = array_values(self::STEP_FIELDS);
+
+        foreach (array_keys($errors) as $key) {
+            $field = explode('.', (string) $key)[0];
+            $index = array_search($field, $fields, true);
+
+            if ($index !== false) {
+                return $index + 1;
+            }
+        }
+
+        return 1;
+    }
+
+    /**
+     * Normalise a scalar answer into a nullable string.
+     */
+    protected function stringValue(mixed $value): ?string
+    {
+        return is_scalar($value) && (string) $value !== '' ? (string) $value : null;
     }
 }

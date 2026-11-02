@@ -37,12 +37,15 @@ class Recommendation extends Component
     {
         $user = $this->user();
 
+        // One read backs both the selected ids and the primary flag.
+        $applications = $user->scholarshipApplications()->get(['scholarship_id', 'is_primary']);
+
         $this->selected = array_values(array_map(
-            fn (mixed $id): int => (int) $id,
-            $user->scholarshipApplications()->pluck('scholarship_id')->all(),
+            fn (string $id): int => (int) $id,
+            $applications->pluck('scholarship_id')->all(),
         ));
 
-        $primary = $user->scholarshipApplications()->where('is_primary', true)->value('scholarship_id');
+        $primary = $applications->firstWhere('is_primary', true)?->scholarship_id;
 
         $this->primary = is_numeric($primary) ? (int) $primary : null;
     }

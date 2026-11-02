@@ -1,3 +1,3 @@
 <x-layouts::app.sidebar :title="$title ?? null">
-    {{ $slot }}
+    {{$slot}}
 </x-layouts::app.sidebar>

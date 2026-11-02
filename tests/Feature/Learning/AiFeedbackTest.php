@@ -4,6 +4,7 @@ use App\Ai\Agents\PracticeFeedbackAgent;
 use App\Contracts\AiFeedbackServiceInterface;
 use App\Contracts\PracticeSubmissionServiceInterface;
 use App\Exceptions\AiFeedbackException;
+use App\Jobs\EvaluatePracticeFeedback;
 use App\Models\Fase;
 use App\Models\Module;
 use App\Models\PracticeForm;
@@ -103,7 +104,19 @@ test('a failed evaluation keeps the submission and marks it for retry', function
         ['jawaban' => 'Jawaban yang harus tetap aman.'],
     );
 
+    // The answers survive the failed provider call — the evaluation now runs
+    // in the queue, so the status first shows the work as safely stored.
     expect($response->fresh()->answers['jawaban'])->toContain('Jawaban yang harus tetap aman.')
+        ->and($response->ai_status->value)->toBe('processing');
+
+    // Running the queued evaluation against the failing provider must mark
+    // the stored submission as failed so the mentee can retry explicitly.
+    (new EvaluatePracticeFeedback($response->id, $this->form->id))
+        ->handle(app(PracticeSubmissionServiceInterface::class));
+
+    $response->refresh();
+
+    expect($response->answers['jawaban'])->toContain('Jawaban yang harus tetap aman.')
         ->and($response->ai_status->value)->toBe('failed')
         ->and($response->ai_error)->not->toBeNull()
         ->and($response->ai_score)->toBeNull();

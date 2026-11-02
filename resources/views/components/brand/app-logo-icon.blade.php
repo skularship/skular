@@ -1,2 +1,4 @@
-{{-- Skular mark: graduation cap with a rising path, drawn on a 40x42 grid. --}}
-<img src="/skular-logo.png" class="h-12 w-auto"/>
+{{-- Skular wordmark. It sits above the fold in every layout, so it is
+     intentionally not lazy loaded, and its intrinsic size is declared to
+     reserve space before the file arrives. --}}
+<img src="/skular-logo.png" alt="{{ config('seo.site_name') }}" width="530" height="222" class="h-12 w-auto" />

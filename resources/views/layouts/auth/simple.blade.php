@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
-        @include('partials.head')
+        {{-- Authentication screens may be crawled and followed, never indexed. --}}
+        @include('partials.head', ['robots' => $robots ?? 'noindex, follow'])
     </head>
     <body class="min-h-screen bg-linear-to-b from-warm-cream to-brand-amber/15 antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
         <div class="flex min-h-svh flex-col items-center justify-center gap-6 p-4 sm:p-6 md:p-10">

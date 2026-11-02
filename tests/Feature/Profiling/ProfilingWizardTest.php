@@ -5,6 +5,25 @@ use App\Models\Cluster;
 use App\Models\User;
 use Livewire\Livewire;
 
+/**
+ * A complete, valid profiling batch as the browser sends it.
+ *
+ * @return array<string, string>
+ */
+function validProfilingAnswers(int $cluster_id): array
+{
+    return [
+        'level' => 'S1',
+        'age' => '21',
+        'gpa' => '3.75',
+        'has_sktm' => '1',
+        'desired_level' => 'S2',
+        'desired_location' => 'luar_negeri',
+        'cluster' => (string) $cluster_id,
+        'phone' => '081234567890',
+    ];
+}
+
 test('a guest is redirected to login before profiling', function () {
     $this->get(route('profiling'))->assertRedirect(route('login'));
 });
@@ -26,125 +45,59 @@ test('the wizard starts on the first question', function () {
         ->assertSee('Jenjang');
 });
 
-test('an answered step is stored as a session draft before moving on', function () {
-    $user = User::factory()->create();
-
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->set('level', 's1')
-        ->call('next')
-        ->assertHasNoErrors()
-        ->assertSet('step', 2);
-
-    expect(session('profiling_level'))->toBe('s1');
+test('the wizard navigates and answers on the client without step endpoints', function () {
+    expect(method_exists(Wizard::class, 'next'))->toBeFalse()
+        ->and(method_exists(Wizard::class, 'goBack'))->toBeFalse()
+        ->and(method_exists(Wizard::class, 'goToStep'))->toBeFalse()
+        ->and(method_exists(Wizard::class, 'selectChoice'))->toBeFalse()
+        ->and(method_exists(Wizard::class, 'finish'))->toBeFalse();
 });
 
-test('the next question replaces the one just answered', function () {
+test('every single choice question renders one radio group bound to frontend state', function () {
+    $cluster = Cluster::factory()->create();
     $user = User::factory()->create();
 
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->assertSee('Pilih jenjang pendidikanmu saat ini')
-        ->set('level', 's1')
-        ->call('next')
-        ->assertSet('step', 2)
-        ->assertSee('Berapa usiamu sekarang?')
-        ->assertDontSee('Pilih jenjang pendidikanmu saat ini')
-        ->call('goBack')
-        ->assertSet('step', 1)
-        ->assertSee('Pilih jenjang pendidikanmu saat ini')
-        ->assertDontSee('Berapa usiamu sekarang?');
+    $this->actingAs($user)
+        ->get(route('profiling'))
+        ->assertOk()
+        ->assertSee('x-model="answers.level"', false)
+        ->assertSee('name="answers.level"', false)
+        ->assertSee('x-model="answers.desired_location"', false)
+        ->assertSee('x-model="answers.has_sktm"', false)
+        ->assertSee('x-model="answers.cluster"', false)
+        ->assertSee('type="radio"', false)
+        ->assertSee('data-test="option-cluster-'.$cluster->id.'"', false)
+        ->assertDontSee('$wire.set', false)
+        ->assertDontSee('wire:model="level"', false);
 });
 
-test('the stepper jumps straight to another question', function () {
+test('answering a question does not write anything to the profile', function () {
     $user = User::factory()->create();
 
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->call('goToStep', 5)
-        ->assertSet('step', 5)
-        ->assertSee('Jenjang apa yang ingin kamu kejar?')
-        ->assertDontSee('Pilih jenjang pendidikanmu saat ini')
-        ->call('goToStep', 99)
-        ->assertSet('step', 8);
+    Livewire::actingAs($user)->test(Wizard::class);
+
+    expect($user->refresh()->level)->toBeNull()
+        ->and($user->age)->toBeNull()
+        ->and($user->profile_completed_at)->toBeNull();
 });
 
-test('a step cannot be skipped without an answer', function () {
-    $user = User::factory()->create();
-
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->call('next')
-        ->assertHasErrors(['level' => 'required'])
-        ->assertSet('step', 1);
-});
-
-test('the age question enforces the allowed range', function () {
-    $user = User::factory()->create();
-
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->set('step', 2)
-        ->set('age', '14')
-        ->call('next')
-        ->assertHasErrors(['age' => 'min']);
-
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->set('step', 2)
-        ->set('age', '61')
-        ->call('next')
-        ->assertHasErrors(['age' => 'max']);
-});
-
-test('the gpa question rejects values outside the four point scale', function () {
-    $user = User::factory()->create();
-
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->set('step', 3)
-        ->set('gpa', '4.5')
-        ->call('next')
-        ->assertHasErrors(['gpa' => 'max']);
-});
-
-test('the phone question only accepts digits, plus, dash and spaces', function () {
-    $user = User::factory()->create();
-
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->set('step', 8)
-        ->set('phone', 'nomor saya 0812')
-        ->call('next')
-        ->assertHasErrors(['phone' => 'regex']);
-});
-
-test('finishing the wizard persists the profile and opens the recommendations', function () {
+test('finishing the wizard persists the whole batch and opens the recommendations', function () {
     $cluster = Cluster::factory()->create();
     $user = User::factory()->create();
 
     Livewire::actingAs($user)
         ->test(Wizard::class)
-        ->set('step', 8)
-        ->set('level', 's1')
-        ->set('age', '21')
-        ->set('gpa', '3.75')
-        ->set('has_sktm', true)
-        ->set('desired_level', 's2')
-        ->set('desired_location', 'luar_negeri')
-        ->set('cluster', (string) $cluster->id)
-        ->set('phone', '081234567890')
-        ->call('finish')
+        ->call('submit', validProfilingAnswers($cluster->id))
         ->assertHasNoErrors()
         ->assertRedirect(route('profiling.recommendation'));
 
     $user->refresh();
 
-    expect($user->level->value)->toBe('s1')
+    expect($user->level->value)->toBe('S1')
         ->and($user->age)->toBe(21)
         ->and((float) $user->gpa)->toBe(3.75)
         ->and($user->has_sktm)->toBeTrue()
-        ->and($user->desired_level->value)->toBe('s2')
+        ->and($user->desired_level->value)->toBe('S2')
         ->and($user->desired_location->value)->toBe('luar_negeri')
         ->and($user->cluster_id)->toBe($cluster->id)
         ->and($user->phone)->toBe('081234567890')
@@ -152,23 +105,69 @@ test('finishing the wizard persists the profile and opens the recommendations', 
         ->and(session('profiling_level'))->toBeNull();
 });
 
-test('finishing with a missing answer reports the error and returns to that step', function () {
+test('an incomplete batch is rejected and points at the first missing question', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test(Wizard::class)
+        ->call('submit', [])
+        ->assertReturned(fn (array $result): bool => $result['ok'] === false && $result['step'] === 1)
+        ->assertHasErrors(['level']);
+
+    expect($user->refresh()->profile_completed_at)->toBeNull();
+});
+
+test('the age question enforces the allowed range on the final batch', function () {
     $cluster = Cluster::factory()->create();
     $user = User::factory()->create();
 
     Livewire::actingAs($user)
         ->test(Wizard::class)
-        ->set('step', 8)
-        ->set('level', 's1')
-        ->set('age', '21')
-        ->set('gpa', '3.75')
-        ->set('has_sktm', false)
-        ->set('desired_level', 's1')
-        ->set('desired_location', 'dalam_negeri')
-        ->set('cluster', (string) $cluster->id)
-        ->call('finish')
-        ->assertHasErrors(['phone' => 'required'])
-        ->assertSet('step', 8);
+        ->call('submit', [...validProfilingAnswers($cluster->id), 'age' => '14'])
+        ->assertReturned(fn (array $result): bool => $result['ok'] === false && $result['step'] === 2)
+        ->assertHasErrors(['age']);
+
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test(Wizard::class)
+        ->call('submit', [...validProfilingAnswers($cluster->id), 'age' => '61'])
+        ->assertHasErrors(['age']);
+
+    expect($user->refresh()->profile_completed_at)->toBeNull();
+});
+
+test('the gpa question rejects values outside the four point scale', function () {
+    $cluster = Cluster::factory()->create();
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test(Wizard::class)
+        ->call('submit', [...validProfilingAnswers($cluster->id), 'gpa' => '4.5'])
+        ->assertReturned(fn (array $result): bool => $result['ok'] === false && $result['step'] === 3)
+        ->assertHasErrors(['gpa']);
+});
+
+test('the phone question only accepts digits, plus, dash and spaces', function () {
+    $cluster = Cluster::factory()->create();
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test(Wizard::class)
+        ->call('submit', [...validProfilingAnswers($cluster->id), 'phone' => 'nomor saya 0812'])
+        ->assertReturned(fn (array $result): bool => $result['ok'] === false && $result['step'] === 8)
+        ->assertHasErrors(['phone']);
+});
+
+test('an option that is not offered by the backend is rejected', function () {
+    $cluster = Cluster::factory()->create();
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test(Wizard::class)
+        ->call('submit', [...validProfilingAnswers($cluster->id), 'level' => 'sarjana'])
+        ->assertReturned(fn (array $result): bool => $result['ok'] === false && $result['step'] === 1)
+        ->assertHasErrors(['level']);
 
     expect($user->refresh()->profile_completed_at)->toBeNull();
 });
@@ -179,133 +178,91 @@ test('an inactive cluster cannot be selected', function () {
 
     Livewire::actingAs($user)
         ->test(Wizard::class)
-        ->set('step', 7)
-        ->set('cluster', (string) $cluster->id)
-        ->call('next')
-        ->assertHasErrors(['cluster' => 'exists']);
+        ->call('submit', validProfilingAnswers($cluster->id))
+        ->assertReturned(fn (array $result): bool => $result['ok'] === false && $result['step'] === 7)
+        ->assertHasErrors(['cluster']);
+});
+
+test('the sktm answer maps the card value onto the stored boolean', function () {
+    $cluster = Cluster::factory()->create();
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test(Wizard::class)
+        ->call('submit', [...validProfilingAnswers($cluster->id), 'has_sktm' => '0'])
+        ->assertHasNoErrors();
+
+    expect($user->refresh()->has_sktm)->toBeFalse();
+});
+
+test('extra keys in the batch are ignored and cannot overwrite the profile', function () {
+    $cluster = Cluster::factory()->create();
+    $other = Cluster::factory()->create();
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test(Wizard::class)
+        ->call('submit', [
+            ...validProfilingAnswers($cluster->id),
+            'cluster_id' => (string) $other->id,
+            'profile_completed_at' => '2000-01-01 00:00:00',
+        ])
+        ->assertHasNoErrors();
+
+    $user->refresh();
+
+    expect($user->cluster_id)->toBe($cluster->id)
+        ->and($user->profile_completed_at?->year)->toBe(now()->year);
+});
+
+test('submitting the same batch twice does not create duplicate data', function () {
+    $cluster = Cluster::factory()->create();
+    $user = User::factory()->create();
+    $answers = validProfilingAnswers($cluster->id);
+
+    $component = Livewire::actingAs($user)->test(Wizard::class);
+
+    $component->call('submit', $answers)->assertHasNoErrors();
+    $component->call('submit', $answers)->assertHasNoErrors();
+
+    expect(User::query()->count())->toBe(1)
+        ->and($user->refresh()->cluster_id)->toBe($cluster->id)
+        ->and($user->hasCompletedProfile())->toBeTrue();
 });
 
 test('a returning mentee sees their stored answers pre-filled', function () {
     $cluster = Cluster::factory()->create();
     $user = User::factory()->profiled()->create([
-        'level' => 's1',
+        'level' => 'S1',
         'age' => 22,
         'cluster_id' => $cluster->id,
     ]);
 
     Livewire::actingAs($user)
         ->test(Wizard::class)
-        ->assertSet('level', 's1')
-        ->assertSet('age', '22')
-        ->assertSet('cluster', (string) $cluster->id);
+        ->assertSet('answers.level', 'S1')
+        ->assertSet('answers.age', 22)
+        ->assertSet('answers.cluster', (string) $cluster->id);
 });
 
-test('selecting a card releases the previous answer on single-choice steps', function () {
-    $user = User::factory()->create();
-
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->set('level', 'sma')
-        ->call('selectChoice', 'level', 's1')
-        ->assertSet('level', 's1')
-        ->call('selectChoice', 'level', 'smk')
-        ->assertSet('level', 'smk');
-});
-
-test('tapping the active card clears it and shows the required error again', function () {
-    $user = User::factory()->create();
-
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->set('step', 6)
-        ->set('desired_location', 'dalam_negeri')
-        ->call('selectChoice', 'desired_location', 'dalam_negeri')
-        ->assertSet('desired_location', null)
-        ->call('next')
-        ->assertHasErrors(['desired_location']);
-});
-
-test('selecting a card clears the validation error immediately', function () {
-    $user = User::factory()->create();
-
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->call('next')
-        ->assertHasErrors(['level' => 'required'])
-        ->call('selectChoice', 'level', 's1')
-        ->assertHasNoErrors();
-});
-
-test('the sktm card toggles a boolean answer', function () {
-    $user = User::factory()->create();
-
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->assertSet('has_sktm', null)
-        ->call('selectChoice', 'has_sktm', '1')
-        ->assertSet('has_sktm', true)
-        ->call('selectChoice', 'has_sktm', '0')
-        ->assertSet('has_sktm', false)
-        ->call('selectChoice', 'has_sktm', '0')
-        ->assertSet('has_sktm', null);
-});
-
-test('enter on the last step submits the whole profile like the finish button', function () {
+test('a rejected batch writes nothing and can be retried without losing the profile', function () {
     $cluster = Cluster::factory()->create();
     $user = User::factory()->create();
 
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->set('step', 8)
-        ->set('level', 's1')
-        ->set('age', '21')
-        ->set('gpa', '3.75')
-        ->set('has_sktm', true)
-        ->set('desired_level', 's2')
-        ->set('desired_location', 'luar_negeri')
-        ->set('cluster', (string) $cluster->id)
-        ->set('phone', '081234567890')
-        ->call('submitStep')
+    $component = Livewire::actingAs($user)->test(Wizard::class);
+
+    $component
+        ->call('submit', [...validProfilingAnswers($cluster->id), 'phone' => 'nomor saya'])
+        ->assertHasErrors(['phone'])
+        ->assertSet('answers.level', null)
+        ->assertSet('step', 1);
+
+    expect($user->refresh()->profile_completed_at)->toBeNull();
+
+    $component
+        ->call('submit', validProfilingAnswers($cluster->id))
         ->assertHasNoErrors()
         ->assertRedirect(route('profiling.recommendation'));
 
     expect($user->refresh()->hasCompletedProfile())->toBeTrue();
-});
-
-test('a failed validation on submit keeps the typed values of the current step', function () {
-    $user = User::factory()->create();
-
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->set('step', 2)
-        ->set('age', '61')
-        ->call('submitStep')
-        ->assertHasErrors(['age' => 'max'])
-        ->assertSet('step', 2)
-        ->assertSet('age', '61');
-});
-
-test('moving back and forth keeps the answers of every step', function () {
-    $cluster = Cluster::factory()->create();
-    $user = User::factory()->create();
-
-    Livewire::actingAs($user)
-        ->test(Wizard::class)
-        ->set('level', 's1')
-        ->set('age', '21')
-        ->set('gpa', '3.75')
-        ->set('has_sktm', true)
-        ->set('desired_level', 's2')
-        ->set('desired_location', 'luar_negeri')
-        ->set('cluster', (string) $cluster->id)
-        ->set('phone', '081234567890')
-        ->set('step', 4)
-        ->call('goBack')
-        ->assertSet('step', 3)
-        ->assertSet('level', 's1')
-        ->assertSet('age', '21')
-        ->assertSet('gpa', '3.75')
-        ->assertSet('desired_level', 's2')
-        ->assertSet('desired_location', 'luar_negeri')
-        ->assertSet('cluster', (string) $cluster->id);
 });

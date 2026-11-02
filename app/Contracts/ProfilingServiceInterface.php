@@ -14,19 +14,14 @@ interface ProfilingServiceInterface
     public function steps(): array;
 
     /**
-     * Get the current value of every profiling step, falling back to persisted data.
+     * Get the persisted value of every profiling step.
      *
      * @return array<string, mixed>
      */
     public function values(User $user): array;
 
     /**
-     * Persist a single profiling step in the session.
-     */
-    public function put(string $step, mixed $value): void;
-
-    /**
-     * Get the filled/completed progress of the profiling wizard.
+     * Get the filled/completed progress of the persisted profile.
      *
      * @return array{completed: int, total: int, percentage: int}
      */
@@ -38,12 +33,9 @@ interface ProfilingServiceInterface
     public function isComplete(User $user): bool;
 
     /**
-     * Persist every profiling step onto the mentee and clear the session draft.
+     * Validate a whole profiling batch and persist it as one transaction.
+     *
+     * @param  array<string, mixed>  $answers
      */
-    public function complete(User $user): User;
-
-    /**
-     * Discard the session draft.
-     */
-    public function forget(): void;
+    public function complete(User $user, array $answers): User;
 }

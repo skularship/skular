@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
-        @include('partials.head')
+        @include('partials.head', ['robots' => 'noindex, follow'])
     </head>
     <body class="min-h-screen bg-white antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
         <div class="relative grid min-h-dvh flex-col items-center justify-center px-6 py-8 sm:px-0 sm:py-0 lg:max-w-none lg:grid-cols-2 lg:px-0">

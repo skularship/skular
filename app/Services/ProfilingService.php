@@ -7,7 +7,7 @@ use App\Contracts\ProfilingServiceInterface;
 use App\Enums\EducationLevel;
 use App\Enums\LocationScope;
 use App\Models\User;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ProfilingService implements ProfilingServiceInterface
@@ -41,7 +41,7 @@ class ProfilingService implements ProfilingServiceInterface
     }
 
     /**
-     * Get the current value of every profiling step, falling back to persisted data.
+     * Get the persisted value of every profiling step.
      *
      * @return array<string, mixed>
      */
@@ -50,22 +50,14 @@ class ProfilingService implements ProfilingServiceInterface
         $values = [];
 
         foreach (self::STEPS as $step) {
-            $values[$step] = $this->value($user, $step);
+            $values[$step] = $this->persistedValue($user, $step);
         }
 
         return $values;
     }
 
     /**
-     * Persist a single profiling step in the session.
-     */
-    public function put(string $step, mixed $value): void
-    {
-        Session::put($this->sessionKey($step), $value);
-    }
-
-    /**
-     * Get the filled/completed progress of the profiling wizard.
+     * Get the filled/completed progress of the persisted profile.
      *
      * @return array{completed: int, total: int, percentage: int}
      */
@@ -75,7 +67,7 @@ class ProfilingService implements ProfilingServiceInterface
         $completed = 0;
 
         foreach (self::STEPS as $step) {
-            if ($this->isFilled($this->value($user, $step))) {
+            if ($this->isFilled($this->persistedValue($user, $step))) {
                 $completed++;
             }
         }
@@ -102,40 +94,30 @@ class ProfilingService implements ProfilingServiceInterface
     }
 
     /**
-     * Persist every profiling step onto the mentee and clear the session draft.
+     * Validate a whole profiling batch and persist it as one transaction.
+     *
+     * @param  array<string, mixed>  $answers
      */
-    public function complete(User $user): User
+    public function complete(User $user, array $answers): User
     {
-        $values = $this->values($user);
-
-        $validated = Validator::make($values, $this->profilingRules(), $this->profilingMessages())
+        $validated = Validator::make($answers, $this->profilingRules(), $this->profilingMessages())
             ->validate();
 
-        $user->forceFill([
-            'level' => EducationLevel::from((string) $validated['level']),
-            'age' => (int) $validated['age'],
-            'gpa' => (float) $validated['gpa'],
-            'has_sktm' => (bool) $validated['has_sktm'],
-            'desired_level' => EducationLevel::from((string) $validated['desired_level']),
-            'desired_location' => LocationScope::from((string) $validated['desired_location']),
-            'cluster_id' => (int) $validated['cluster'],
-            'phone' => (string) $validated['phone'],
-            'profile_completed_at' => now(),
-        ])->save();
-
-        $this->forget();
+        DB::transaction(function () use ($user, $validated): void {
+            $user->forceFill([
+                'level' => EducationLevel::from((string) $validated['level']),
+                'age' => (int) $validated['age'],
+                'gpa' => (float) $validated['gpa'],
+                'has_sktm' => (bool) $validated['has_sktm'],
+                'desired_level' => EducationLevel::from((string) $validated['desired_level']),
+                'desired_location' => LocationScope::from((string) $validated['desired_location']),
+                'cluster_id' => (int) $validated['cluster'],
+                'phone' => (string) $validated['phone'],
+                'profile_completed_at' => now(),
+            ])->save();
+        });
 
         return $user;
-    }
-
-    /**
-     * Discard the session draft.
-     */
-    public function forget(): void
-    {
-        foreach (self::STEPS as $step) {
-            Session::forget($this->sessionKey($step));
-        }
     }
 
     /**
@@ -149,16 +131,6 @@ class ProfilingService implements ProfilingServiceInterface
             'phone.regex' => 'Nomor telepon hanya boleh berisi angka, tanda +, tanda -, dan spasi.',
             'cluster.exists' => 'Bidang minat yang dipilih tidak tersedia. Silakan pilih ulang.',
         ];
-    }
-
-    /**
-     * Resolve the current value of a profiling step, preferring the session draft.
-     */
-    private function value(User $user, string $step): mixed
-    {
-        $session_value = Session::get($this->sessionKey($step));
-
-        return $this->isFilled($session_value) ? $session_value : $this->persistedValue($user, $step);
     }
 
     /**
@@ -185,13 +157,5 @@ class ProfilingService implements ProfilingServiceInterface
     private function isFilled(mixed $value): bool
     {
         return $value !== null && $value !== '';
-    }
-
-    /**
-     * Get the session key holding a profiling step draft.
-     */
-    private function sessionKey(string $step): string
-    {
-        return 'profiling_'.$step;
     }
 }

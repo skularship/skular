@@ -9,13 +9,13 @@ enum EducationLevel: string implements HasLabel
 {
     use HasSelectOptions;
 
-    case SMA = 'sma';
-    case SMK = 'smk';
-    case D3 = 'd3';
-    case D4 = 'd4';
-    case S1 = 's1';
-    case S2 = 's2';
-    case S3 = 's3';
+    case SMA = 'SMA';
+    case SMK = 'SMK';
+    case D3 = 'D3';
+    case D4 = 'D4';
+    case S1 = 'S1';
+    case S2 = 'S2';
+    case S3 = 'S3';
 
     public function getLabel(): string
     {
@@ -44,6 +44,6 @@ enum EducationLevel: string implements HasLabel
      */
     public function matchingLevelValues(): array
     {
-        return array_map(fn (self $level): string => $level->value, $this->matchingLevels());
+        return array_map(fn(self $level): string => $level->value, $this->matchingLevels());
     }
 }

@@ -5,6 +5,8 @@
     use App\Enums\QuickProfilingTimeline;
     use App\Enums\QuickProfilingWeeklyTime;
     use App\Enums\ReadinessCategory;
+
+    $question_count = count($this->questions);
 @endphp
 
 <section
@@ -156,132 +158,341 @@
                     </p>
                 </div>
             @else
-                <form wire:submit="advance" class="flex flex-col gap-5" data-test="quick-form">
+                {{--
+                    Temporary frontend state + batch submission.
+
+                    Every answer stays in this Alpine object. Choosing an option
+                    and moving between questions never reaches the server, so the
+                    interaction is instant and no database write can happen while
+                    the visitor is still answering. The whole batch is handed to
+                    $wire.submit() only from finish(), and the backend re-validates
+                    it before scoring.
+                --}}
+                <form
+                    class="flex flex-col gap-5"
+                    data-test="quick-form"
+                    x-data="{
+                        questions: @js($this->questions),
+                        answers: @js($this->initialAnswers),
+                        step: 1,
+                        submitting: false,
+                        error: '',
+                        storageKey: @js(\App\Livewire\Profiling\QuickAssessment::STORAGE_KEY),
+                        none: @js(QuickProfilingAsset::None->value),
+                        init() {
+                            this.restore();
+
+                            const unanswered = this.questions.findIndex((question) => ! this.isAnswered(question.field));
+
+                            this.step = unanswered === -1 ? this.total : unanswered + 1;
+                        },
+                        get total() {
+                            return this.questions.length;
+                        },
+                        get current() {
+                            return this.questions[this.step - 1] || this.questions[0];
+                        },
+                        get percent() {
+                            return Math.round((this.step / this.total) * 100);
+                        },
+                        isAnswered(field) {
+                            const value = this.answers[field];
+
+                            if (Array.isArray(value)) {
+                                return value.length > 0;
+                            }
+
+                            return typeof value === 'string' && value.trim() !== '';
+                        },
+                        toggleAsset(value) {
+                            const picked = Array.isArray(this.answers.assets) ? [...this.answers.assets] : [];
+
+                            if (value === this.none) {
+                                this.answers.assets = picked.includes(value) ? [] : [value];
+                            } else {
+                                const withoutNone = picked.filter((item) => item !== this.none);
+
+                                this.answers.assets = withoutNone.includes(value)
+                                    ? withoutNone.filter((item) => item !== value)
+                                    : withoutNone.concat([value]);
+                            }
+
+                            this.error = '';
+                            this.save();
+                        },
+                        goTo(number) {
+                            if (number < 1 || number > this.total) {
+                                return;
+                            }
+
+                            this.error = '';
+                            this.step = number;
+                        },
+                        next() {
+                            if (! this.isAnswered(this.current.field)) {
+                                this.error = 'Pilih satu jawaban dulu sebelum lanjut.';
+
+                                return;
+                            }
+
+                            if (this.step >= this.total) {
+                                this.finish();
+
+                                return;
+                            }
+
+                            this.goTo(this.step + 1);
+                        },
+                        back() {
+                            this.goTo(this.step - 1);
+                        },
+                        finish() {
+                            if (this.submitting) {
+                                return;
+                            }
+
+                            const unanswered = this.questions.findIndex((question) => ! this.isAnswered(question.field));
+
+                            if (unanswered !== -1) {
+                                this.step = unanswered + 1;
+                                this.error = 'Masih ada pertanyaan yang belum dijawab.';
+
+                                return;
+                            }
+
+                            this.submitting = true;
+                            this.error = '';
+
+                            this.$wire.submit(this.answers).then((result) => {
+                                this.submitting = false;
+
+                                if (result && result.ok) {
+                                    this.clearSaved();
+
+                                    return;
+                                }
+
+                                if (result && typeof result.step === 'number') {
+                                    this.step = result.step;
+                                }
+
+                                this.error = (result && result.message) ? result.message : 'Jawabanmu belum bisa diproses. Coba lagi ya.';
+                            }).catch(() => {
+                                this.submitting = false;
+                                this.error = 'Koneksi bermasalah. Jawabanmu masih tersimpan di halaman ini, coba kirim ulang.';
+                            });
+                        },
+                        save() {
+                            try {
+                                window.sessionStorage.setItem(this.storageKey, JSON.stringify(this.answers));
+                            } catch (error) {
+                                // Private mode or a full quota: the in-memory state still works.
+                            }
+                        },
+                        restore() {
+                            try {
+                                const saved = JSON.parse(window.sessionStorage.getItem(this.storageKey) || 'null');
+
+                                if (! saved || typeof saved !== 'object') {
+                                    return;
+                                }
+
+                                Object.keys(this.answers).forEach((key) => {
+                                    if (! Object.prototype.hasOwnProperty.call(saved, key)) {
+                                        return;
+                                    }
+
+                                    const value = saved[key];
+
+                                    if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
+                                        return;
+                                    }
+
+                                    this.answers[key] = value;
+                                });
+                            } catch (error) {
+                                this.clearSaved();
+                            }
+                        },
+                        clearSaved() {
+                            try {
+                                window.sessionStorage.removeItem(this.storageKey);
+                            } catch (error) {
+                                // Nothing to clear.
+                            }
+                        }
+                    }"
+                    x-on:submit.prevent="next()"
+                    x-on:change="save()"
+                >
                     <div>
                         <div class="flex items-center justify-between text-xs font-semibold tracking-wide text-brand-teal uppercase dark:text-brand-teal-light">
-                            <span>{{ __('Pertanyaan :current dari :total', ['current' => $step, 'total' => count($this->steps)]) }}</span>
-                            <span>{{ $this->progressPercentage }}%</span>
+                            <span>
+                                {{ __('Pertanyaan') }}
+                                <span x-text="step" class="tabular-nums">{{ $question_count > 0 ? 1 : 0 }}</span>
+                                {{ __('dari') }} {{ $question_count }}
+                            </span>
+                            <span x-text="percent + '%'" class="tabular-nums">{{ (int) round(1 / max(1, $question_count) * 100) }}%</span>
                         </div>
 
                         <div
                             class="mt-2 h-2 w-full overflow-hidden rounded-full bg-zinc-200/80 dark:bg-white/10"
                             role="progressbar"
-                            aria-valuenow="{{ $this->progressPercentage }}"
+                            aria-valuenow="{{ (int) round(1 / max(1, $question_count) * 100) }}"
+                            x-bind:aria-valuenow="percent"
                             aria-valuemin="0"
                             aria-valuemax="100"
                             aria-label="{{ __('Progres cek kesiapan') }}"
                         >
-                            <div class="h-2 brand-gradient rounded-full transition-all duration-500 motion-reduce:transition-none" style="width: {{ $this->progressPercentage }}%"></div>
+                            <div
+                                class="h-2 brand-gradient rounded-full transition-all duration-500 motion-reduce:transition-none"
+                                style="width: {{ (int) round(1 / max(1, $question_count) * 100) }}%"
+                                x-bind:style="'width: ' + percent + '%'"
+                            ></div>
                         </div>
                     </div>
 
-                    <fieldset>
-                        <legend class="block">
-                            <span class="block text-lg font-bold text-zinc-900 dark:text-white">{{ $this->currentTitle }}</span>
-                            <span class="mt-1 block text-sm text-zinc-500 dark:text-zinc-400">{{ $this->currentDescription }}</span>
-                        </legend>
+                    @foreach ($this->questions as $index => $question)
+                        @php $number = $index + 1; @endphp
 
-                        <div class="mt-4 grid gap-3 sm:grid-cols-2">
-                            @if ($this->activeField === 'currentStatus')
-                                @foreach (QuickProfilingStatus::cases() as $option)
-                                    <x-forms.selection-card
-                                        wire:click="selectChoice('currentStatus', '{{ $option->value }}')"
-                                        :value="$option->value"
-                                        :selected="$currentStatus === $option->value"
-                                        :title="$option->getLabel()"
-                                        :description="$option->description()"
-                                        :icon="$option->icon()"
-                                        data-test="option-status-{{ $option->value }}"
-                                    />
-                                @endforeach
-                            @elseif ($this->activeField === 'target')
-                                @foreach (QuickProfilingGoal::cases() as $option)
-                                    <x-forms.selection-card
-                                        wire:click="selectChoice('target', '{{ $option->value }}')"
-                                        :value="$option->value"
-                                        :selected="$target === $option->value"
-                                        :title="$option->getLabel()"
-                                        :description="$option->description()"
-                                        :icon="$option->icon()"
-                                        data-test="option-target-{{ $option->value }}"
-                                    />
-                                @endforeach
-                            @elseif ($this->activeField === 'registerTimeline')
-                                @foreach (QuickProfilingTimeline::cases() as $option)
-                                    <x-forms.selection-card
-                                        wire:click="selectChoice('registerTimeline', '{{ $option->value }}')"
-                                        :value="$option->value"
-                                        :selected="$registerTimeline === $option->value"
-                                        :title="$option->getLabel()"
-                                        :icon="$option->icon()"
-                                        data-test="option-timeline-{{ $option->value }}"
-                                    />
-                                @endforeach
-                            @elseif ($this->activeField === 'assets')
-                                <div class="sm:col-span-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                    @foreach (QuickProfilingAsset::cases() as $option)
-                                        <x-forms.selection-card
-                                            wire:click="toggleAsset('{{ $option->value }}')"
-                                            :value="$option->value"
-                                            :selected="in_array($option->value, $assets, true)"
-                                            :title="$option->getLabel()"
-                                            :icon="$option->icon()"
-                                            data-test="option-asset-{{ $option->value }}"
-                                        />
-                                    @endforeach
-                                </div>
-                            @elseif ($this->activeField === 'weeklyPrepTime')
-                                @foreach (QuickProfilingWeeklyTime::cases() as $option)
-                                    <x-forms.selection-card
-                                        wire:click="selectChoice('weeklyPrepTime', '{{ $option->value }}')"
-                                        :value="$option->value"
-                                        :selected="$weeklyPrepTime === $option->value"
-                                        :title="$option->getLabel()"
-                                        :icon="$option->icon()"
-                                        data-test="option-weekly-{{ $option->value }}"
-                                    />
-                                @endforeach
-                            @endif
-                        </div>
-                    </fieldset>
+                        <fieldset
+                            x-show="step === {{ $number }}"
+                            @if ($number > 1) x-cloak @endif
+                            class="m-0 min-w-0 border-0 p-0"
+                        >
+                            <legend class="block">
+                                <span class="block text-lg font-bold text-zinc-900 dark:text-white">{{ __($question['title']) }}</span>
+                                <span class="mt-1 block text-sm text-zinc-500 dark:text-zinc-400">{{ __($question['description']) }}</span>
+                            </legend>
 
-                    @error($this->activeField)
+                            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                                @switch($question['field'])
+                                    @case('currentStatus')
+                                        @foreach (QuickProfilingStatus::cases() as $option)
+                                            <x-forms.selection-card
+                                                grouped="single"
+                                                model="answers.currentStatus"
+                                                :value="$option->value"
+                                                :title="$option->getLabel()"
+                                                :description="$option->description()"
+                                                :icon="$option->icon()"
+                                                data-test="option-status-{{ $option->value }}"
+                                            />
+                                        @endforeach
+                                        @break
+
+                                    @case('target')
+                                        @foreach (QuickProfilingGoal::cases() as $option)
+                                            <x-forms.selection-card
+                                                grouped="single"
+                                                model="answers.target"
+                                                :value="$option->value"
+                                                :title="$option->getLabel()"
+                                                :description="$option->description()"
+                                                :icon="$option->icon()"
+                                                data-test="option-target-{{ $option->value }}"
+                                            />
+                                        @endforeach
+                                        @break
+
+                                    @case('registerTimeline')
+                                        @foreach (QuickProfilingTimeline::cases() as $option)
+                                            <x-forms.selection-card
+                                                grouped="single"
+                                                model="answers.registerTimeline"
+                                                :value="$option->value"
+                                                :title="$option->getLabel()"
+                                                :icon="$option->icon()"
+                                                data-test="option-timeline-{{ $option->value }}"
+                                            />
+                                        @endforeach
+                                        @break
+
+                                    @case('assets')
+                                        <div class="grid gap-3 sm:col-span-2 sm:grid-cols-2 lg:grid-cols-3">
+                                            @foreach (QuickProfilingAsset::cases() as $option)
+                                                <x-forms.selection-card
+                                                    grouped="multi"
+                                                    model="answers.assets"
+                                                    change="toggleAsset"
+                                                    :value="$option->value"
+                                                    :title="$option->getLabel()"
+                                                    :icon="$option->icon()"
+                                                    data-test="option-asset-{{ $option->value }}"
+                                                />
+                                            @endforeach
+                                        </div>
+                                        @break
+
+                                    @case('weeklyPrepTime')
+                                        @foreach (QuickProfilingWeeklyTime::cases() as $option)
+                                            <x-forms.selection-card
+                                                grouped="single"
+                                                model="answers.weeklyPrepTime"
+                                                :value="$option->value"
+                                                :title="$option->getLabel()"
+                                                :icon="$option->icon()"
+                                                data-test="option-weekly-{{ $option->value }}"
+                                            />
+                                        @endforeach
+                                        @break
+                                @endswitch
+                            </div>
+                        </fieldset>
+                    @endforeach
+
+                    @if ($errors->any())
                         <x-feedback.callout variant="warning" icon="exclamation-triangle" :heading="__('Periksa lagi ya')">
-                            {{ $message }}
+                            {{ $errors->first() }}
                         </x-feedback.callout>
-                    @enderror
+                    @endif
+
+                    <div
+                        x-show="error"
+                        x-cloak
+                        role="alert"
+                        class="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-950 dark:text-amber-200"
+                    >
+                        <span class="font-medium" x-text="error"></span>
+                    </div>
 
                     <div class="flex flex-col-reverse gap-3 border-t border-zinc-200/80 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
                         <div>
-                            @if ($step > 1)
-                                <x-actions.button type="button" variant="ghost" icon="arrow-left" wire:click="goBack" data-test="quick-back">
-                                    {{ __('Kembali') }}
-                                </x-actions.button>
-                            @endif
+                            <x-actions.button type="button" variant="ghost" icon="arrow-left" x-on:click="back()" x-show="step > 1" x-cloak data-test="quick-back">
+                                {{ __('Kembali') }}
+                            </x-actions.button>
                         </div>
 
-                        @if ($step < count($this->steps))
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
                             <x-actions.button
-                                type="submit"
+                                type="button"
                                 iconTrailing="arrow-right"
-                                loading="profiling.save"
-                                loading-target="advance"
+                                x-on:click="next()"
+                                x-show="step < total"
+                                x-bind:disabled="! isAnswered(current.field) || submitting"
                                 data-test="quick-next"
                             >
                                 {{ __('Lanjut') }}
                             </x-actions.button>
-                        @else
+
                             <x-actions.button
-                                type="submit"
+                                type="button"
                                 iconTrailing="sparkles"
-                                loading="profiling.readiness"
-                                loading-target="advance"
+                                x-on:click="finish()"
+                                x-show="step >= total"
+                                x-cloak
+                                x-bind:disabled="submitting"
                                 data-test="quick-submit"
                             >
-                                {{ __('Lihat Hasil Kesiapan') }}
+                                <span x-show="! submitting">{{ __('Lihat Hasil Kesiapan') }}</span>
+                                <span x-show="submitting" x-cloak>{{ __('Menghitung hasil…') }}</span>
                             </x-actions.button>
-                        @endif
+                        </div>
                     </div>
+
+                    <p class="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                        {{ __('Jawabanmu baru dikirim saat kamu menekan tombol hasil di pertanyaan terakhir.') }}
+                    </p>
                 </form>
             @endif
         </div>

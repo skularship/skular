@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
-        @include('partials.head')
+        {{-- Every page behind this shell requires a session: crawling is
+             allowed so the noindex directive is readable, indexing is not. --}}
+        @include('partials.head', ['robots' => 'noindex, nofollow'])
     </head>
     {{-- The empty x-data root is required: the sidebar toggle and its x-show
          panel live outside any component, and Alpine only evaluates directives

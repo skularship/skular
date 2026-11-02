@@ -33,7 +33,7 @@ test('the public FAQ page only shows published FAQs from active categories', fun
 
     $this->get(route('faq.index'))
         ->assertOk()
-        ->assertSee('FAQ - Skular')
+        ->assertSee('FAQ — Skular')
         ->assertSee('<meta name="description"', false)
         ->assertSee('Pertanyaan yang Sering Diajukan')
         ->assertSee($visible->question)

@@ -1,2 +1,10 @@
+# Skular — https://skularship.com
+# Public pages stay crawlable; private areas require a session and are marked
+# noindex on the page response. Only the Filament admin panel is disallowed:
+# it is never part of the public site and publishes no noindex of its own.
 User-agent: *
-Disallow:
+Allow: /
+
+Disallow: /admin
+
+Sitemap: https://skularship.com/sitemap.xml
