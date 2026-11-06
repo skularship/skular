@@ -135,7 +135,8 @@
             <div class="mt-5" wire:loading.class="opacity-60" wire:target="search,selectCategory,clearFilters">
                 @if ($faqs->isEmpty())
                     <x-ui.empty-state
-                        icon="face-frown"
+                        :variant="filled($search) ? 'search' : ($category !== '' ? 'filter' : 'initial')"
+                        :icon="filled($search) ? 'magnifying-glass' : ($category !== '' ? 'funnel' : 'chat-bubble-left-right')"
                         :title="filled($search) || $category !== '' ? __('Tidak ada FAQ yang cocok') : __('Belum ada FAQ publik')"
                         :description="filled($search) || $category !== ''
                             ? __('Coba kata kunci lain atau tampilkan semua kategori.')

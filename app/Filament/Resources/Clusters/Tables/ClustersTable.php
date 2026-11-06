@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Clusters\Tables;
 
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
@@ -47,6 +48,12 @@ class ClustersTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
+            ])
+            ->emptyStateHeading('Belum ada cluster')
+            ->emptyStateDescription('Cluster mengelompokkan jurusan dan minat untuk pencocokan beasiswa. Tambahkan cluster pertama agar pilihan profiling mentee lebih relevan.')
+            ->emptyStateIcon('heroicon-o-squares-2x2')
+            ->emptyStateActions([
+                CreateAction::make()->label('Tambah cluster'),
             ]);
     }
 }

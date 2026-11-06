@@ -83,6 +83,9 @@ class ScholarshipApplicationsTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Belum ada pendaftaran beasiswa')
+            ->emptyStateDescription('Pendaftaran muncul setelah mentee memilih beasiswa dan mulai belajar. Belum ada mentee yang mendaftar saat ini.')
+            ->emptyStateIcon('heroicon-o-document-arrow-up');
     }
 }

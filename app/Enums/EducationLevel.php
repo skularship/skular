@@ -44,6 +44,6 @@ enum EducationLevel: string implements HasLabel
      */
     public function matchingLevelValues(): array
     {
-        return array_map(fn(self $level): string => $level->value, $this->matchingLevels());
+        return array_map(fn (self $level): string => $level->value, $this->matchingLevels());
     }
 }

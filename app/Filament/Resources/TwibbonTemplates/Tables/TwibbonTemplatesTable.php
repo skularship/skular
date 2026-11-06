@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\TwibbonTemplates\Tables;
 
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
@@ -45,6 +46,12 @@ class TwibbonTemplatesTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
+            ])
+            ->emptyStateHeading('Belum ada template twibbon')
+            ->emptyStateDescription('Unggah template agar mentee bisa merayakan kelulusan beasiswanya dengan twibbon Skular.')
+            ->emptyStateIcon('heroicon-o-photo')
+            ->emptyStateActions([
+                CreateAction::make()->label('Tambah template'),
             ]);
     }
 }

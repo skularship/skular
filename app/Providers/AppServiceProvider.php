@@ -47,6 +47,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Livewire\Blaze\Blaze;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -65,6 +66,23 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->registerPerformanceInstrumentation();
+        $this->optimizeBladeComponents();
+    }
+
+    /**
+     * Compile the app's anonymous Blade components into plain PHP functions.
+     *
+     * Pages render 200-460 component instances (icons, pills, buttons) and
+     * Blade's component factory dominated render time: measured on the
+     * dashboard, p50 went from ~118ms to ~36ms. Only Blaze's "compile"
+     * strategy is enabled; memoization and folding stay off because several
+     * components read request state ($errors, Livewire). Vendor components
+     * (Flux, Filament) are untouched. Set BLAZE_ENABLED=false to fall back
+     * to plain Blade, then run `php artisan view:clear`.
+     */
+    protected function optimizeBladeComponents(): void
+    {
+        Blaze::optimize()->in(resource_path('views/components'));
     }
 
     /**

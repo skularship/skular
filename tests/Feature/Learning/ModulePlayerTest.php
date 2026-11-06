@@ -356,3 +356,32 @@ test('module feedback is stored for the admin report', function () {
         ->and($feedback->ratings)->toBe(['Materi mudah dipahami', 'AI feedback membantu'])
         ->and($feedback->suggestion)->toBe('Tambahkan contoh esai.');
 });
+
+test('pahami only lists filled text insights from the stored json list', function () {
+    $this->module->update([
+        'summary_material' => null,
+        'inti_material' => null,
+        'insights' => ['Tujuan harus spesifik', '', '   ', ['value' => 'bentuk lama'], null],
+    ]);
+
+    Livewire::actingAs($this->mentee)
+        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'pahami'])
+        ->assertOk()
+        ->assertSee('Insight penting')
+        ->assertSee('Tujuan harus spesifik')
+        ->assertDontSee('bentuk lama');
+});
+
+test('pahami shows the empty state when stored insights hold no usable text', function () {
+    $this->module->update([
+        'summary_material' => null,
+        'inti_material' => null,
+        'insights' => ['', '  '],
+    ]);
+
+    Livewire::actingAs($this->mentee)
+        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'pahami'])
+        ->assertOk()
+        ->assertDontSee('Insight penting')
+        ->assertSee('Materi belum tersedia');
+});

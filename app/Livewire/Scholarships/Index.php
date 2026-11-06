@@ -78,7 +78,7 @@ class Index extends Component
         return view('livewire.scholarships.index', [
             'scholarships' => $this->query()->paginate(9),
             'levels' => EducationLevel::cases(),
-            'scopes' => LocationScope::cases(),
+            'scopes' => LocationScope::studyDestinations(),
             'locations' => $this->locations(),
             'selected_ids' => $selected_ids,
             'selected_count' => $selected_count,

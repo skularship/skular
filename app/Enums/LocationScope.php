@@ -25,4 +25,41 @@ enum LocationScope: string implements HasLabel
             self::Penuh => 'Penuh'
         };
     }
+
+    /**
+     * Get the study destinations a mentee can choose while profiling.
+     *
+     * Funding categories belong to scholarship benefits, never to the mentee's
+     * location preference, so they are deliberately left out of this list.
+     *
+     * @return array<int, self>
+     */
+    public static function studyDestinations(): array
+    {
+        return [self::DalamNegeri, self::LuarNegeri];
+    }
+
+    /**
+     * Get the profiling choices as a value => label map.
+     *
+     * @return array<string, string>
+     */
+    public static function studyDestinationOptions(): array
+    {
+        $options = [];
+
+        foreach (self::studyDestinations() as $destination) {
+            $options[$destination->value] = $destination->getLabel();
+        }
+
+        return $options;
+    }
+
+    /**
+     * Determine whether this scope describes where the study takes place.
+     */
+    public function isStudyDestination(): bool
+    {
+        return in_array($this, self::studyDestinations(), true);
+    }
 }

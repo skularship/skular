@@ -196,3 +196,35 @@ test('a twibbon is rendered from an active template', function () {
     expect($path)->not->toBeNull()
         ->and(Storage::disk('public')->exists((string) $path))->toBeTrue();
 });
+
+test('a submission cannot be re-confirmed once its result is reported', function () {
+    Storage::fake('local');
+
+    $this->application->update([
+        'status' => ApplicationStatus::ResultReported,
+        'submitted_at' => now(),
+        'submission_confirmed_at' => now(),
+        'result' => ApplicationResult::Accepted,
+        'result_reported_at' => now(),
+    ]);
+
+    $service = app(ScholarshipApplicationServiceInterface::class);
+
+    expect(fn () => $service->confirmSubmission(
+        $this->mentee,
+        $this->application,
+        UploadedFile::fake()->image('bukti.png'),
+        null,
+    ))->toThrow(ValidationException::class);
+
+    Livewire::actingAs($this->mentee)
+        ->test(Tracker::class)
+        ->call('openConfirm', $this->application->id)
+        ->assertSet('confirming_id', null);
+
+    $application = $this->application->refresh();
+
+    expect($application->status)->toBe(ApplicationStatus::ResultReported)
+        ->and($application->result)->toBe(ApplicationResult::Accepted)
+        ->and(Storage::disk('local')->allFiles())->toBe([]);
+});

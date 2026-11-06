@@ -19,19 +19,16 @@
 
         @if ($matches->isEmpty())
             <x-ui.empty-state
-                icon="face-frown"
+                icon="academic-cap"
                 :title="__('Belum menemukan beasiswa yang cocok')"
                 :description="__('Belum ada beasiswa aktif yang sesuai dengan jenjang dan preferensi lokasimu. Coba perbarui profilmu atau kembali lagi setelah periode pendaftaran berikutnya dibuka.')"
-            >
-                <div class="flex flex-wrap justify-center gap-3">
-                    <x-actions.link-button :href="route('profiling')" wire:navigate icon="pencil-square">
-                        {{ __('Perbarui profil') }}
-                    </x-actions.link-button>
-                    <x-actions.link-button :href="route('dashboard')" wire:navigate variant="outline">
-                        {{ __('Kembali ke dashboard') }}
-                    </x-actions.link-button>
-                </div>
-            </x-ui.empty-state>
+                :action-label="__('Perbarui profil')"
+                :action-url="route('profiling')"
+                action-icon="pencil-square"
+                :secondary-action-label="__('Kembali ke dashboard')"
+                :secondary-action-url="route('dashboard')"
+                data-test="recommendation-empty"
+            />
         @else
             <div class="grid gap-4">
                 @foreach ($matches as $match)
@@ -75,9 +72,11 @@
                                     <p class="mt-2 text-lg font-semibold break-words text-zinc-900 dark:text-white">
                                         {{ $scholarship->scholarship_name }}
                                     </p>
-                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                                        {{ $scholarship->institution }}
-                                    </p>
+                                    @if (filled($scholarship->institution))
+                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                                            {{ $scholarship->institution }}
+                                        </p>
+                                    @endif
 
                                     <div class="mt-3 flex flex-wrap gap-2">
                                         <x-ui.pill icon="academic-cap">{{ $scholarship->level->label() }}</x-ui.pill>
@@ -131,6 +130,10 @@
                                             {{ __('Jadikan utama') }}
                                         </button>
                                     @endif
+
+                                    <x-actions.link-button :href="route('scholarships.show', $scholarship->id)" wire:navigate size="sm" variant="outline" iconTrailing="arrow-right">
+                                        {{ __('Lihat Detail') }}
+                                    </x-actions.link-button>
 
                                     @if ($scholarship->link)
                                         <a

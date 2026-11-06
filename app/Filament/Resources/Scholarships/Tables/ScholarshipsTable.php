@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Scholarships\Tables;
 use App\Enums\EducationLevel;
 use App\Enums\ScholarshipStatus;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
@@ -95,6 +96,12 @@ class ScholarshipsTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
+            ])
+            ->emptyStateHeading('Belum ada beasiswa')
+            ->emptyStateDescription('Tambahkan beasiswa pertama agar mentee bisa mulai mencocokkan profil dan menyiapkan pendaftaran.')
+            ->emptyStateIcon('heroicon-o-academic-cap')
+            ->emptyStateActions([
+                CreateAction::make()->label('Tambah beasiswa'),
             ]);
     }
 }

@@ -18,11 +18,11 @@
             icon="academic-cap"
             :title="__('Belum ada beasiswa yang kamu pilih')"
             :description="__('Pilih beasiswa dari rekomendasi dulu supaya kamu bisa mencatat pendaftaran dan hasilnya di sini.')"
-        >
-            <x-actions.link-button :href="route('profiling.recommendation')" wire:navigate iconTrailing="arrow-right">
-                {{ __('Lihat rekomendasi') }}
-            </x-actions.link-button>
-        </x-ui.empty-state>
+            :action-label="__('Lihat rekomendasi')"
+            :action-url="route('profiling.recommendation')"
+            action-icon-trailing="arrow-right"
+            data-test="tracker-empty"
+        />
     @else
         @foreach ($applications as $application)
             @php

@@ -110,6 +110,13 @@ class Module extends Model
             $module->scholarship_id = null;
         });
 
+        // Checkpoints and practice responses cascade on delete, so removing a
+        // module a mentee already worked on would erase their progress and
+        // answers. Such modules are unpublished (draft) instead.
+        static::deleting(function (Module $module): bool {
+            return ! $module->hasMenteeHistory();
+        });
+
         // Curriculum reads are cached per content version; any edit invalidates
         // them so mentees never see a stale roadmap.
         static::saved(function (): void {
@@ -294,6 +301,16 @@ class Module extends Model
     public function practiceResponses(): HasMany
     {
         return $this->hasMany(UserPracticeResponse::class);
+    }
+
+    /**
+     * Determine whether any mentee progress or practice answer exists.
+     *
+     * Always asks the database so a delete never relies on a stale count.
+     */
+    public function hasMenteeHistory(): bool
+    {
+        return $this->checkpoints()->exists() || $this->practiceResponses()->exists();
     }
 
     /**

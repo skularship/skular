@@ -61,6 +61,19 @@ test('a mentee is only matched with scholarships in their desired location', fun
     expect($matches)->toHaveCount(0);
 });
 
+test('a funding category on a scholarship is not treated as a study location match', function () {
+    $mentee = User::factory()->profiled()->create([
+        'level' => EducationLevel::S1,
+        'desired_location' => LocationScope::DalamNegeri,
+    ]);
+
+    Scholarship::factory()->forLevel(EducationLevel::S1)->create([
+        'scope' => LocationScope::Penuh,
+    ]);
+
+    expect($this->matching->match(UserProfileData::fromUser($mentee)))->toHaveCount(0);
+});
+
 test('a scholarship without a location scope is available to every mentee', function () {
     $mentee = User::factory()->profiled()->create([
         'level' => EducationLevel::S1,

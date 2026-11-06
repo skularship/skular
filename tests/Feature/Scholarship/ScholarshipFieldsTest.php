@@ -96,7 +96,7 @@ test('the admin form stores the repeater items as a plain array', function () {
         ->test(CreateScholarship::class)
         ->fillForm([
             'scholarship_name' => 'Beasiswa Repeater Uji',
-            'level' => 's1',
+            'level' => 'S1',
             'status' => 'active',
             'key_benefits' => [['value' => 'Biaya kuliah penuh'], ['value' => 'Tunjangan biaya hidup']],
             'values_sought' => [['value' => 'Kepemimpinan'], ['value' => 'Integritas']],

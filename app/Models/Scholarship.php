@@ -70,6 +70,13 @@ class Scholarship extends Model
      */
     protected static function booted(): void
     {
+        // Applications cascade on delete, so removing a scholarship that
+        // mentees selected would silently erase their submissions, proofs and
+        // reported results. Such scholarships are closed or archived instead.
+        static::deleting(function (Scholarship $scholarship): bool {
+            return ! $scholarship->hasMenteeHistory();
+        });
+
         static::saved(function (): void {
             ContentCache::bump();
         });
@@ -238,6 +245,16 @@ class Scholarship extends Model
     public function applications(): HasMany
     {
         return $this->hasMany(ScholarshipApplication::class);
+    }
+
+    /**
+     * Determine whether any mentee has selected this scholarship.
+     *
+     * Always asks the database so a delete never relies on a stale count.
+     */
+    public function hasMenteeHistory(): bool
+    {
+        return $this->applications()->exists();
     }
 
     /**

@@ -58,7 +58,11 @@ class ScholarshipMatchingService implements ScholarshipMatchingServiceInterface
             ->where('status', ScholarshipStatus::Active)
             ->whereIn('level', $profile_data->level->matchingLevelValues())
             ->where(function (Builder $query) use ($profile_data): void {
-                $query->whereNull('scope')->orWhere('scope', $profile_data->desired_location);
+                // Compare the stored study-location value, not the enum object,
+                // so the predicate behaves the same on SQLite and MySQL. A null
+                // scope means the location is unspecified and stays available.
+                $query->whereNull('scope')
+                    ->orWhere('scope', $profile_data->desired_location->value);
             })
             ->orderBy('closing_date')
             ->get();
@@ -190,7 +194,7 @@ class ScholarshipMatchingService implements ScholarshipMatchingServiceInterface
             informational: true,
         );
 
-        if ($scholarship->scope !== null) {
+        if ($scholarship->scope?->isStudyDestination()) {
             $reasons[] = new MatchReasonData(
                 'Lokasi',
                 sprintf('Beasiswa %s sesuai dengan preferensimu.', mb_strtolower($scholarship->scope->label())),

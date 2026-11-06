@@ -29,6 +29,19 @@ class ModuleMentorService implements ModuleMentorServiceInterface
     public const MAX_HISTORY_TURNS = 6;
 
     /**
+     * Maximum characters forwarded to the model for one previous chat turn.
+     *
+     * The transcript lives in public Livewire state, so a tampered request can
+     * send arbitrarily long turns; this bound keeps every prompt cheap.
+     */
+    public const MAX_HISTORY_TURN_LENGTH = 4000;
+
+    /**
+     * Maximum characters of the practice field label forwarded to the model.
+     */
+    public const MAX_FIELD_LABEL_LENGTH = 200;
+
+    /**
      * Answer a mentee question using the module context and bounded chat history.
      *
      * @param  array<int, array<string, mixed>>  $history
@@ -57,7 +70,11 @@ class ModuleMentorService implements ModuleMentorServiceInterface
             ]);
         }
 
-        $agent = new ModuleMentorAgent($module, $practice_form, $active_field);
+        $active_field = $active_field === null
+            ? null
+            : mb_substr(trim($active_field), 0, self::MAX_FIELD_LABEL_LENGTH);
+
+        $agent = new ModuleMentorAgent($module, $practice_form, $active_field === '' ? null : $active_field);
 
         $messages = $this->historyMessages($history);
         $started_at = microtime(true);
@@ -123,7 +140,8 @@ class ModuleMentorService implements ModuleMentorServiceInterface
         $messages = [];
 
         foreach ($recent as $turn) {
-            $content = trim((string) ($turn['content'] ?? ''));
+            $raw = $turn['content'] ?? '';
+            $content = is_string($raw) ? mb_substr(trim($raw), 0, self::MAX_HISTORY_TURN_LENGTH) : '';
 
             if ($content === '') {
                 continue;

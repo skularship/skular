@@ -1,3 +1,8 @@
+@php
+    $has_search = filled($search);
+    $has_filters = filled($level) || filled($scope) || filled($location) || $include_closed;
+@endphp
+
 <div class="mx-auto flex w-full max-w-6xl flex-col gap-6">
     <x-ui.section-heading
         :eyebrow="__('Jelajahi beasiswa')"
@@ -94,13 +99,23 @@
 
     @if ($scholarships->isEmpty())
         <x-ui.empty-state
-            icon="face-frown"
-            :title="__('Belum ada beasiswa yang cocok')"
-            :description="__('Coba ubah kata kunci atau filter, atau kembali lagi saat periode pendaftaran berikutnya dibuka.')"
+            :variant="$has_search ? 'search' : ($has_filters ? 'filter' : 'initial')"
+            :icon="$has_search ? 'magnifying-glass' : ($has_filters ? 'funnel' : 'academic-cap')"
+            :title="$has_search
+                ? __('Yah, belum ketemu!')
+                : ($has_filters ? __('Tidak ada hasil untuk filter ini') : __('Belum ada beasiswa yang tersedia'))"
+            :description="$has_search
+                ? __('Coba gunakan kata kunci lain atau periksa kembali penulisan pencarianmu.')
+                : ($has_filters
+                    ? __('Coba ubah atau reset filter agar kamu bisa menemukan lebih banyak pilihan.')
+                    : __('Katalog akan terisi begitu admin menambahkan beasiswa. Cek lagi nanti ya.'))"
+            data-test="scholarship-empty"
         >
-            <x-actions.button type="button" variant="outline" icon="arrow-path" wire:click="resetFilters">
-                {{ __('Reset filter') }}
-            </x-actions.button>
+            @if ($has_search || $has_filters)
+                <x-actions.button type="button" variant="outline" icon="arrow-path" wire:click="resetFilters">
+                    {{ __('Reset filter') }}
+                </x-actions.button>
+            @endif
         </x-ui.empty-state>
     @else
         <div
@@ -134,7 +149,9 @@
 
                     <div class="flex-1">
                         <h3 class="text-base font-bold break-words text-zinc-900 dark:text-white">{{ $scholarship->scholarship_name }}</h3>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ $scholarship->institution }}</p>
+                        @if (filled($scholarship->institution))
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ $scholarship->institution }}</p>
+                        @endif
 
                         <div class="mt-3 flex flex-wrap gap-2">
                             <x-ui.pill>{{ $scholarship->level->label() }}</x-ui.pill>

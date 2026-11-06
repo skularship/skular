@@ -71,11 +71,11 @@
             icon="identification"
             :title="__('Lengkapi profiling dulu ya')"
             :description="__('Tanpa profil yang lengkap, Skular belum bisa mencocokkanmu dengan beasiswa yang tepat.')"
-        >
-            <x-actions.link-button :href="route('profiling')" wire:navigate iconTrailing="arrow-right">
-                {{ __('Mulai profiling') }}
-            </x-actions.link-button>
-        </x-ui.empty-state>
+            :action-label="__('Mulai profiling')"
+            :action-url="route('profiling')"
+            action-icon-trailing="arrow-right"
+            data-test="profile-empty"
+        />
     @endif
 
     {{-- B. Progress overview --}}
@@ -218,11 +218,11 @@
                         icon="academic-cap"
                         :title="__('Belum ada beasiswa yang kamu pilih')"
                         :description="__('Pilih maksimal :count beasiswa supaya jalur belajarmu bisa disusun.', ['count' => $max_selections])"
-                    >
-                        <x-actions.link-button :href="route('scholarships.index')" wire:navigate iconTrailing="arrow-right">
-                            {{ __('Jelajahi beasiswa') }}
-                        </x-actions.link-button>
-                    </x-ui.empty-state>
+                        :action-label="__('Jelajahi beasiswa')"
+                        :action-url="route('scholarships.index')"
+                        action-icon-trailing="arrow-right"
+                        data-test="dashboard-scholarship-empty"
+                    />
                 @endif
 
                 {{-- D. Next best action --}}
@@ -470,9 +470,11 @@
                     </x-ui.card>
                 @empty
                     <x-ui.empty-state
+                        variant="activity"
                         icon="map"
                         :title="__('Roadmap belum tersedia')"
                         :description="__('Pilih beasiswa atau tunggu admin menambahkan modul pembelajaran.')"
+                        data-test="roadmap-empty"
                     />
                 @endforelse
             </section>

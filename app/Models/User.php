@@ -80,7 +80,13 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->roles()->whereIn('name', AdminRole::values())->exists();
+        // Read the loaded relation so the sidebar (rendered on every page) and
+        // Filament share one query per request. Spatie unsets this relation
+        // whenever roles are assigned or removed, so it never goes stale.
+        return $this->loadMissing('roles')
+            ->roles
+            ->whereIn('name', AdminRole::values())
+            ->isNotEmpty();
     }
 
     /**

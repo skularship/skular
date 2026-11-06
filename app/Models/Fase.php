@@ -33,6 +33,12 @@ class Fase extends Model
      */
     protected static function booted(): void
     {
+        // Modules cascade with their fase, and mentee progress cascades with
+        // its module, so a fase holding worked-on modules must not be removed.
+        static::deleting(function (Fase $fase): bool {
+            return ! $fase->hasMenteeHistory();
+        });
+
         static::saved(function (): void {
             ContentCache::bump();
         });
@@ -73,5 +79,15 @@ class Fase extends Model
     public function modules(): HasMany
     {
         return $this->hasMany(Module::class)->orderBy('modul_order')->orderBy('id');
+    }
+
+    /**
+     * Determine whether any module of this fase carries mentee progress.
+     */
+    public function hasMenteeHistory(): bool
+    {
+        return $this->modules()
+            ->where(fn (Builder $query) => $query->has('checkpoints')->orHas('practiceResponses'))
+            ->exists();
     }
 }

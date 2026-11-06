@@ -36,8 +36,9 @@ class ScholarshipForm
                         TextInput::make('location')
                             ->label('Lokasi'),
                         Select::make('scope')
-                            ->label('Cakupan')
-                            ->options(LocationScope::class),
+                            ->label('Lokasi studi')
+                            ->options(LocationScope::studyDestinationOptions())
+                            ->helperText('Hanya untuk cakupan studi. Kategori pendanaan dicatat pada bagian Benefit Utama.'),
                         Select::make('cluster_id')
                             ->label('Cluster bidang')
                             ->relationship('cluster', 'name')

@@ -66,6 +66,9 @@ class CheckpointsTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Belum ada checkpoint')
+            ->emptyStateDescription('Checkpoint terbentuk otomatis ketika mentee membuka modul. Belum ada mentee yang memulai modul saat ini.')
+            ->emptyStateIcon('heroicon-o-flag');
     }
 }

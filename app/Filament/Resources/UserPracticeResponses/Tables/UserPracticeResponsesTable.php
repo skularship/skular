@@ -16,6 +16,9 @@ class UserPracticeResponsesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->emptyStateHeading('Belum ada jawaban latihan')
+            ->emptyStateDescription('Jawaban dan penilaian AI muncul setelah mentee mengirim latihan praktik. Belum ada jawaban yang masuk saat ini.')
+            ->emptyStateIcon('heroicon-o-clipboard-document-check')
             ->columns([
                 TextColumn::make('user.name')
                     ->label('Mentee')

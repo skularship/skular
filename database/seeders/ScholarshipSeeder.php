@@ -18,7 +18,7 @@ class ScholarshipSeeder extends Seeder
         [
             'scholarship_name' => 'Beasiswa Unggulan Nusantara',
             'institution' => 'Yayasan Pendidikan Nusantara',
-            'level' => 's1',
+            'level' => 'S1',
             'location' => 'Indonesia',
             'scope' => 'dalam_negeri',
             'sktm_require' => false,
@@ -33,7 +33,7 @@ class ScholarshipSeeder extends Seeder
         [
             'scholarship_name' => 'Beasiswa Pemerintah Daerah Cendekia',
             'institution' => 'Pemerintah Provinsi',
-            'level' => 's1',
+            'level' => 'S1',
             'location' => 'Indonesia',
             'scope' => 'dalam_negeri',
             'sktm_require' => true,
@@ -48,7 +48,7 @@ class ScholarshipSeeder extends Seeder
         [
             'scholarship_name' => 'Beasiswa Talenta Digital',
             'institution' => 'Komunitas Teknologi Indonesia',
-            'level' => 's1',
+            'level' => 'S1',
             'location' => 'Indonesia',
             'scope' => 'dalam_negeri',
             'sktm_require' => false,
@@ -63,7 +63,7 @@ class ScholarshipSeeder extends Seeder
         [
             'scholarship_name' => 'Global Futures Scholarship',
             'institution' => 'Global Futures Foundation',
-            'level' => 's2',
+            'level' => 'S2',
             'location' => 'Belanda',
             'scope' => 'luar_negeri',
             'sktm_require' => false,
@@ -78,7 +78,7 @@ class ScholarshipSeeder extends Seeder
         [
             'scholarship_name' => 'Asia Pacific Leader Award',
             'institution' => 'Asia Pacific University Network',
-            'level' => 's2',
+            'level' => 'S2',
             'location' => 'Australia',
             'scope' => 'luar_negeri',
             'sktm_require' => false,
@@ -93,7 +93,7 @@ class ScholarshipSeeder extends Seeder
         [
             'scholarship_name' => 'Beasiswa Vokasi Terampil',
             'institution' => 'Politeknik Negeri',
-            'level' => 'd3',
+            'level' => 'D3',
             'location' => 'Yogyakarta',
             'scope' => 'dalam_negeri',
             'sktm_require' => true,
@@ -108,7 +108,7 @@ class ScholarshipSeeder extends Seeder
         [
             'scholarship_name' => 'Beasiswa Diploma Unggul',
             'institution' => 'Konsorsium Industri Manufaktur',
-            'level' => 'd4',
+            'level' => 'D4',
             'location' => 'Bandung',
             'scope' => 'dalam_negeri',
             'sktm_require' => false,
@@ -123,7 +123,7 @@ class ScholarshipSeeder extends Seeder
         [
             'scholarship_name' => 'Beasiswa Muda Berprestasi',
             'institution' => 'Yayasan Generasi Emas',
-            'level' => 'sma',
+            'level' => 'SMA',
             'location' => 'Indonesia',
             'scope' => 'dalam_negeri',
             'sktm_require' => false,
@@ -138,7 +138,7 @@ class ScholarshipSeeder extends Seeder
         [
             'scholarship_name' => 'Beasiswa SMK Siap Kerja',
             'institution' => 'Badan Kerjasama Vokasi',
-            'level' => 'smk',
+            'level' => 'SMK',
             'location' => 'Jakarta',
             'scope' => 'dalam_negeri',
             'sktm_require' => true,
@@ -153,7 +153,7 @@ class ScholarshipSeeder extends Seeder
         [
             'scholarship_name' => 'Beasiswa Doktoral Riset',
             'institution' => 'Lembaga Riset Nasional',
-            'level' => 's2',
+            'level' => 'S2',
             'location' => 'Jepang',
             'scope' => 'luar_negeri',
             'sktm_require' => false,
@@ -168,7 +168,7 @@ class ScholarshipSeeder extends Seeder
         [
             'scholarship_name' => 'Beasiswa Kesehatan Peduli',
             'institution' => 'Rumah Sakit Pendidikan',
-            'level' => 's1',
+            'level' => 'S1',
             'location' => 'Indonesia',
             'scope' => 'dalam_negeri',
             'sktm_require' => true,
@@ -183,7 +183,7 @@ class ScholarshipSeeder extends Seeder
         [
             'scholarship_name' => 'Beasiswa Seni Kreatif',
             'institution' => 'Institut Seni Indonesia',
-            'level' => 's1',
+            'level' => 'S1',
             'location' => 'Indonesia',
             'scope' => 'dalam_negeri',
             'sktm_require' => false,
@@ -198,7 +198,7 @@ class ScholarshipSeeder extends Seeder
         [
             'scholarship_name' => 'Beasiswa Sosial Inklusif',
             'institution' => 'Yayasan Kemanusiaan',
-            'level' => 's1',
+            'level' => 'S1',
             'location' => 'Indonesia',
             'scope' => 'dalam_negeri',
             'sktm_require' => true,
@@ -213,7 +213,7 @@ class ScholarshipSeeder extends Seeder
         [
             'scholarship_name' => 'Beasiswa Agro Masa Depan',
             'institution' => 'Konsorsium Agribisnis',
-            'level' => 'd4',
+            'level' => 'D4',
             'location' => 'Bogor',
             'scope' => 'dalam_negeri',
             'sktm_require' => false,

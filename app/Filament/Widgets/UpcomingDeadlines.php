@@ -57,6 +57,9 @@ class UpcomingDeadlines extends TableWidget
             ])
             ->defaultPaginationPageOption(5)
             ->paginated([5])
-            ->recordUrl(null);
+            ->recordUrl(null)
+            ->emptyStateHeading('Tidak ada deadline mendatang')
+            ->emptyStateDescription('Belum ada beasiswa aktif dengan tanggal tutup dalam waktu dekat. Deadline baru akan muncul di sini.')
+            ->emptyStateIcon('heroicon-o-calendar-days');
     }
 }

@@ -22,7 +22,10 @@ trait ProfilingRules
             'gpa' => ['required', 'numeric', 'min:0', 'max:4'],
             'has_sktm' => ['required', 'boolean'],
             'desired_level' => ['required', Rule::enum(EducationLevel::class)],
-            'desired_location' => ['required', Rule::enum(LocationScope::class)],
+            'desired_location' => [
+                'required',
+                Rule::enum(LocationScope::class)->only(LocationScope::studyDestinations()),
+            ],
             'cluster' => [
                 'required',
                 'integer',

@@ -50,7 +50,9 @@ class Tracker extends Component
      */
     public function openConfirm(int $application_id): void
     {
-        $this->application($application_id);
+        if (! $this->needsSubmission($this->application($application_id))) {
+            return;
+        }
 
         $this->confirming_id = $application_id;
         $this->reporting_id = null;

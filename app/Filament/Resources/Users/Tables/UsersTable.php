@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Tables;
 
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
@@ -89,6 +90,12 @@ class UsersTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
+            ])
+            ->emptyStateHeading('Belum ada pengguna')
+            ->emptyStateDescription('Tambahkan pengguna pertama, atau tunggu mentee mendaftar melalui halaman registrasi.')
+            ->emptyStateIcon('heroicon-o-users')
+            ->emptyStateActions([
+                CreateAction::make()->label('Tambah pengguna'),
             ]);
     }
 }

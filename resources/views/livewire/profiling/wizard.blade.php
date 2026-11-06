@@ -431,8 +431,8 @@
 
             <fieldset class="m-0 flex min-w-0 flex-col gap-4 border-0 p-0" x-show="currentKey === 'desired_location'" @if ($this->activeStep !== 'desired_location') x-cloak @endif>
                 <legend class="flex flex-col gap-1">
-                    <span class="text-base font-semibold text-zinc-900 dark:text-white">{{ __('Kamu ingin kuliah di mana?') }}</span>
-                    <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Pilih satu lokasi tujuan kuliah.') }}</span>
+                    <span class="text-base font-semibold text-zinc-900 dark:text-white">{{ __('Preferensi lokasi beasiswa') }}</span>
+                    <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Pilih satu lokasi tujuan studi. Pilihan ini dipakai untuk mencocokkan beasiswa, bukan untuk menentukan jenis pendanaan.') }}</span>
                 </legend>
 
                 <div class="grid gap-3 sm:grid-cols-2">
@@ -442,7 +442,9 @@
                             model="answers.desired_location"
                             :value="$value"
                             :title="$label"
-                            :description="$value === 'dalam_negeri' ? __('Universitas di Indonesia') : __('Universitas di luar negeri')"
+                            :description="$value === 'dalam_negeri'
+                                ? __('Saya ingin mengikuti program beasiswa untuk studi di Indonesia.')
+                                : __('Saya ingin mengikuti program beasiswa untuk studi di luar Indonesia.')"
                             :icon="$value === 'dalam_negeri' ? 'flag' : 'globe-alt'"
                             data-test="option-desired-location-{{ $value }}"
                         />

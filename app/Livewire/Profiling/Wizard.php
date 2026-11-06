@@ -174,14 +174,17 @@ class Wizard extends Component
     }
 
     /**
-     * Get the location scope options.
+     * Get the study destination options offered while profiling.
+     *
+     * Only domestic and international study remain here; funding categories
+     * are a scholarship attribute and must never be a location answer.
      *
      * @return array<string, string>
      */
     #[Computed]
     public function locationOptions(): array
     {
-        return LocationScope::options();
+        return LocationScope::studyDestinationOptions();
     }
 
     /**

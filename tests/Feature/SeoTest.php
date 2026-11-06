@@ -99,3 +99,17 @@ test('the shared social preview is a real 1200x630 asset', function () {
         ->and($height)->toBe(630)
         ->and(filesize($path))->toBeLessThan(1_000_000);
 });
+
+test('an unknown url renders the branded 404 page with a real 404 status', function () {
+    $this->get('/halaman-yang-tidak-ada')
+        ->assertNotFound()
+        ->assertSee('Halaman Tidak Ditemukan', false)
+        ->assertSee('<meta name="robots" content="noindex, follow" />', false)
+        ->assertSee('/skular-logo.png', false);
+});
+
+test('the admin panel favicon is root relative so nested admin urls resolve it', function () {
+    $this->get('/admin/login')
+        ->assertOk()
+        ->assertSee('<link rel="icon" href="/favicon.png" />', false);
+});

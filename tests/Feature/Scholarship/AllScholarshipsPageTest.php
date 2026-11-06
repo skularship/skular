@@ -91,6 +91,20 @@ test('the deadline sort puts the closest deadline first', function () {
     expect($names)->toBe(['Beasiswa Cepat', 'Beasiswa Lambat']);
 });
 
+test('the catalog distinguishes initial, search, and filtered empty states', function () {
+    Livewire::actingAs($this->mentee)
+        ->test(Index::class)
+        ->assertSee('Belum ada beasiswa yang tersedia')
+        ->set('search', 'tidak-ada-hasil')
+        ->assertSee('Yah, belum ketemu!')
+        ->assertDontSee('Belum ada beasiswa yang tersedia')
+        ->set('search', '')
+        ->set('level', EducationLevel::S2->value)
+        ->assertSee('Tidak ada hasil untuk filter ini')
+        ->call('resetFilters')
+        ->assertSee('Belum ada beasiswa yang tersedia');
+});
+
 test('the catalog paginates nine scholarships per page', function () {
     collect(range(1, 12))->each(fn (int $i) => catalogScholarship('Beasiswa Halaman '.$i));
 

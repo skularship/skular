@@ -13,7 +13,8 @@ class EditScholarship extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->failureNotificationTitle('Beasiswa tidak bisa dihapus karena sudah dipilih mentee. Ubah statusnya menjadi ditutup.'),
         ];
     }
 }

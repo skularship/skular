@@ -20,9 +20,11 @@ Skular adalah platform pembelajaran beasiswa berbasis AI untuk mahasiswa dan Gen
   - [Livewire RPC](#5-livewire-rpc)
   - [Admin Filament (CRUD)](#6-admin-filament-crud)
 - [Cara Menjalankan Project](#cara-menjalankan-project)
+- [Deployment Production](#deployment-production)
 - [Perintah Lainnya](#perintah-lainnya)
 - [Testing & Quality Gates](#testing--quality-gates)
 - [Akun Admin](#akun-admin)
+- [Akun Demo Mentee](#akun-demo-mentee)
 
 ---
 
@@ -38,7 +40,8 @@ Skular adalah platform pembelajaran beasiswa berbasis AI untuk mahasiswa dan Gen
 | Autentikasi | Laravel Fortify, Passkeys (WebAuthn), Socialite (Google), TOTP 2FA |
 | Authorization (admin) | spatie/laravel-permission + filament-shield |
 | AI | `laravel/ai` dengan driver OpenRouter (`OPENROUTER_API_KEY`) |
-| Data | SQLite (local), Eloquent + spatie/laravel-data (DTO) |
+| Data | SQLite (local), MySQL 8+/PostgreSQL 15+ (production), Eloquent + spatie/laravel-data (DTO) |
+| Render Blade | `livewire/blaze` — komponen anonim di `resources/views/components` dikompilasi menjadi fungsi PHP (mode *compile*) |
 | Testing | Pest 5, Laravel Pint, Larastan (PHPStan level 7) |
 
 ---
@@ -88,26 +91,28 @@ skular/
 1. **Dua surface** — aplikasi publik Livewire (`/dashboard`, `/profiling`, dst.) dan panel admin Filament (`/admin`).
 2. **Business logic di Service** — Livewire component tetap tipis; akses lewat interface di `app/Contracts` (di-bind di `AppServiceProvider`), data DTO di `app/Data`.
 3. **Authorization admin** — Filament Shield terhadap policy di `app/Policies`. Role: `super_admin` (bypass), `co_admin`, `staff_divisi`.
-4. **State Livewire server-side** — `wire:model` (deferred/live sesuai kebutuhan); validasi backend selalu dijalankan di action.
+4. **State Livewire server-side** — `wire:model` (deferred/live sesuai kebutuhan); validasi backend selalu dijalankan di action. Pengecualian: kedua profiling menyimpan jawaban sementara di browser dan baru mengirimnya sekali di akhir (lihat [Fitur](#fitur)).
+5. **Hemat render** — ikon dirender langsung lewat helper `svg()` blade-icons (bukan komponen bertingkat) dan komponen Blade app dikompilasi Blaze. Halaman merender 200–460 komponen per request, sehingga dua hal ini menurunkan waktu render dashboard dari ~376 ms menjadi ~36 ms (diukur lokal).
 
 ---
 
 ## Fitur
 
 ### Mentee (aplikasi publik)
-- **Profiling 8 langkah** — selection card interaktif (single-select otomatis melepas pilihan lama), input angka untuk usia/IPK, progress bar + stepper, draft tersimpan di session, validasi per langkah.
+- **Profiling Kilat (landing page, tanpa login)** — 5 pertanyaan kesiapan beasiswa. Jawaban hanya disimpan di state browser (dan `sessionStorage`); seluruh jawaban dikirim **sekali** saat selesai, lalu backend memvalidasi ulang dan menghitung skor sendiri. Hasil tidak disimpan ke akun mana pun dan terpisah dari Profiling 8 langkah.
+- **Profiling 8 langkah** — selection card interaktif (single-select otomatis melepas pilihan lama), input angka untuk usia/IPK, progress bar + stepper, validasi per langkah di browser. Berpindah langkah tidak mengirim request apa pun: draft disimpan di `sessionStorage` (terpisah per akun) dan seluruh profil dikirim **sekali** lewat `Wizard::submit()` di langkah terakhir. Backend memvalidasi ulang semua jawaban dan menyimpannya dalam satu transaksi, sehingga kirim ulang setelah gagal tidak membuat data ganda. Draft dihapus setelah submit berhasil.
 - **Scholarship matching** — pencocokan berbasis jenjang, usia, IPK, SKTM, dan preferensi lokasi, dengan alasan transparan per kandidat; mentee memilih **maksimal 5 beasiswa** lalu menandai satu sebagai target utama.
 - **Semua Beasiswa (katalog)** `/scholarships` — jelajah seluruh beasiswa aktif: pencarian nama/institusi, filter jenjang/cakupan/lokasi, urut deadline terdekat, pagination; beasiswa yang sudah ditutup bisa dimunculkan. Draft & arsip tidak pernah tampil.
 - **Detail beasiswa** `/scholarships/{scholarship}` — benefit utama, nilai yang dicari, persyaratan (IPK/usia/SKTM), jadwal (dibuka/ditutup/verifikasi), kuota, catatan, link resmi; CTA **Tambah ke pilihan** yang mengikuti batas 5 dan status pendaftaran, atau **Lanjutkan Persiapan** bila sudah dipilih.
 - **Learning roadmap (personal)** — modul **Inti** + modul **Template** beasiswa yang dipilih (checkpoint bertahap), plus **Perpustakaan** `/library` sebagai pelatihan tambahan lintas beasiswa di luar urutan roadmap.
 - **Module player** — Pembukaan → Pahami (materi, insight, inti materi, **kata pengantar**) → Quick Question (benar/salah) → **Praktik** (dynamic form, kata pengantar sebelum form) → **Feedback AI** (skor, strengths, improvements, next steps) → Checkpoint + feedback modul.
-- **AI Mentor (chatbot modul)** — panel diskusi di halaman Praktik. Menjawab berdasarkan materi + AI knowledge modul, dengan quick prompt, riwayat percakapan yang dibatasi, indikator loading, dan tombol retry saat provider gagal. Tidak pernah mengisi/mengubah jawaban praktik atau menyelesaikan checkpoint.
-- **AI Brainstorming** — pertanyaan pilihan ganda adaptif untuk memancing ide saat mengisi praktik, dengan progress pertanyaan dan ringkasan ide yang bisa disalin. Ringkasan tidak pernah menimpa jawaban yang sudah ditulis.
+- **AI Mentor (chatbot modul)** — panel diskusi di halaman Praktik. Menjawab berdasarkan materi + AI knowledge modul, dengan quick prompt, riwayat percakapan yang dibatasi (6 giliran terakhir, tiap giliran maks. 4.000 karakter; pertanyaan maks. 1.000 karakter), rate limit 12 permintaan/menit, indikator loading, dan tombol retry saat provider gagal. Tidak pernah mengisi/mengubah jawaban praktik atau menyelesaikan checkpoint.
+- **AI Brainstorming** — pertanyaan dan pilihan jawabannya disusun admin per modul (bukan dibuat AI saat halaman dibuka). AI baru dipanggil ketika mentee meminta **kerangka draf** dari jawabannya (rate limit 8/menit). Jawaban tersimpan otomatis supaya bisa dilanjutkan di perangkat lain: pilihan tersimpan saat diklik, isian teks saat kolomnya ditinggalkan. Kerangka tidak pernah menimpa jawaban praktik yang sudah ditulis.
 - **Beasiswa Saya (tracker/antrean)** — konfirmasi pendaftaran + unggah bukti screenshot, lapor hasil (diterima/belum), unduh bukti. Beasiswa diurutkan deadline terdekat; setelah hasil dilaporkan, target aktif otomatis pindah ke beasiswa berikutnya.
 - **Dashboard** — welcome header, beasiswa yang sedang disiapkan + antrean deadline, **Next Best Action** (dihitung dari status database), roadmap belajar, ringkasan progress, dan akses cepat.
 - **CV Saya** — data diri otomatis dari jawaban praktik, siap cetak/PDF.
 - **Twibbon** — generate twibbon dari template admin dengan nama & beasiswa.
-- **Settings** — profil, appearance (dark/light/system), keamanan (password, 2FA TOTP, passkeys).
+- **Settings** — profil dan keamanan (password, 2FA TOTP, passkeys). UI sengaja **light-only**; tidak ada pengaturan tema/appearance.
 - **Autentikasi** — email/password, Google OAuth, passkey, verifikasi email, reset password, rate limiting.
 
 ### Admin (panel `/admin`)
@@ -124,11 +129,18 @@ skular/
 
 ## Aturan Bisnis (Beasiswa & Modul)
 
-**Maksimal 5 beasiswa per mentee.** Ditampilkan sebagai "x dari 5 beasiswa dipilih" dan dicek di UI (halaman rekomendasi & detail), lalu ditegakkan di backend: `ScholarshipApplicationService::select()` membatasi jumlah di dalam transaksi dengan `lockForUpdate`, sehingga request paralel tidak dapat melewati batas. Duplikat dicegah oleh unique index `(user_id, scholarship_id)`.
+**Maksimal 5 beasiswa per mentee.** Ditampilkan sebagai "x dari 5 beasiswa dipilih" dan dicek di UI (halaman rekomendasi & detail), lalu ditegakkan di backend: `ScholarshipApplicationService::select()` membatasi jumlah di dalam transaksi yang lebih dulu mengunci baris `users` milik mentee (`lockForUpdate`). Dengan begitu request paralel ikut antre walaupun mentee belum punya pilihan sama sekali, dan tidak bisa melewati batas. Duplikat dicegah oleh unique index `(user_id, scholarship_id)`.
 
 **Urutan berdasarkan deadline.** Antrean beasiswa diurutkan `closing_date` terdekat lebih dulu; `closing_date` NULL ditaruh paling akhir dengan tie-break `id` agar deterministik. Beasiswa berstatus Draft/Closed/Archived atau yang jendelanya sudah lewat tidak bisa dipilih sebagai pilihan baru.
 
-**Lifecycle beasiswa.** `selected` → `submitted` → `result_reported` (hasil `accepted`/`rejected`). Setiap beasiswa punya status aplikasi sendiri, dan histori (jawaban praktik, feedback AI, checkpoint, bukti submit, hasil, twibbon) tetap tersimpan. Setelah hasil dilaporkan, target aktif otomatis berpindah ke beasiswa berikutnya dengan deadline terdekat; pelaporan hasil yang sama dua kali bersifat **idempoten** dan tidak melompati antrean. Bila tidak ada beasiswa berikutnya, beasiswa terakhir tetap menjadi target agar hasil & twibbonnya tetap dapat diakses.
+**Lifecycle beasiswa.** `selected` → `submitted` → `result_reported` (hasil `accepted`/`rejected`). Setiap beasiswa punya status aplikasi sendiri, dan histori (jawaban praktik, feedback AI, checkpoint, bukti submit, hasil, twibbon) tetap tersimpan. Setelah hasil dilaporkan, target aktif otomatis berpindah ke beasiswa berikutnya dengan deadline terdekat; pelaporan hasil yang sama dua kali bersifat **idempoten** dan tidak melompati antrean. Bila tidak ada beasiswa berikutnya, beasiswa terakhir tetap menjadi target agar hasil & twibbonnya tetap dapat diakses. Setelah hasil dilaporkan, konfirmasi pendaftaran dan bukti submit **terkunci**: `confirmSubmission()` menolaknya agar status tidak kembali ke `submitted` sementara hasil lama masih tercatat.
+
+**Histori mentee tidak bisa terhapus lewat admin.** Foreign key pendaftaran, checkpoint, dan jawaban praktik memakai `cascadeOnDelete`, jadi model menolak penghapusan (`deleting` mengembalikan `false`) untuk:
+- **Beasiswa** yang sudah dipilih minimal satu mentee → ubah statusnya menjadi *Closed*/*Archived*.
+- **Modul** yang sudah punya checkpoint atau jawaban praktik mentee → *Jadikan draf* untuk menyembunyikannya.
+- **Fase** yang salah satu modulnya sudah dikerjakan mentee.
+
+Data yang belum pernah disentuh mentee tetap bisa dihapus. Panel admin menampilkan notifikasi yang menjelaskan alasan penolakan, dan bulk delete hanya melewati record yang terlindungi. Pola ini sama dengan `FaqCategory`, yang tidak bisa dihapus selama masih berisi FAQ.
 
 **Tipe modul (`category`).**
 - `inti` — berlaku untuk semua beasiswa, tidak terikat scholarship.
@@ -171,7 +183,7 @@ Setiap pengguna hanya melihat menu yang izinnya dimiliki (Shield). Widget dashbo
 5. **Quick Question** — tabel di bawah form editor: pernyataan Benar/Salah, kunci jawaban, penjelasan, urutan, dan status tampil.
 6. **Latihan praktik** — tabel di bawah form editor: judul, arahan, urutan, dan builder pertanyaan (jenis jawaban, wajib/opsional, petunjuk pengisian, pilihan jawaban untuk tipe pilihan, serta opsi tampil di CV). Tidak ada JSON yang perlu ditulis manual.
 7. **Pratinjau** — tombol *Pratinjau* membuka `/admin/modules/{record}/preview`: urutan langkah dan isi konten seperti yang dilihat mentee, plus peringatan bila modul belum siap terbit. Halaman ini read-only — tidak memulai checkpoint, tidak mengirim jawaban praktik, dan tidak mengubah progres siapa pun.
-8. **Terbitkan** — tombol *Terbitkan* (per modul atau bulk *Terbitkan yang siap*) hanya memproses modul draf. Bila syarat wajib belum lengkap, backend menolak dan notifikasi menyebutkan bagian yang kurang. Modul terbit dapat dikembalikan ke draf (*Jadikan draf*) tanpa menghapus progres, jawaban, atau checkpoint mentee.
+8. **Terbitkan** — tombol *Terbitkan* (per modul atau bulk *Terbitkan yang siap*) hanya memproses modul draf. Bila syarat wajib belum lengkap, backend menolak dan notifikasi menyebutkan bagian yang kurang. Modul terbit dapat dikembalikan ke draf (*Jadikan draf*) tanpa menghapus progres, jawaban, atau checkpoint mentee. Ini juga cara yang benar untuk "menghapus" modul yang sudah dikerjakan mentee, karena tombol *Hapus* akan ditolak (lihat [Aturan Bisnis](#aturan-bisnis-beasiswa--modul)).
 
 ### Checklist kelengkapan modul
 
@@ -208,7 +220,7 @@ Setiap halaman Livewire dirender di dalam layout `x-layouts::app.sidebar` (kecua
 
 | Route | Komponen Livewire | View | Struktur |
 |---|---|---|---|
-| `/` | (blade view) | `welcome.blade.php` | Header sticky → hero (brand-grid + blob) → Cara Kerja → AI Learning → Matching → Roadmap → CTA → footer |
+| `/` | (blade view) + `Profiling\QuickAssessment` | `welcome.blade.php`, `livewire/profiling/quick-assessment.blade.php` | Header sticky → hero (brand-grid + blob) → Cara Kerja → AI Learning → Matching → Roadmap → Profiling Kilat → CTA → footer |
 | `/login`, `/register`, dst. | auth Livewire | `livewire/auth/*` | `layouts/auth/simple` — logo, card form, link bawah |
 | `/profiling` | `Profiling\Wizard` | `livewire/profiling/wizard.blade.php` | header progress (nomor "03 dari 08", progress bar, stepper dot 1-8) → `x-ui.card` form per langkah → tombol Kembali/Lanjut/Selesai |
 | `/profiling/recommendation` | `Scholarships\Recommendation` | `livewire/scholarships/recommendation.blade.php` | header → daftar kartu match (checkbox, tier pill, alasan) → sticky bar konfirmasi |
@@ -220,7 +232,7 @@ Setiap halaman Livewire dirender di dalam layout `x-layouts::app.sidebar` (kecua
 | `/scholarships/{scholarship}` | `Scholarships\Show` | `livewire/scholarships/show.blade.php` | header beasiswa → jadwal & sisa hari → CTA (sesuai batas 5/status/ownership) → Benefit Utama → Nilai yang Dicari → Persyaratan → Catatan |
 | `/cv` | `Cv\Show` | `livewire/cv/show.blade.php` | header + kartu profil → section CV per latihan |
 | `/scholarships/{id}/twibbon` | `Twibbon\Generator` | `livewire/twibbon/generator.blade.php` | grid 2 kolom: pilih template + preview/unduh |
-| `/settings/*` | `Settings\Profile/Appearance/Security` | `livewire/settings/*` | form profil, pemilih tema, keamanan (2FA/passkey) |
+| `/settings/*` | `Settings\Profile/Security` | `livewire/settings/*` | form profil, keamanan (2FA/passkey) |
 | `/admin` | Filament panel | vendor views | tabel + form resource |
 
 **Komponen Blade bersama** (`resources/views/components/`):
@@ -232,6 +244,11 @@ Setiap halaman Livewire dirender di dalam layout `x-layouts::app.sidebar` (kecua
 - `display/` — `heading`, `text`, `subheading`, `avatar`
 - `feedback/` — `callout`, `auth-session-status`
 - `brand/` — `app-logo`, `app-logo-icon`
+- `icons/` — `app-icon` (dipakai di seluruh UI: `<x-icons.app-icon name="check" />`, `variant="o|s"`) plus ikon kustom (`spinner`, `layout-grid`, dst.)
+
+> **Catatan performa ikon:** `app-icon` merender Heroicons langsung lewat helper `svg()` blade-icons. Itu panggilan yang sama dengan yang dilakukan `<x-heroicon-*>` di balik layar, jadi markup-nya identik, tapi sekitar 80× lebih murah. Jangan kembalikan ke `<x-dynamic-component>`, karena satu halaman bisa merender 50–130 ikon. Hanya ikon kustom yang masih memakai komponen Blade.
+>
+> **Blaze:** semua komponen di `resources/views/components` dikompilasi oleh Blaze (`AppServiceProvider::optimizeBladeComponents()`, mode *compile* saja; *memo* dan *fold* dimatikan karena beberapa komponen membaca `$errors` dan state Livewire). Komponen vendor (Flux, Filament) tidak ikut. Untuk debugging, set `BLAZE_ENABLED=false` lalu jalankan `php artisan view:clear`. Setelah mengubah konfigurasi Blaze, **selalu** jalankan `view:clear`, karena view lama hasil kompilasi akan error.
 
 ---
 
@@ -321,7 +338,7 @@ Prefix endpoint: `/livewire-{hash}` — `hash` = 8 karakter pertama `sha256(APP_
 | GET | `/livewire-41e11991/preview-file/{filename}` | `livewire.preview-file` | `filename` | — |
 | PUT | `/storage/{path}` | `storage.local.upload` | `path` | `multipart/form-data` |
 
-Contoh pemanggilan aksi Livewire (via component test / RPC): memanggil `Wizard::next()` di `POST /profiling` dengan `calls: [{"method":"next","params":[]}]` — validasi berjalan server-side; bila gagal, `errors` dikembalikan dan state dipertahankan.
+Contoh pemanggilan aksi Livewire (via component test / RPC): profiling hanya punya satu aksi server, `Wizard::submit(answers)`, dengan `calls: [{"method":"submit","params":[{"level":"S1","age":"21","gpa":"3.5","has_sktm":false,"desired_level":"S2","desired_location":"dalam_negeri","cluster":"1","phone":"081234567890"}]}]`. Perpindahan langkah tidak memanggil server. Validasi berjalan server-side: bila gagal, aksi mengembalikan `{"ok":false,"step":<nomor langkah>,"message":"..."}` dan jawaban di browser tetap utuh. Bila berhasil, aksi mengembalikan `{"ok":true}` lalu redirect ke rekomendasi. `QuickAssessment::submit(answers)` di landing page bekerja dengan pola yang sama.
 
 ### 6. Admin Filament (CRUD)
 
@@ -403,27 +420,55 @@ php artisan queue:listen
 | Variabel | Keterangan |
 |---|---|
 | `OPENROUTER_API_KEY` | Kunci API AI — dipakai untuk feedback praktik, **AI Mentor**, dan **AI Brainstorming** (driver `openrouter` di `config/ai.php`). Ada di `.env` lokal dan `OPENROUTER_API_KEY` kosong di `.env.example` |
-| `OPENROUTER_TEXT_MODEL` | Model teks OpenRouter untuk semua fitur AI. Diisi di `.env`; bila kosong, `config/ai.php` memakai `dots-studio/dots-3-note-preview:free` |
+| Model AI | **Tidak** diatur lewat env. `config/ai.php` menetapkan model teks OpenRouter `deepseek/deepseek-v4.1-flash` secara langsung. `OPENROUTER_TEXT_MODEL` di `.env`/`.env.example` **tidak dibaca** aplikasi; ganti modelnya di `config/ai.php`. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Login Google (Socialite) |
-| `SESSION_DRIVER=database` | Sesi di tabel DB (sudah ada di `.env.example`) |
-| `DB_CONNECTION=sqlite` | Database lokal |
+| `DB_CONNECTION` | `sqlite` untuk lokal (dibuat oleh `composer setup`); `mysql`/`pgsql` untuk production |
+| `SESSION_DRIVER` / `CACHE_STORE` / `QUEUE_CONNECTION` | Default `database` untuk ketiganya. Untuk trafik tinggi gunakan `redis` bila hosting menyediakan (lihat [Deployment Production](#deployment-production)) |
+| `BLAZE_ENABLED` | Default `true`. Set `false` hanya untuk debugging render komponen, lalu `php artisan view:clear` |
+| `TRUSTED_PROXIES` | Isi IP/CIDR load balancer (atau `*`) bila aplikasi di belakang reverse proxy, agar HTTPS dan cookie aman terdeteksi |
+| `SEO_CANONICAL_URL` | Domain kanonik untuk canonical URL, sitemap, dan Open Graph |
 
 ---
 
 ## Deployment Production
 
-Panduan lengkap hosting, environment production, Nginx, migrasi aman, backup,
-restore, rollback, health check, dan load testing ada di
-[`docs/deployment.md`](docs/deployment.md).
-
-Ringkasan gerbang sebelum rilis:
+### Gerbang sebelum rilis
 
 ```bash
 composer ci:check        # Pint + PHPStan + seluruh test
 npm ci && npm run build  # build aset production
-composer audit           # kerentanan dependency PHP
+composer audit --locked  # kerentanan dependency PHP
 npm audit --omit=dev     # kerentanan dependency JS
 ```
+
+> `composer audit` dan `npm audit` juga dijalankan CI (`.github/workflows/tests.yml`). Advisory yang belum ditangani akan menggagalkan pipeline.
+
+### Langkah setiap deploy
+
+```bash
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+php artisan optimize          # cache config, route, event, dan view
+php artisan view:cache        # WAJIB: tanpa ini pengunjung pertama setelah deploy menanggung kompilasi view (~1,4 detik terukur di katalog)
+php artisan filament:optimize # cache komponen & ikon Filament
+php artisan queue:restart     # worker memuat kode baru
+```
+
+Aset `public/build` di-commit ke repository. Setelah `npm run build`, commit **semua** file baru di `public/build/assets` beserta `manifest.json`. Jika file CSS/JS yang dirujuk manifest tidak ikut ter-commit, tampilan produksi akan rusak.
+
+### Kebutuhan runtime
+
+| Komponen | Keterangan |
+|---|---|
+| PHP | 8.3+ (diuji 8.5) dengan **OPcache aktif** (`opcache.enable=1`; `opcache.validate_timestamps=0` di production, lalu reload PHP-FPM setiap deploy) |
+| Database | MySQL 8+ atau PostgreSQL 15+. Jangan memakai SQLite di production |
+| Queue worker | **Wajib** dan harus selalu hidup (Supervisor/systemd): `php artisan queue:work --tries=1 --timeout=60`. Feedback AI praktik diproses job `EvaluatePracticeFeedback` (`timeout` 60 detik, harus **lebih kecil** dari `retry_after` 90 detik di `config/queue.php`; kalau tidak, job yang masih berjalan bisa diambil worker lain) |
+| Scheduler | Tidak diperlukan (tidak ada task terjadwal) |
+| Storage | Persisten dan **privat**: bukti pendaftaran disimpan di disk `local` (`storage/app/private/submissions`) dan hanya bisa diunduh pemiliknya atau admin. Ikut dicadangkan bersama database |
+| Session / cache / queue | Default memakai database, sehingga setiap request menulis ke tabel `sessions`. Untuk ribuan pengguna aktif, gunakan Redis bila tersedia: `SESSION_DRIVER=redis`, `CACHE_STORE=redis`, `QUEUE_CONNECTION=redis` (tanpa perubahan kode) |
+| HTTPS | Wajib. Isi `TRUSTED_PROXIES` bila di belakang load balancer; HSTS hanya dikirim untuk request HTTPS |
+| Health check | `GET /up` (liveness) dan `GET /health` (readiness: database + cache; 503 bila salah satu gagal) |
+| Uji beban | `tests/Load/skular-smoke.js` (k6). Jalankan ke staging, bukan production |
 
 ## Perintah Lainnya
 
@@ -461,14 +506,19 @@ php artisan db:seed --class=RoleSeeder
 - **PHPStan/Larastan level 7** — `app/`, `bootstrap/app.php`, `config/`, `database/`, `routes/`.
 - **Build** — `npm run build` harus sukses.
 
-Status saat dokumentasi ditulis:
+- **Budget query** — `tests/Feature/Performance/QueryBudgetTest.php` membatasi jumlah query halaman utama (dashboard ≤ 10, modul ≤ 25, katalog ≤ 8, library ≤ 6). Hasil saat ini: dashboard 7, modul 17, katalog 4, library 2. Klik antar-section di modul memakai 5 query.
+
+Status saat dokumentasi diperbarui (6 November 2026):
 
 | Gate | Hasil |
 |---|---|
-| Pest | **373 passed** (2823 assertions), 0 failed |
-| Pint | PASS (299 file) |
+| Pest | **414 passed** (3041 assertions), 0 failed |
+| Pint | PASS |
 | PHPStan | No errors |
 | `npm run build` | Sukses |
+| `composer validate --strict` | Valid |
+| `composer audit --locked` | **FAIL**: 15 advisory pada 8 package (Livewire 4.4.7 dan beberapa komponen Symfony); perlu `composer update` |
+| `npm audit --omit=dev` | **FAIL**: 5 kerentanan (1 high, 4 moderate) |
 
 ---
 

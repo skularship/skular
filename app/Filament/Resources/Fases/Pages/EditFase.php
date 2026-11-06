@@ -13,7 +13,8 @@ class EditFase extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->failureNotificationTitle('Fase tidak bisa dihapus karena modulnya sudah dikerjakan mentee.'),
         ];
     }
 }

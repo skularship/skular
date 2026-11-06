@@ -54,6 +54,8 @@
 
             @if ($state === 'empty')
                 <x-ui.empty-state
+                    :contained="false"
+                    size="sm"
                     icon="light-bulb"
                     :title="__('Pertanyaan pemancing belum tersedia')"
                     :description="__('Pengajar belum menambahkan pertanyaan untuk modul ini. Kamu tetap bisa mengisi latihan praktik di atas.')"
@@ -226,8 +228,10 @@
                             @endif
 
                             @if ($type === \App\Enums\BrainstormQuestionType::ShortText->value)
+                                {{-- Saved when the field loses focus, not on every typing pause:
+                                     each pause was a round trip, a database write and a re-render. --}}
                                 <textarea
-                                    wire:model.live.debounce.500ms="answers.{{ $question_id }}"
+                                    wire:model.blur="answers.{{ $question_id }}"
                                     rows="3"
                                     maxlength="{{ \App\Services\BrainstormingConfigService::MAX_TEXT_ANSWER_LENGTH }}"
                                     class="w-full rounded-2xl border-2 border-zinc-200 bg-white px-4 py-3 text-base text-zinc-700 outline-none transition focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/20 sm:text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"

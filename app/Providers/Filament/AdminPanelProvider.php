@@ -35,7 +35,10 @@ class AdminPanelProvider extends PanelProvider
             ->font('Rubik')
             // The whole product is light-only, including the admin panel.
             ->darkMode(false)
-            ->favicon('skular-logo.png')
+            // Root-relative: a bare "skular-logo.png" resolved against nested
+            // admin URLs (/admin/users/...) and 404'd. Same icon as the public
+            // layouts (resources/views/partials/head.blade.php).
+            ->favicon('/favicon.png')
             ->colors([
                 // Skular amber-to-orange primary palette.
                 'primary' => [

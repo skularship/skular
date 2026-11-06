@@ -83,6 +83,17 @@ class ModulePlayer extends Component
     public bool $module_completed = false;
 
     /**
+     * Whether the checkpoint is already stored as started.
+     *
+     * Once true, section clicks skip ProgressService::startModule(), which
+     * re-resolves the whole learning path (applications, scholarships and
+     * checkpoints) only to find the module already in progress. Locked so a
+     * client cannot flip it; access itself is re-authorised on every mount.
+     */
+    #[Locked]
+    public bool $module_started = false;
+
+    /**
      * Practice responses for this module, loaded at most once per request.
      *
      * @var Collection<int, UserPracticeResponse>|null
@@ -125,7 +136,35 @@ class ModulePlayer extends Component
             $progress_service->startModule($user, $this->module);
         }
 
+        $this->module_started = true;
+
         $this->prefill($user);
+    }
+
+    /**
+     * Reload the relations every request reads.
+     *
+     * Livewire rehydrates the module without its relations; without this the
+     * outline step labels and the computed form/question lists each query the
+     * same rows again on every section click.
+     */
+    public function hydrate(): void
+    {
+        $this->module->loadMissing(['practiceForms', 'quickQuestions']);
+    }
+
+    /**
+     * Mark the module as started once per component lifetime.
+     */
+    private function ensureStarted(): void
+    {
+        if ($this->module_started) {
+            return;
+        }
+
+        $this->progressService()->startModule($this->user(), $this->module);
+
+        $this->module_started = true;
     }
 
     /**
@@ -133,7 +172,7 @@ class ModulePlayer extends Component
      */
     public function start(): void
     {
-        $this->progressService()->startModule($this->user(), $this->module);
+        $this->ensureStarted();
 
         $this->section = 'pahami';
 
@@ -150,7 +189,7 @@ class ModulePlayer extends Component
         }
 
         if (! $this->module_completed && $section !== 'opening') {
-            $this->progressService()->startModule($this->user(), $this->module);
+            $this->ensureStarted();
         }
 
         $this->section = $section;
@@ -575,7 +614,9 @@ class ModulePlayer extends Component
             'rating_options' => ModuleFeedbackService::RATING_OPTIONS,
             'average_score' => $this->averageScore(),
             'practice_pending' => $this->practicePending,
-            'next_module' => $this->nextModule,
+            // Resolving the next module walks the whole learning path; only the
+            // checkpoint section shows it, so other sections skip that work.
+            'next_module' => $this->section === 'checkpoint' ? $this->nextModule : null,
         ]);
     }
 }

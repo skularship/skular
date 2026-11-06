@@ -269,13 +269,13 @@
                                 />
                             </div>
                         @empty
-                            <div class="p-8 text-center">
-                                <div class="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-zinc-100 dark:bg-zinc-800">
-                                    <x-icons.app-icon name="key" class="size-7 text-zinc-400 dark:text-zinc-500" />
-                                </div>
-                                <p class="font-medium">{{ __('No passkeys yet') }}</p>
-                                <x-display.text class="mt-1">{{ __('Add a passkey to sign in without a password') }}</x-display.text>
-                            </div>
+                            <x-ui.empty-state
+                                :contained="false"
+                                size="sm"
+                                icon="key"
+                                :title="__('No passkeys yet')"
+                                :description="__('Add a passkey to sign in without a password')"
+                            />
                         @endforelse
                     </div>
 

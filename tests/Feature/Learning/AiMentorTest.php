@@ -8,6 +8,7 @@ use App\Models\Fase;
 use App\Models\Module;
 use App\Models\PracticeForm;
 use App\Models\User;
+use App\Services\ModuleMentorService;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 
@@ -150,4 +151,23 @@ test('retry does not duplicate the previous answer', function () {
     // user question + error bubble replaced by one assistant answer.
     expect(collect($messages)->where('role', 'user'))->toHaveCount(1)
         ->and(collect($messages)->where('role', 'assistant')->where('error', true))->toHaveCount(0);
+});
+
+test('the mentor bounds tampered chat history and field labels before prompting', function () {
+    ModuleMentorAgent::fake(['Oke.']);
+
+    $history = [
+        ['role' => 'user', 'content' => str_repeat('a', 50_000)],
+        ['role' => 'assistant', 'content' => ['bukan', 'teks']],
+    ];
+
+    $this->service->reply($this->module, $this->form, 'Lanjut.', $history, str_repeat('b', 5_000));
+
+    ModuleMentorAgent::assertPrompted(function ($prompt): bool {
+        $messages = $prompt->messages ?? [];
+
+        return count($messages) === 1
+            && mb_strlen($messages[0]->content) === ModuleMentorService::MAX_HISTORY_TURN_LENGTH
+            && ! str_contains($prompt->prompt, str_repeat('b', ModuleMentorService::MAX_FIELD_LABEL_LENGTH + 1));
+    });
 });

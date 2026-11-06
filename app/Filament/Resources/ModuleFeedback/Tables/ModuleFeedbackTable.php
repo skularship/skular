@@ -37,6 +37,9 @@ class ModuleFeedbackTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->emptyStateHeading('Belum ada feedback modul')
+            ->emptyStateDescription('Feedback dikirim mentee setelah menyelesaikan modul. Belum ada feedback yang masuk saat ini.')
+            ->emptyStateIcon('heroicon-o-chat-bubble-bottom-center-text');
     }
 }

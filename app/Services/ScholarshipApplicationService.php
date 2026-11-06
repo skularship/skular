@@ -61,6 +61,12 @@ class ScholarshipApplicationService implements ScholarshipApplicationServiceInte
         }
 
         $added = DB::transaction(function () use ($user, $scholarships): int {
+            // Locking the existing application rows alone does not serialise a
+            // mentee with no applications yet (there is nothing to lock), so
+            // the user row is locked first: concurrent selections of the same
+            // mentee queue up here and always see each other's inserts.
+            User::query()->whereKey($user->id)->lockForUpdate()->first();
+
             /** @var Collection<int, int> $existing */
             $existing = $user->scholarshipApplications()
                 ->lockForUpdate()
@@ -254,6 +260,15 @@ class ScholarshipApplicationService implements ScholarshipApplicationServiceInte
         ?string $note,
     ): ScholarshipApplication {
         $this->authorizeOwnership($user, $application);
+
+        // Once a result is reported the cycle is closed. Re-confirming would
+        // move the status back to "submitted" while the old result stays on the
+        // record, leaving the history and the twibbon eligibility inconsistent.
+        if ($application->status === ApplicationStatus::ResultReported) {
+            throw ValidationException::withMessages([
+                'proof' => 'Hasil beasiswa ini sudah dilaporkan, jadi konfirmasi pendaftarannya tidak bisa diubah lagi.',
+            ]);
+        }
 
         $path = null;
 

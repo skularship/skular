@@ -56,11 +56,11 @@
             icon="document-text"
             :title="__('Belum ada isi CV')"
             :description="__('Kerjakan latihan praktik yang ditandai admin — misalnya pengalaman organisasi dan prestasi — lalu jawabanmu otomatis muncul di sini.')"
-        >
-            <x-actions.link-button :href="route('dashboard')" wire:navigate iconTrailing="arrow-right">
-                {{ __('Kembali ke roadmap') }}
-            </x-actions.link-button>
-        </x-ui.empty-state>
+            :action-label="__('Kembali ke roadmap')"
+            :action-url="route('dashboard')"
+            action-icon-trailing="arrow-right"
+            data-test="cv-empty"
+        />
     @else
         @foreach ($sections as $section)
             <x-ui.card class="flex flex-col gap-4 print:border-zinc-300 print:shadow-none" data-test="cv-section">

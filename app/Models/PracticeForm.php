@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ContentCache;
 use Carbon\CarbonImmutable;
 use Database\Factories\PracticeFormFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -39,6 +40,21 @@ class PracticeForm extends Model
 {
     /** @use HasFactory<PracticeFormFactory> */
     use HasFactory;
+
+    /**
+     * Flush cached curriculum rows: they carry each module's
+     * `practice_forms_count`, which changes with every form added or removed.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (): void {
+            ContentCache::bump();
+        });
+
+        static::deleted(function (): void {
+            ContentCache::bump();
+        });
+    }
 
     /**
      * Get the attributes that should be cast.

@@ -45,9 +45,12 @@
 
             @if ($templates->isEmpty())
                 <x-ui.empty-state
+                    :contained="false"
+                    size="sm"
                     icon="photo"
                     :title="__('Belum ada template')"
                     :description="__('Admin belum mengunggah template twibbon. Coba lagi nanti.')"
+                    data-test="twibbon-empty"
                 />
             @else
                 <div class="grid grid-cols-2 gap-3">

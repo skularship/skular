@@ -25,7 +25,8 @@ class EditModule extends EditRecord
                 ->openUrlInNewTab(),
             PublishModuleAction::make(),
             UnpublishModuleAction::make(),
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->failureNotificationTitle('Modul tidak bisa dihapus karena sudah dikerjakan mentee. Jadikan draf untuk menyembunyikannya.'),
         ];
     }
 

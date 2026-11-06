@@ -1,5 +1,12 @@
 @php
-    $has_material = filled($module->summary_material) || filled($module->inti_material) || (is_array($module->insights) && $module->insights !== []);
+    // modules.insights is a JSON list written by the admin editor. Only
+    // non-empty text items are shown, so a blank or malformed entry can never
+    // render an empty card or break the page.
+    $insights = collect(is_array($module->insights) ? $module->insights : [])
+        ->filter(fn (mixed $insight): bool => is_string($insight) && filled($insight))
+        ->values();
+
+    $has_material = filled($module->summary_material) || filled($module->inti_material) || $insights->isNotEmpty();
 @endphp
 
 <div class="sk-rise flex flex-col gap-6">
@@ -43,7 +50,7 @@
                 </section>
             @endif
 
-            @if (is_array($module->insights) && $module->insights !== [])
+            @if ($insights->isNotEmpty())
                 <section class="flex flex-col gap-3">
                     <h3 class="inline-flex items-center gap-2 text-base font-bold text-zinc-900 dark:text-white">
                         <x-icons.app-icon name="light-bulb" class="size-4 text-brand-gold" />
@@ -51,7 +58,7 @@
                     </h3>
 
                     <ul class="grid gap-3 sm:grid-cols-2">
-                        @foreach ($module->insights as $insight)
+                        @foreach ($insights as $insight)
                             <li class="flex items-start gap-3 rounded-2xl border border-brand-amber/35 bg-brand-amber/10 px-4 py-3 text-sm text-zinc-700 dark:border-brand-amber/20 dark:text-zinc-200">
                                 <span class="flex size-6 shrink-0 items-center justify-center rounded-full brand-gradient text-[0.6875rem] font-bold text-brand-ink">{{ $loop->iteration }}</span>
                                 <span>{{ $insight }}</span>

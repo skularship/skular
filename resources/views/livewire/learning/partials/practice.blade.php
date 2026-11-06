@@ -58,6 +58,8 @@
             <div class="flex flex-col gap-5 p-5">
                 @if (count($schema) === 0)
                     <x-ui.empty-state
+                        :contained="false"
+                        size="sm"
                         icon="beaker"
                         :title="__('Latihan belum tersedia')"
                         :description="__('Admin belum menambahkan kolom untuk latihan ini.')"
@@ -228,6 +230,7 @@
             icon="beaker"
             :title="__('Belum ada latihan praktik')"
             :description="__('Admin belum menambahkan latihan untuk modul ini. Kamu bisa langsung menuju checkpoint.')"
+            data-test="practice-empty"
         >
             <x-actions.button type="button" iconTrailing="arrow-right" wire:click="nextSection" loading="module.section">
                 {{ __('Ke checkpoint') }}

@@ -1,7 +1,10 @@
 <?php
 
+use App\Enums\EducationLevel;
+use App\Enums\LocationScope;
 use App\Livewire\Profiling\Wizard;
 use App\Models\Cluster;
+use App\Models\Scholarship;
 use App\Models\User;
 use Livewire\Livewire;
 
@@ -51,6 +54,63 @@ test('the wizard navigates and answers on the client without step endpoints', fu
         ->and(method_exists(Wizard::class, 'goToStep'))->toBeFalse()
         ->and(method_exists(Wizard::class, 'selectChoice'))->toBeFalse()
         ->and(method_exists(Wizard::class, 'finish'))->toBeFalse();
+});
+
+test('the location step only offers domestic and international study destinations', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('profiling'))
+        ->assertOk()
+        ->assertSee('Preferensi lokasi beasiswa')
+        ->assertSee('data-test="option-desired-location-dalam_negeri"', false)
+        ->assertSee('data-test="option-desired-location-luar_negeri"', false)
+        ->assertDontSee('data-test="option-desired-location-Tunjangan saja"', false)
+        ->assertDontSee('data-test="option-desired-location-Parsial"', false)
+        ->assertDontSee('data-test="option-desired-location-Penuh"', false);
+});
+
+test('a funding category cannot be submitted as a location preference', function () {
+    $cluster = Cluster::factory()->create();
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test(Wizard::class)
+        ->call('submit', [...validProfilingAnswers($cluster->id), 'desired_location' => 'Penuh'])
+        ->assertReturned(fn (array $result): bool => $result['ok'] === false && $result['step'] === 6)
+        ->assertHasErrors(['desired_location']);
+
+    expect($user->refresh()->profile_completed_at)->toBeNull();
+});
+
+test('finishing the wizard shows matching scholarships on the recommendation page', function () {
+    $cluster = Cluster::factory()->create();
+    $user = User::factory()->create();
+
+    $domestic = Scholarship::factory()->forLevel(EducationLevel::S1)->withoutRequirements()->create([
+        'scholarship_name' => 'Beasiswa Domestik Pasca Wizard',
+        'scope' => LocationScope::DalamNegeri,
+    ]);
+
+    Scholarship::factory()->forLevel(EducationLevel::S1)->withoutRequirements()->create([
+        'scholarship_name' => 'Beasiswa Internasional Pasca Wizard',
+        'scope' => LocationScope::LuarNegeri,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(Wizard::class)
+        ->call('submit', [...validProfilingAnswers($cluster->id), 'desired_location' => 'dalam_negeri'])
+        ->assertHasNoErrors()
+        ->assertRedirect(route('profiling.recommendation'));
+
+    expect($user->refresh()->desired_location)->toBe(LocationScope::DalamNegeri);
+
+    $this->actingAs($user)
+        ->get(route('profiling.recommendation'))
+        ->assertOk()
+        ->assertSee('Beasiswa Domestik Pasca Wizard')
+        ->assertDontSee('Beasiswa Internasional Pasca Wizard')
+        ->assertSee('Lihat Detail');
 });
 
 test('every single choice question renders one radio group bound to frontend state', function () {
