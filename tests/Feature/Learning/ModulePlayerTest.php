@@ -236,14 +236,17 @@ test('the checkpoint can be confirmed once every practice form is submitted', fu
         ->toBe(CheckpointStatus::Completed);
 });
 
-test('the module introduction appears in pahami after the material', function () {
-    $this->module->update(['introduction' => 'Sebelum masuk kuis, baca ulang inti materi supaya jawabanmu tepat.']);
+test('the module introduction opens pahami right before the core material', function () {
+    $this->module->update([
+        'introduction' => 'Baca pengantar ini dulu supaya jawabanmu tepat.',
+        'inti_material' => 'Isi inti materi lama.',
+    ]);
 
     Livewire::actingAs($this->mentee)
         ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'pahami'])
         ->assertSee('Kata Pengantar')
-        ->assertSee('Refleksi Menuju Kuis')
-        ->assertSee('Sebelum masuk kuis, baca ulang inti materi supaya jawabanmu tepat.');
+        ->assertSee('Sebelum Mulai Belajar')
+        ->assertSeeInOrder(['Baca pengantar ini dulu supaya jawabanmu tepat.', 'Inti Materi', 'Isi inti materi lama.']);
 });
 
 test('the module introduction appears before the practice forms', function () {

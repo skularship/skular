@@ -149,7 +149,7 @@ class ModuleReadinessService implements ModuleReadinessServiceInterface
     private function hasMaterial(Module $module): bool
     {
         return filled($module->summary_material)
-            || filled($module->inti_material)
+            || $module->hasCoreMaterial()
             || array_filter($module->insights, filled(...)) !== [];
     }
 

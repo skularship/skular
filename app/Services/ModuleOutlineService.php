@@ -175,7 +175,11 @@ class ModuleOutlineService implements ModuleOutlineServiceInterface
             $items[] = count($insights).' poin penting';
         }
 
-        if (filled($module->inti_material)) {
+        $core_sections = $module->filledCoreSections();
+
+        if ($core_sections->isNotEmpty()) {
+            $items[] = 'Inti materi: '.$core_sections->count().' kolom';
+        } elseif (filled($module->inti_material)) {
             $items[] = 'Inti materi';
         }
 

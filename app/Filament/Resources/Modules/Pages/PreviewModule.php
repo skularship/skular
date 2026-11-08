@@ -198,6 +198,11 @@ class PreviewModule extends Page
     {
         $schema = [];
 
+        if (filled($module->introduction)) {
+            $schema[] = Text::make('Kata pengantar (dibaca paling awal):')->weight('bold')->size('sm');
+            $schema[] = $this->paragraph($module->introduction);
+        }
+
         if (filled($module->link_video)) {
             $schema[] = Text::make(new HtmlString(
                 'Video materi: <a href="'.e((string) $module->link_video).'" target="_blank" rel="noopener noreferrer">'.e((string) $module->link_video).'</a>',
@@ -220,12 +225,21 @@ class PreviewModule extends Page
             ));
         }
 
-        if (filled($module->inti_material)) {
+        $core_sections = $module->filledCoreSections();
+
+        if ($core_sections->isNotEmpty()) {
+            $schema[] = Text::make('Inti materi')->weight('bold')->size('sm');
+
+            foreach ($core_sections as $core_section) {
+                $schema[] = Text::make($core_section->subtitle)->weight('semibold')->icon('heroicon-m-bookmark');
+                $schema[] = $this->paragraph($core_section->body);
+            }
+        } elseif (filled($module->inti_material)) {
             $schema[] = Text::make('Inti materi')->weight('bold')->size('sm');
             $schema[] = $this->paragraph($module->inti_material);
         }
 
-        if ($schema === []) {
+        if (! filled($module->link_video) && ! filled($module->summary_material) && $insights === [] && ! $module->hasCoreMaterial()) {
             $schema[] = Text::make('Materi Pahami masih kosong, mentee akan melihat pesan bahwa materi belum tersedia.')
                 ->icon('heroicon-m-exclamation-triangle')
                 ->color('warning');
@@ -243,8 +257,6 @@ class PreviewModule extends Page
             Text::make('Mentee menjawab setiap pernyataan dengan Benar atau Salah, lalu jawabannya langsung dikoreksi.')
                 ->icon('heroicon-m-information-circle')
                 ->color('gray'),
-            Text::make('Kata pengantar yang dibaca sebelum kuis:')->weight('bold')->size('sm'),
-            $this->paragraph($module->introduction ?? ''),
             Text::make('Pertanyaan:')->weight('bold')->size('sm'),
         ];
 

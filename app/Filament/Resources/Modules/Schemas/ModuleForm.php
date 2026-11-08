@@ -186,7 +186,7 @@ class ModuleForm
                             ->placeholder('Contoh: Sebelum berlatih, pahami dulu apa yang dinilai penyelenggara beasiswa pada bagian ini.')
                             ->rows(4)
                             ->columnSpanFull()
-                            ->helperText('Tampil dua kali di sisi mentee: sebelum Quick Question dan sebelum latihan praktik.'),
+                            ->helperText('Tampil dua kali di sisi mentee: di awal langkah Pahami (tepat sebelum inti materi) dan sebelum latihan praktik.'),
                     ]),
 
                 Section::make('3. Materi langkah Pahami')
@@ -205,11 +205,38 @@ class ModuleForm
                             helperText: 'Ditampilkan sebagai kartu berurutan pada langkah Pahami. Susun ulang dengan menarik barisnya.',
                             maxLength: 255,
                         ),
-                        Textarea::make('inti_material')
+                        Repeater::make('coreSections')
                             ->label('Inti materi')
-                            ->rows(6)
+                            ->relationship()
+                            ->orderColumn('ordering')
+                            ->reorderable()
+                            ->schema([
+                                TextInput::make('subtitle')
+                                    ->label('Subjudul')
+                                    ->placeholder('Contoh: Kenali dulu apa yang dinilai')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
+                                Textarea::make('body')
+                                    ->label('Isi')
+                                    ->placeholder('Tulis dengan sapaan "kamu" dan kalimat sederhana.')
+                                    ->required()
+                                    ->rows(6)
+                                    ->columnSpanFull(),
+                            ])
+                            ->itemLabel(fn (array $state): string => filled($state['subtitle'] ?? null)
+                                ? Str::limit((string) $state['subtitle'], 70)
+                                : 'Kolom baru')
+                            ->addActionLabel('Tambah kolom inti materi')
+                            ->defaultItems(0)
+                            ->helperText('Tampil tepat setelah kata pengantar di langkah Pahami. Satu kolom atau lebih, masing-masing dengan subjudul. Tarik barisnya untuk mengubah urutan.')
+                            ->columnSpanFull(),
+                        Textarea::make('inti_material')
+                            ->label('Inti materi lama (satu teks)')
+                            ->rows(4)
                             ->columnSpanFull()
-                            ->helperText('Pembahasan utama yang dibaca mentee setelah ringkasan dan poin penting.'),
+                            ->visible(fn (?Module $record): bool => filled($record?->inti_material))
+                            ->helperText('Hanya tampil ke mentee selama modul belum punya kolom inti materi di atas. Pindahkan isinya ke kolom baru, lalu kosongkan teks ini.'),
                         Toggle::make('has_video')
                             ->label('Modul ini punya video')
                             ->dehydrated(false)

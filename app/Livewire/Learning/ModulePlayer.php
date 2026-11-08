@@ -126,7 +126,7 @@ class ModulePlayer extends Component
             throw new AuthorizationException('Modul ini masih terkunci. Selesaikan modul sebelumnya dulu ya.');
         }
 
-        $this->module = $module->loadMissing(['fase', 'practiceForms', 'quickQuestions', 'scholarship']);
+        $this->module = $module->loadMissing(['fase', 'practiceForms', 'quickQuestions', 'scholarship', 'coreSections']);
 
         if (! array_key_exists($this->section, $this->steps)) {
             $this->section = 'opening';
@@ -152,7 +152,7 @@ class ModulePlayer extends Component
      */
     public function hydrate(): void
     {
-        $this->module->loadMissing(['practiceForms', 'quickQuestions']);
+        $this->module->loadMissing(['practiceForms', 'quickQuestions', 'coreSections']);
     }
 
     /**

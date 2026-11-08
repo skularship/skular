@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -314,6 +315,42 @@ class Module extends Model
     public function practiceForms(): HasMany
     {
         return $this->hasMany(PracticeForm::class)->orderBy('ordering')->orderBy('id');
+    }
+
+    /**
+     * Get the "Inti Materi" columns of this module in display order.
+     *
+     * @return HasMany<ModuleCoreSection, $this>
+     */
+    public function coreSections(): HasMany
+    {
+        return $this->hasMany(ModuleCoreSection::class)->orderBy('ordering')->orderBy('id');
+    }
+
+    /**
+     * Get the filled "Inti Materi" columns, using the loaded relation when present.
+     *
+     * @return Collection<int, ModuleCoreSection>
+     */
+    public function filledCoreSections(): Collection
+    {
+        $sections = $this->relationLoaded('coreSections') ? $this->coreSections : $this->coreSections()->get();
+
+        return $sections
+            ->filter(fn (ModuleCoreSection $section): bool => filled($section->subtitle) && filled($section->body))
+            ->sortBy([['ordering', 'asc'], ['id', 'asc']])
+            ->values();
+    }
+
+    /**
+     * Determine whether the module has any "Inti Materi" to show.
+     *
+     * Modules written before the column editor only have the legacy single
+     * text, which still counts and is still shown.
+     */
+    public function hasCoreMaterial(): bool
+    {
+        return $this->filledCoreSections()->isNotEmpty() || filled($this->inti_material);
     }
 
     /**

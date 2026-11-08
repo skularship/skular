@@ -3,15 +3,11 @@
 ])
 
 @php
-    $is_quiz = $variant === 'quiz';
-
-    $title = $is_quiz ? __('Refleksi Menuju Kuis') : __('Ayo Mulai Praktik');
-
-    $subtitle = $is_quiz
-        ? __('Baca dulu arahan ini sebelum menguji pemahamanmu.')
-        : __('Konteks dari modul ini sebelum kamu mengerjakan latihan.');
-
-    $section_icon = $is_quiz ? 'clipboard-document-check' : 'beaker';
+    [$title, $subtitle, $section_icon] = match ($variant) {
+        'pahami' => [__('Sebelum Mulai Belajar'), __('Baca pengantar ini dulu, lalu lanjut ke inti materi di bawah.'), 'book-open'],
+        'quiz' => [__('Refleksi Menuju Kuis'), __('Baca dulu arahan ini sebelum menguji pemahamanmu.'), 'clipboard-document-check'],
+        default => [__('Ayo Mulai Praktik'), __('Konteks dari modul ini sebelum kamu mengerjakan latihan.'), 'beaker'],
+    };
 @endphp
 
 <section

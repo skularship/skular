@@ -6,7 +6,10 @@
         ->filter(fn (mixed $insight): bool => is_string($insight) && filled($insight))
         ->values();
 
-    $has_material = filled($module->summary_material) || filled($module->inti_material) || $insights->isNotEmpty();
+    $core_sections = $module->filledCoreSections();
+    $has_core = $core_sections->isNotEmpty() || filled($module->inti_material);
+    $has_summary = filled($module->summary_material) || $insights->isNotEmpty();
+    $has_material = $has_core || $has_summary;
 @endphp
 
 <div class="sk-rise flex flex-col gap-6">
@@ -35,7 +38,54 @@
         </div>
     </div>
 
-    @if ($has_material)
+    @if (filled($module->introduction))
+        @include('livewire.learning.partials.module-introduction', ['variant' => 'pahami'])
+    @endif
+
+    @if ($has_core)
+        <section class="flex flex-col gap-4" data-test="inti-materi" aria-labelledby="inti-materi-heading">
+            <h3 id="inti-materi-heading" class="inline-flex items-center gap-2 text-lg font-extrabold tracking-tight text-zinc-900">
+                <x-icons.app-icon name="bolt" class="size-5 text-brand-teal" />
+                {{ __('Inti Materi') }}
+            </h3>
+
+            @if ($core_sections->isNotEmpty())
+                @if ($core_sections->count() > 1)
+                    {{-- A short table of contents keeps long material easy to skim. --}}
+                    <nav aria-label="{{ __('Daftar inti materi') }}" class="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                        @foreach ($core_sections as $core_section)
+                            <a
+                                href="#inti-{{ $core_section->id }}"
+                                class="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-brand-teal/20 bg-white px-3.5 py-2 text-xs font-semibold text-zinc-600 transition hover:border-brand-teal hover:text-brand-teal focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-teal"
+                            >
+                                <span class="flex size-5 items-center justify-center rounded-full bg-brand-teal/10 text-[0.625rem] font-bold text-brand-teal">{{ $loop->iteration }}</span>
+                                {{ \Illuminate\Support\Str::limit($core_section->subtitle, 40) }}
+                            </a>
+                        @endforeach
+                    </nav>
+                @endif
+
+                <ol class="flex flex-col gap-4">
+                    @foreach ($core_sections as $core_section)
+                        <li id="inti-{{ $core_section->id }}" class="scroll-mt-24 rounded-3xl border border-brand-teal/20 bg-white p-5 shadow-soft sm:p-6" data-test="inti-materi-kolom">
+                            <h4 class="flex items-start gap-3 text-base font-bold text-zinc-900">
+                                <span class="flex size-7 shrink-0 items-center justify-center rounded-full brand-gradient text-xs font-bold text-brand-ink">{{ $loop->iteration }}</span>
+                                <span class="min-w-0 pt-0.5 break-words">{{ $core_section->subtitle }}</span>
+                            </h4>
+
+                            <p class="mt-3 max-w-3xl text-[0.9375rem] leading-relaxed break-words whitespace-pre-line text-zinc-700 sm:ps-10">{{ $core_section->body }}</p>
+                        </li>
+                    @endforeach
+                </ol>
+            @else
+                <div class="rounded-3xl border border-brand-teal/25 bg-brand-teal/5 p-5">
+                    <p class="max-w-3xl text-[0.9375rem] leading-relaxed whitespace-pre-line text-zinc-700">{{ $module->inti_material }}</p>
+                </div>
+            @endif
+        </section>
+    @endif
+
+    @if ($has_summary)
         <x-ui.card padding="lg" class="flex flex-col gap-8">
             @if (filled($module->summary_material))
                 <section class="flex flex-col gap-3">
@@ -68,30 +118,16 @@
                 </section>
             @endif
 
-            @if (filled($module->inti_material))
-                <section class="flex flex-col gap-3 rounded-3xl border border-brand-teal/25 bg-brand-teal/5 p-5 dark:border-brand-teal-light/20 dark:bg-brand-teal/10">
-                    <h3 class="inline-flex items-center gap-2 text-base font-bold text-brand-teal dark:text-brand-teal-light">
-                        <x-icons.app-icon name="bolt" class="size-4" />
-                        {{ __('Inti materi') }}
-                    </h3>
-
-                    <p class="max-w-3xl text-[0.9375rem] leading-relaxed whitespace-pre-line text-zinc-700 dark:text-zinc-200">
-                        {{ $module->inti_material }}
-                    </p>
-                </section>
-            @endif
         </x-ui.card>
-    @else
+    @endif
+
+    @unless ($has_material)
         <x-ui.empty-state
             icon="book-open-text"
             :title="__('Materi belum tersedia')"
             :description="__('Admin belum menambahkan materi untuk modul ini. Kamu bisa lanjut ke bagian berikutnya.')"
         />
-    @endif
-
-    @if (filled($module->introduction))
-        @include('livewire.learning.partials.module-introduction', ['variant' => 'quiz'])
-    @endif
+    @endunless
 
     <div class="flex flex-wrap items-center justify-between gap-3">
         <x-actions.button type="button" variant="outline" icon="arrow-left" wire:click="previousSection" loading="module.section">
