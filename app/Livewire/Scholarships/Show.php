@@ -21,6 +21,11 @@ class Show extends Component
 {
     public Scholarship $scholarship;
 
+    /**
+     * Show one scholarship; draft and archived scholarships return 404.
+     *
+     * @param  Scholarship  $scholarship  Route-bound scholarship.
+     */
     public function mount(Scholarship $scholarship): void
     {
         // Draft and archived scholarships are not mentee-facing.
@@ -75,6 +80,11 @@ class Show extends Component
         $this->dispatch('toast', variant: 'success', text: __('Beasiswa berhasil ditambahkan ke daftar persiapanmu.'));
     }
 
+    /**
+     * Render the scholarship detail page (route scholarships.show).
+     *
+     * @return View The livewire.scholarships.show view.
+     */
     public function render(ScholarshipApplicationServiceInterface $application_service): View
     {
         /** @var User $user */

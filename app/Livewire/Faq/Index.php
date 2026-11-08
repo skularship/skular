@@ -69,6 +69,11 @@ class Index extends Component
         $this->resetPage();
     }
 
+    /**
+     * Render the public FAQ page (route faq.index).
+     *
+     * @return View The livewire.faq.index view.
+     */
     public function render(): View
     {
         $categories = FaqCategory::query()

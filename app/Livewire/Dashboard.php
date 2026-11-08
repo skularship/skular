@@ -29,6 +29,11 @@ use Livewire\Component;
 #[Title('Dashboard')]
 class Dashboard extends Component
 {
+    /**
+     * Render the mentee dashboard with progress summary and roadmap (route dashboard).
+     *
+     * @return View The livewire.dashboard view.
+     */
     public function render(
         ProgressServiceInterface $progress_service,
         ScholarshipApplicationServiceInterface $application_service,

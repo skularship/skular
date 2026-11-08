@@ -55,6 +55,11 @@ class Show extends Component
         return $user;
     }
 
+    /**
+     * Render the mentee CV page (route cv.show).
+     *
+     * @return View The livewire.cv.show view.
+     */
     public function render(): View
     {
         return view('livewire.cv.show', [

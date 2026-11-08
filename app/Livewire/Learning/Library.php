@@ -18,6 +18,11 @@ use Livewire\Component;
 #[Title('Perpustakaan')]
 class Library extends Component
 {
+    /**
+     * Render the optional Perpustakaan module library (route library.index).
+     *
+     * @return View The livewire.learning.library view.
+     */
     public function render(LearningPathServiceInterface $learning_path): View
     {
         $user = $this->user();

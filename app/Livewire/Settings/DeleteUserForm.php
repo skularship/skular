@@ -7,6 +7,9 @@ use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
+/**
+ * Settings form that deletes the signed-in account after password confirmation.
+ */
 class DeleteUserForm extends Component
 {
     use PasswordValidationRules;

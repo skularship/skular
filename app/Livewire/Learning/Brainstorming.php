@@ -83,6 +83,16 @@ class Brainstorming extends Component
 
     public bool $show_outline = true;
 
+    /**
+     * Verify the module is unlocked and the practice form is active, then load
+     * the admin questions and any stored session. Read-only: no checkpoint is written.
+     *
+     * @param  Module  $module  The module being studied.
+     * @param  int  $form_id  Active practice form of that module.
+     * @param  string|null  $field_label  Label of the practice field in focus, if any.
+     *
+     * @throws AuthorizationException When the module is locked or the form is not available.
+     */
     public function mount(Module $module, int $form_id, ?string $field_label = null): void
     {
         $user = $this->user();
@@ -124,6 +134,9 @@ class Brainstorming extends Component
         }
     }
 
+    /**
+     * Open or close the brainstorming panel.
+     */
     public function toggle(): void
     {
         $this->open = ! $this->open;
@@ -442,6 +455,11 @@ class Brainstorming extends Component
         return $user;
     }
 
+    /**
+     * Render the brainstorming panel inside a practice form.
+     *
+     * @return View The livewire.learning.brainstorming view.
+     */
     public function render(): View
     {
         return view('livewire.learning.brainstorming');

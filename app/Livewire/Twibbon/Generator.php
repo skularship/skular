@@ -100,7 +100,7 @@ class Generator extends Component
      * @return Collection<int, TwibbonTemplate>
      */
     #[Computed]
-    public function templates()
+    public function templates(): Collection
     {
         return TwibbonTemplate::query()->activeOrdered()->get();
     }
@@ -145,6 +145,11 @@ class Generator extends Component
         return $user;
     }
 
+    /**
+     * Render the twibbon generator for one application (route twibbon.show).
+     *
+     * @return View The livewire.twibbon.generator view.
+     */
     public function render(): View
     {
         return view('livewire.twibbon.generator', [

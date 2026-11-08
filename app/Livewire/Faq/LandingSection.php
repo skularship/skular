@@ -14,6 +14,11 @@ use Livewire\Component;
  */
 class LandingSection extends Component
 {
+    /**
+     * Render the FAQ section embedded on the landing page.
+     *
+     * @return View The livewire.faq.landing-section view.
+     */
     public function render(): View
     {
         $faqs = Faq::query()

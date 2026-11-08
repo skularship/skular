@@ -18,6 +18,9 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
+/**
+ * Settings page for password, passkeys and two-factor authentication.
+ */
 #[Title('Security settings')]
 class Security extends Component
 {

@@ -9,6 +9,9 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
+/**
+ * Settings page for name/email and email verification (route profile.edit).
+ */
 #[Title('Profile settings')]
 class Profile extends Component
 {
@@ -65,6 +68,11 @@ class Profile extends Component
         $this->dispatch('toast', variant: 'info', text: __('A new verification link has been sent to your email address.'));
     }
 
+    /**
+     * Determine whether the user still has to verify their email.
+     *
+     * @return bool True when verification is required and pending.
+     */
     #[Computed]
     public function hasUnverifiedEmail(): bool
     {
@@ -73,6 +81,11 @@ class Profile extends Component
         return $user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail();
     }
 
+    /**
+     * Determine whether the delete account form may be shown.
+     *
+     * @return bool False until a must-verify user has verified their email.
+     */
     #[Computed]
     public function showDeleteUser(): bool
     {

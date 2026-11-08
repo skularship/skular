@@ -123,6 +123,15 @@ class MentorChat extends Component
         return $this->quota()->limit();
     }
 
+    /**
+     * Verify the module is unlocked and, when given, that the practice form is active.
+     *
+     * @param  Module  $module  The module being studied.
+     * @param  int|null  $form_id  Practice form anchoring the chat, if any.
+     * @param  string|null  $field_label  Label of the practice field in focus, if any.
+     *
+     * @throws AuthorizationException When the module is locked or the form is not available.
+     */
     public function mount(Module $module, ?int $form_id = null, ?string $field_label = null): void
     {
         $user = $this->user();
@@ -149,6 +158,9 @@ class MentorChat extends Component
         }
     }
 
+    /**
+     * Open or close the chat panel.
+     */
     public function toggle(): void
     {
         $this->open = ! $this->open;
@@ -405,6 +417,11 @@ class MentorChat extends Component
         return $user;
     }
 
+    /**
+     * Render the AI Mentor chat with suggestions and remaining quota.
+     *
+     * @return View The livewire.learning.mentor-chat view.
+     */
     public function render(): View
     {
         return view('livewire.learning.mentor-chat', [

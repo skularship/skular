@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Features\SupportRedirects\Redirector;
 
+/**
+ * Invokable action that logs the user out, invalidates the session and redirects home. Used by DeleteUserForm after the account is deleted.
+ */
 class Logout
 {
     /**

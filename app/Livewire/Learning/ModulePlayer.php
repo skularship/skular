@@ -730,6 +730,11 @@ class ModulePlayer extends Component
         return $user;
     }
 
+    /**
+     * Render the learning loop of one module (route modules.show).
+     *
+     * @return View The livewire.learning.module-player view.
+     */
     public function render(): View
     {
         return view('livewire.learning.module-player', [

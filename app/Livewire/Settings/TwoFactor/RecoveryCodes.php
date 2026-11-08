@@ -7,6 +7,9 @@ use Laravel\Fortify\Actions\GenerateNewRecoveryCodes;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
+/**
+ * Shows and regenerates two-factor recovery codes on the security settings page.
+ */
 class RecoveryCodes extends Component
 {
     /** @var list<string> */

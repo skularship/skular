@@ -157,7 +157,7 @@ class Wizard extends Component
      * @return Collection<int, Cluster>
      */
     #[Computed]
-    public function clusters()
+    public function clusters(): Collection
     {
         return Cluster::query()->activeOrdered()->get();
     }
@@ -252,6 +252,11 @@ class Wizard extends Component
         return self::STORAGE_KEY.':'.$this->user()->getKey();
     }
 
+    /**
+     * Render the eight question profiling wizard (route profiling).
+     *
+     * @return View The livewire.profiling.wizard view.
+     */
     public function render(): View
     {
         return view('livewire.profiling.wizard');

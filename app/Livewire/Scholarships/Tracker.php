@@ -151,7 +151,7 @@ class Tracker extends Component
      *
      * @return Collection<int, ScholarshipApplication>
      */
-    private function applications()
+    private function applications(): Collection
     {
         return $this->user()
             ->scholarshipApplications()
@@ -202,6 +202,11 @@ class Tracker extends Component
         return $user;
     }
 
+    /**
+     * Render the "Beasiswa Saya" application tracker (route scholarships.tracker).
+     *
+     * @return View The livewire.scholarships.tracker view.
+     */
     public function render(): View
     {
         return view('livewire.scholarships.tracker', [

@@ -33,6 +33,9 @@ class Recommendation extends Component
      */
     public ?int $primary = null;
 
+    /**
+     * Preload the scholarships the mentee already selected and the primary one.
+     */
     public function mount(): void
     {
         $user = $this->user();
@@ -127,6 +130,11 @@ class Recommendation extends Component
         );
     }
 
+    /**
+     * Render the matched scholarships after profiling (route profiling.recommendation).
+     *
+     * @return View The livewire.scholarships.recommendation view.
+     */
     public function render(): View
     {
         return view('livewire.scholarships.recommendation', [

@@ -203,6 +203,11 @@ class QuickAssessment extends Component
             ->score($status, $goal, $timeline, $assets, $weekly);
     }
 
+    /**
+     * Render the public Profiling Kilat readiness quiz.
+     *
+     * @return View The livewire.profiling.quick-assessment view.
+     */
     public function render(): View
     {
         return view('livewire.profiling.quick-assessment');
