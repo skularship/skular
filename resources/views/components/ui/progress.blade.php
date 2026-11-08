@@ -1,3 +1,4 @@
+{{-- Linear progress bar. Props: value (0-100), label, showValue, size, tone. --}}
 @props([
     'value' => 0,
     'label' => null,

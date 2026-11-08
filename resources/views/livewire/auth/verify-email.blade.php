@@ -1,3 +1,4 @@
+{{-- Fortify email verification notice. --}}
 <x-layouts::auth :title="__('Email verification')">
     <div class="mt-4 flex flex-col gap-6">
         <x-display.text class="text-center">

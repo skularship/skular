@@ -1,3 +1,4 @@
+{{-- "Lanjutkan dengan Google" button linking to the Google OAuth redirect route (GoogleAuthController). --}}
 @php
     $configured = app(\App\Contracts\GoogleAuthServiceInterface::class)->isConfigured();
 @endphp

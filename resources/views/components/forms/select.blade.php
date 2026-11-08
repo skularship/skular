@@ -1,3 +1,4 @@
+{{-- Select input. Props: name, label, hint. --}}
 @props([
     'name' => null,
     'label' => null,

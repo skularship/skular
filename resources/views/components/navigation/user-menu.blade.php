@@ -1,3 +1,4 @@
+{{-- Avatar dropdown user menu. Prop: showName. --}}
 @props([
     'showName' => true,
 ])

@@ -1,3 +1,4 @@
+{{-- Skeleton loading lines. Props: lines, height, rounded. --}}
 @props([
     'lines' => 1,
     'height' => 'h-4',

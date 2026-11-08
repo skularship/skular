@@ -1,3 +1,4 @@
+{{-- Passkey sign-in button for the login screen. Props: optionsRoute, submitRoute, label, loadingLabel, separator. --}}
 @props([
     'optionsRoute' => 'passkey.login-options',
     'submitRoute' => 'passkey.login',

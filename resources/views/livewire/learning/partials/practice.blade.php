@@ -1,3 +1,4 @@
+{{-- Praktik step: practice forms (dynamic fields), AI result label and feedback, re-assessment button, brainstorming, AI Mentor chat, and the gated "Lanjut ke checkpoint" button. --}}
 @php
     $submitted_forms = $forms->filter(fn ($form) => $responses->has($form->id))->count();
 @endphp

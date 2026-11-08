@@ -1,3 +1,4 @@
+{{-- Title + description block at the top of auth screens. Props: title, description. --}}
 @props([
     'title',
     'description',

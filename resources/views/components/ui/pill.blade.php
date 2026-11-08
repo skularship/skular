@@ -1,3 +1,4 @@
+{{-- Pill/badge label. Props: variant (neutral/success/warning/danger/info/peach/brand), icon. --}}
 @props([
     'variant' => 'neutral',
     'icon' => null,

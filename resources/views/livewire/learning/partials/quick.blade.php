@@ -1,3 +1,4 @@
+{{-- Quick Question step: true/false comprehension questions graded instantly with the admin explanation. --}}
 @php
     $correct_count = 0;
 

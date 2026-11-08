@@ -1,3 +1,4 @@
+{{-- Circular progress ring. Props: value (0-100), size, stroke, label, caption, tone. --}}
 @props([
     'value' => 0,
     'size' => 96,

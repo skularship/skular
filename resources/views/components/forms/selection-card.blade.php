@@ -1,3 +1,4 @@
+{{-- Clickable choice card bound to an Alpine path (profiling wizard, Profiling Kilat). Props: model, value, title, description, icon, disabled, compact, grouped (single=radio, multi=checkbox), change, name. --}}
 @props([
     'model',
     'value' => null,

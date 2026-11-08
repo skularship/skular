@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{{-- Main mentee layout: desktop sidebar, mobile top bar and fixed bottom navigation, toast area. Data: optional $title. --}}
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         {{-- Every page behind this shell requires a session: crawling is

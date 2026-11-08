@@ -1,3 +1,4 @@
+{{-- Pahami step: video, Kata Pengantar, Inti Materi columns (falls back to the legacy inti_material text), then Ringkasan and Insight. --}}
 @php
     // modules.insights is a JSON list written by the admin editor. Only
     // non-empty text items are shown, so a blank or malformed entry can never

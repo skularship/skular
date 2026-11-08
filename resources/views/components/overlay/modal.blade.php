@@ -1,3 +1,4 @@
+{{-- Accessible modal dialog (Alpine). Props: name, model, show, focusable. --}}
 @props([
     'name' => null,
     'model' => null,

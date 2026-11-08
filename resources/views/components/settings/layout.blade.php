@@ -1,3 +1,4 @@
+{{-- Two-column layout of the settings pages (navigation + content slot). --}}
 <div class="flex items-start max-md:flex-col">
     <div class="w-full pb-4 md:me-10 md:w-[220px]">
         <nav aria-label="{{ __('Settings') }}" class="flex flex-col">

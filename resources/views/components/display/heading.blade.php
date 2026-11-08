@@ -1,3 +1,4 @@
+{{-- Heading element. Props: level (h1-h6), size. --}}
 @props([
     'level' => null,
     'size' => 'base',

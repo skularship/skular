@@ -1,3 +1,4 @@
+{{-- Perpustakaan library of optional modules (App\Livewire\Learning\Library). --}}
 @php
     $tones = ['teal', 'amber', 'peach', 'mint'];
 @endphp

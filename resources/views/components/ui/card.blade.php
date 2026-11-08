@@ -1,3 +1,4 @@
+{{-- Rounded card container. Props: padding (none/sm/md/lg), variant (plain/amber/teal/peach/mint/brand), hover. --}}
 @props([
     'padding' => 'md',
     'variant' => 'plain',

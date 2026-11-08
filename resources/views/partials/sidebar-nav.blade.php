@@ -1,3 +1,4 @@
+{{-- Sidebar navigation links of the mentee app (Ruang Belajar, Beasiswa, Akun). --}}
 @php
     $mobile = $mobile ?? false;
 

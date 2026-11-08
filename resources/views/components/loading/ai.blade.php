@@ -1,3 +1,4 @@
+{{-- Loading state for AI actions (optional skeleton). Props: loading (config/loading.php key), target, message, detail, skeleton, skeletonLines, active. --}}
 @props([
     'loading' => 'ai.feedback',
     'target' => null,

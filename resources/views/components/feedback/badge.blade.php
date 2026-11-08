@@ -1,3 +1,4 @@
+{{-- Small inline badge. Prop: size. --}}
 @props([
     'size' => 'sm',
 ])

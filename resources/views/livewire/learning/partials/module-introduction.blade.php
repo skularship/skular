@@ -1,3 +1,4 @@
+{{-- Kata Pengantar card. Prop: variant (pahami | quiz | practice) changes the title and hint. --}}
 @props([
     'variant' => 'quiz',
 ])

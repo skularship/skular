@@ -1,3 +1,4 @@
+{{-- Statistic tile. Props: label, value, hint, icon, tone. --}}
 @props([
     'label',
     'value',

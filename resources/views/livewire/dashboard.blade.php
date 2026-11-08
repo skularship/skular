@@ -1,3 +1,4 @@
+{{-- Mentee dashboard (App\Livewire\Dashboard): progress summary, AI result label (never the numeric score) and the roadmap per fase. --}}
 @php
     $first_name = \Illuminate\Support\Str::before($user->name, ' ');
 

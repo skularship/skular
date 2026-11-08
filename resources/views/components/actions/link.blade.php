@@ -1,3 +1,4 @@
+{{-- Underlined text link (<x-actions.link>). Prop "as" sets the element tag (default a). --}}
 @props([
     'as' => 'a',
 ])

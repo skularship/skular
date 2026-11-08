@@ -1,3 +1,4 @@
+{{-- Security settings: password, passkeys and two-factor authentication. --}}
 <section class="w-full">
     @include('partials.settings-heading')
 

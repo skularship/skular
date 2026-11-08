@@ -1,3 +1,4 @@
+{{-- Heroicon renderer via svg() (much cheaper than dynamic components; keep it). Props: name, variant. --}}
 @props([
     'name',
     'variant' => 'o',

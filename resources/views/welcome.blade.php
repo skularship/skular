@@ -1,3 +1,4 @@
+{{-- Public landing page (route home): marketing sections, Profiling Kilat and the FAQ section. Adds the js class on <html> that enables scroll reveal in app.js. --}}
 @php
     /**
      * Landing page copy.

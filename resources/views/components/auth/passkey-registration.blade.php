@@ -1,3 +1,4 @@
+{{-- Passkey (WebAuthn) registration UI for the security settings page. Loads resources/js/passkeys.js and waits for the passkeys:ready event. --}}
 @assets
 @vite('resources/js/passkeys.js')
 @endassets

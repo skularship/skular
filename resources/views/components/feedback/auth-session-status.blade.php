@@ -1,3 +1,4 @@
+{{-- Session status message on auth screens (e.g. reset link sent). Prop: status. --}}
 @props([
     'status',
 ])

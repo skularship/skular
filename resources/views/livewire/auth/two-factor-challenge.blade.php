@@ -1,3 +1,4 @@
+{{-- Fortify two-factor challenge (code or recovery code). --}}
 <x-layouts::auth :title="__('Two-factor authentication')">
     <div class="flex flex-col gap-6">
         <div

@@ -1,3 +1,4 @@
+{{-- Fortify confirm-password screen. --}}
 <x-layouts::auth :title="__('Confirm password')">
     <div class="flex flex-col gap-6">
         <x-auth.auth-header

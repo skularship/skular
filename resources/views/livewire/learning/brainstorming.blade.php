@@ -1,3 +1,4 @@
+{{-- Brainstorming panel inside a practice form (App\Livewire\Learning\Brainstorming): admin questions, then an AI draft outline built only from the mentee answers. --}}
 <section
     class="overflow-hidden rounded-3xl border border-brand-amber/45 bg-brand-amber/10 shadow-soft dark:border-brand-amber/25 dark:bg-brand-amber/5"
     x-data="{ copied: false }"

@@ -1,3 +1,4 @@
+{{-- Striped SVG placeholder from the starter kit. Prop: id. Not referenced by any view at the time of writing. --}}
 @props([
     'id' => uniqid(),
 ])

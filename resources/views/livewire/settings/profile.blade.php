@@ -1,3 +1,4 @@
+{{-- Profile settings: name, email and verification. --}}
 <section class="w-full">
     @include('partials.settings-heading')
 

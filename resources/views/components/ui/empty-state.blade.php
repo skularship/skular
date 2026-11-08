@@ -1,3 +1,4 @@
+{{-- Empty state with icon, text and up to two actions. Props: icon, title, description, variant, size, contained, actionLabel/Url/Icon, secondaryActionLabel/Url/Icon. --}}
 @props([
     'icon' => 'sparkles',
     'title',

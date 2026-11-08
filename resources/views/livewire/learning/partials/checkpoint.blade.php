@@ -1,3 +1,4 @@
+{{-- Final step: AI result label, "Tandai modul selesai" and the module feedback form. Only reachable once the checkpoint gate passes (enforced server side in ModulePlayer). --}}
 @php
     $submitted_forms = $forms->filter(fn ($form) => $responses->has($form->id))->count();
     $score_label = \App\Enums\AiScoreLabel::tryFromScore($average_score);

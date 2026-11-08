@@ -1,3 +1,4 @@
+{{-- Delete account form with password confirmation. --}}
 <section class="mt-10 space-y-6">
     <div class="relative mb-5">
         <x-display.heading>{{ __('Delete account') }}</x-display.heading>

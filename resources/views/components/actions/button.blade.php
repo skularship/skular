@@ -1,3 +1,4 @@
+{{-- Primary button (<x-actions.button>). Props: variant, size, icon, iconTrailing, type, loading (config/loading.php copy key), loadingText, loadingTarget. Shows a loading label while its wire:click target runs. --}}
 @props([
     'variant' => 'primary',
     'size' => 'base',

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{{-- Header-style variant of the app layout from the starter kit. Not referenced at the time of writing. --}}
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head', ['robots' => 'noindex, follow'])

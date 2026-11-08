@@ -1,3 +1,4 @@
+{{-- Fortify registration screen. After registering, mentees are sent to the profiling wizard (RegisterResponse). --}}
 <x-layouts::auth :title="__('Register')">
     <div class="flex flex-col gap-6">
         <x-auth.auth-header :title="__('Create an account')" :description="__('Enter your details below to create your account')" />

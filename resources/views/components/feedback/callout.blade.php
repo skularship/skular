@@ -1,3 +1,4 @@
+{{-- Callout box for warnings/info. Props: heading, icon, variant. --}}
 @props([
     'heading' => null,
     'icon' => null,

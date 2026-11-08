@@ -1,3 +1,4 @@
+{{-- Initials avatar. Props: initials, name, size. --}}
 @props([
     'initials' => null,
     'name' => null,

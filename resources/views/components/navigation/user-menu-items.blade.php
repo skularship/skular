@@ -1,3 +1,4 @@
+{{-- Shared items of the user menu (settings, logout). Prop: onClickString. --}}
 @props([
     'onClickString' => 'open = false',
 ])

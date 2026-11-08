@@ -1,3 +1,4 @@
+{{-- Body text paragraph/span. Props: inline, variant, color, size. --}}
 @props([
     'inline' => false,
     'variant' => null,

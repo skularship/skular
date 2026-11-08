@@ -1,3 +1,4 @@
+{{-- Opening step: module goal, estimated time and expected output. --}}
 @php
     $mission_tiles = [
         ['icon' => 'flag', 'tone' => 'peach', 'title' => __('Tujuan modul'), 'body' => filled($module->goal) ? $module->goal : __('Tujuan modul ini belum diatur oleh admin.')],

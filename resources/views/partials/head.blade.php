@@ -1,3 +1,4 @@
+{{-- Shared <head> contents: meta/SEO tags, color-scheme light, fonts and the Vite assets (app.css, app.js). --}}
 @php
     /*
      * The single source of document metadata.

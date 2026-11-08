@@ -1,4 +1,13 @@
 /**
+ * Global front-end behaviour for every Skular page (bundled by Vite from
+ * resources/js/app.js and loaded in the layouts). Alpine and Livewire are
+ * provided by Livewire itself; this file only adds progressive enhancements:
+ * scroll reveal, the navigation progress bar, module player scrolling and a
+ * toast when a learning request fails. Nothing here is required for a page to
+ * work without JavaScript.
+ */
+
+/**
  * Scroll reveal for the marketing landing page.
  *
  * The hidden state lives behind the `js` class on <html>, which the head
@@ -7,20 +16,40 @@
  * JavaScript, and the refresh below always reveals what is still pending so a
  * failed observer can never hide content for good.
  */
+/** Elements that fade in when scrolled into view. @type {string} */
 const REVEAL_SELECTOR = '[data-reveal]';
+
+/** Class that makes a reveal element visible. @type {string} */
 const REVEAL_CLASS = 'is-revealed';
 
+/** Shared observer, created lazily on the first page that needs it. @type {IntersectionObserver|null} */
 let revealObserver = null;
 
+/**
+ * Whether the visitor asked the OS to reduce motion.
+ *
+ * @returns {boolean}
+ */
 const prefersReducedMotion = () =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/**
+ * Reveal every pending element at once (fallback and safety net).
+ *
+ * @returns {void}
+ */
 const revealAll = () => {
     document.querySelectorAll(REVEAL_SELECTOR).forEach((element) => {
         element.classList.add(REVEAL_CLASS);
     });
 };
 
+/**
+ * Observe the reveal elements of the current page. Safe to call again after
+ * every Livewire navigation; already revealed elements are skipped.
+ *
+ * @returns {void}
+ */
 const initScrollReveal = () => {
     const elements = Array.from(document.querySelectorAll(REVEAL_SELECTOR));
 
@@ -82,6 +111,12 @@ document.addEventListener('livewire:navigated', initScrollReveal);
  * The bar is purely decorative: `aria-hidden` keeps it out of the accessibility
  * tree, and every navigation keeps its normal focus behaviour.
  */
+/**
+ * Create the progress bar once and wire it to Livewire navigation events and
+ * same-origin full-page link clicks.
+ *
+ * @returns {void}
+ */
 const initNavigationProgress = () => {
     if (document.querySelector('.sk-page-progress') !== null) {
         return;
@@ -97,10 +132,12 @@ const initNavigationProgress = () => {
     let ticker = null;
     let safety = null;
 
+    /** Apply the current progress (0..1) to the bar. @returns {void} */
     const paint = () => {
         bar.style.transform = `scaleX(${progress})`;
     };
 
+    /** Complete and hide the bar. @returns {void} */
     const finish = () => {
         if (!active) {
             return;
@@ -123,6 +160,7 @@ const initNavigationProgress = () => {
         }, 260);
     };
 
+    /** Start the bar and ease it towards 92% until the page is ready. @returns {void} */
     const start = () => {
         if (active) {
             return;
@@ -189,6 +227,11 @@ document.addEventListener('livewire:navigated', initNavigationProgress);
  * Livewire has morphed the new section into the DOM; the app layout scrolls on
  * `window`, so restoring the top here works for desktop and mobile alike.
  */
+/**
+ * Scroll the window back to the top of the new learning section.
+ *
+ * @returns {void}
+ */
 const scrollLearningPlayerToTop = () => {
     window.requestAnimationFrame(() => {
         window.scrollTo({
@@ -203,6 +246,8 @@ const scrollLearningPlayerToTop = () => {
  * Keep the current module section visible in the horizontally scrolling step
  * list. On phones the five tabs are wider than the viewport, so moving to the
  * last section would otherwise hide the active tab off the right edge.
+ *
+ * @returns {void}
  */
 const centerActiveModuleStep = () => {
     window.requestAnimationFrame(() => {
@@ -239,6 +284,10 @@ document.addEventListener('livewire:navigated', centerActiveModuleStep);
  * `wire:loading` already clears itself when a request fails, so the missing
  * piece is telling the mentee what happened and that the same action can be
  * retried. The copy comes from the player element so it stays translatable.
+ *
+ * Dispatches the global `toast` event, shape: {detail: {variant: string, text: string}}.
+ *
+ * @returns {void}
  */
 const showLearningRequestError = () => {
     const player = document.querySelector('[data-learning-player]');
@@ -255,6 +304,11 @@ const showLearningRequestError = () => {
     }));
 };
 
+/**
+ * Register the Livewire request hook that reports failed requests.
+ *
+ * @returns {void}
+ */
 const initLearningRequestFeedback = () => {
     window.Livewire.hook('request', ({ fail }) => {
         fail(() => showLearningRequestError());

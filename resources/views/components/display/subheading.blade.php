@@ -1,3 +1,4 @@
+{{-- Muted subheading text. Prop: size. --}}
 @props([
     'size' => 'base',
 ])

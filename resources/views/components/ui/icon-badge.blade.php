@@ -1,3 +1,4 @@
+{{-- Icon inside a tinted square. Props: icon, tone, size, solid. --}}
 @props([
     'icon',
     'tone' => 'amber',

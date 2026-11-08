@@ -1,3 +1,4 @@
+{{-- Public Profiling Kilat readiness quiz (App\Livewire\Profiling\QuickAssessment); rule based, nothing is stored. --}}
 @php
     use App\Enums\QuickProfilingAsset;
     use App\Enums\QuickProfilingGoal;

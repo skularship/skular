@@ -1,3 +1,4 @@
+{{-- One FAQ question/answer accordion. Props: faq (App\Models\Faq), level (heading level), showCategory. --}}
 @props([
     'faq',
     'level' => 'h3',

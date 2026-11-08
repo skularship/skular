@@ -1,3 +1,4 @@
+{{-- Small inline loading message tied to wire:loading. Props: loading, message, target, detail, delay, tone. --}}
 @props([
     'loading' => null,
     'message' => null,

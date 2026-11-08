@@ -1,3 +1,4 @@
+{{-- Module learning loop (App\Livewire\Learning\ModulePlayer): header, step navigation (checkpoint locked until every answer is saved and assessed), polling while AI assesses, and the active section partial. Data: steps, forms, questions, responses, checkpoint_block(_message), evaluating. --}}
 @php
     $step_keys = array_keys($steps);
     $current_index = array_search($section, $step_keys, true);

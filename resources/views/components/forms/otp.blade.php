@@ -1,3 +1,4 @@
+{{-- One-time code input (two-factor). Props: length, name, model, label. --}}
 @props([
     'length' => 6,
     'name' => null,

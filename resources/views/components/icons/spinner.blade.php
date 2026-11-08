@@ -1,3 +1,4 @@
+{{-- Loading spinner SVG. --}}
 <svg
     {{ $attributes->class(['shrink-0', 'animate-spin']) }}
     xmlns="http://www.w3.org/2000/svg"

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{{-- Public (guest) layout used by the FAQ page (#[Layout('layouts.public')]): public header, footer and skip link. --}}
 <html
     lang="{{ str_replace('_', '-', app()->getLocale()) }}"
     class="scroll-smooth motion-reduce:scroll-auto"

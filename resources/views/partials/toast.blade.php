@@ -1,3 +1,4 @@
+{{-- Global toast stack listening to the window "toast" event ({variant, text}). --}}
 <div
     x-data="{
         toasts: [],

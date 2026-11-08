@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{{-- Simple centered auth layout actually used by layouts/auth. Data: optional $title. --}}
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         {{-- Authentication screens may be crawled and followed, never indexed. --}}

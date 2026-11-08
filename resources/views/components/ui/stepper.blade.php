@@ -1,3 +1,4 @@
+{{-- Generic step indicator. Props: steps, current. --}}
 @props([
     'steps' => [],
     'current' => 1,

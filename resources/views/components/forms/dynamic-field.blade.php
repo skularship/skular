@@ -1,3 +1,4 @@
+{{-- Renders one admin-defined practice form field (App\Data\PracticeFieldData) bound to a Livewire path. Props: field, model (e.g. "answers.{form}.{field}"). Checkbox/radio options get unique ids; checkbox models must be arrays (seeded by ModulePlayer). --}}
 @props([
     'field',
     'model',

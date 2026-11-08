@@ -1,3 +1,4 @@
+{{-- Two-factor recovery codes list with regenerate action. --}}
 <div
     class="py-6 space-y-6 border shadow-sm rounded-xl border-zinc-200 dark:border-white/10"
     wire:cloak

@@ -1,3 +1,4 @@
+{{-- Anchor styled as a button (<x-actions.link-button>). Props: variant, size, icon, iconTrailing; href and other attributes pass through. --}}
 @props([
     'variant' => 'primary',
     'size' => 'base',

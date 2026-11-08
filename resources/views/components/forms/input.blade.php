@@ -1,3 +1,4 @@
+{{-- Text input with optional label and password visibility toggle. Props: name, label, type, value, viewable. Shows the validation error border for name. --}}
 @props([
     'name' => null,
     'label' => null,

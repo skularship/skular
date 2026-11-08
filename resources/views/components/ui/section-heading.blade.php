@@ -1,3 +1,4 @@
+{{-- Section heading with eyebrow. Props: eyebrow, eyebrowIcon, title, description, level, tone. --}}
 @props([
     'eyebrow' => null,
     'eyebrowIcon' => null,

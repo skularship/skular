@@ -1,3 +1,4 @@
+{{-- FAQ section embedded on the landing page (App\Livewire\Faq\LandingSection). --}}
 <div>
     @if ($faqs->isNotEmpty())
         <section id="faq" class="relative scroll-mt-24 overflow-hidden bg-warm-sand py-20 sm:py-24 dark:bg-zinc-900/50" data-test="landing-faq-section">

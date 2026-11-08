@@ -1,3 +1,4 @@
+{{-- Eight question profiling wizard (App\Livewire\Profiling\Wizard). Answers live in Alpine state and sessionStorage and are submitted once at the end. --}}
 <div
     class="mx-auto flex w-full max-w-3xl min-w-0 flex-col gap-5 sm:gap-6"
     data-test="profiling-wizard"

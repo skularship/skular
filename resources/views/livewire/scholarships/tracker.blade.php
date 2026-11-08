@@ -1,3 +1,4 @@
+{{-- "Beasiswa Saya" tracker (App\Livewire\Scholarships\Tracker): status, proof upload and result per selected scholarship. --}}
 <div class="mx-auto flex w-full max-w-4xl flex-col gap-6">
     <header class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
