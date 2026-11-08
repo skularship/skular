@@ -49,7 +49,12 @@ class FaseResource extends Resource
      */
     public static function getNavigationBadge(): ?string
     {
-        $drafts = Module::whereHas('fase', fn ($query) => $query->where('content_status', ContentStatus::Draft->value))
+        // content_status lives on modules, not fases. Qualifying it keeps the
+        // count correct even if fases ever gains a column of the same name
+        // (the old unqualified filter only worked as an outer-column reference).
+        $drafts = Module::query()
+            ->where('modules.content_status', ContentStatus::Draft->value)
+            ->whereHas('fase')
             ->count();
 
         return $drafts === 0 ? null : (string) $drafts;
