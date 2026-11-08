@@ -85,6 +85,11 @@ class ModulePlayer extends Component
     public bool $module_completed = false;
 
     /**
+     * Why the mentee was sent back from the checkpoint, shown on the Praktik step.
+     */
+    public ?string $gate_notice = null;
+
+    /**
      * Whether the checkpoint is already stored as started.
      *
      * Once true, section clicks skip ProgressService::startModule(), which
@@ -141,6 +146,8 @@ class ModulePlayer extends Component
         $this->module_started = true;
 
         $this->prefill($user);
+
+        $this->guardCheckpointSection();
     }
 
     /**
@@ -196,6 +203,8 @@ class ModulePlayer extends Component
 
         $this->section = $section;
 
+        $this->guardCheckpointSection();
+
         $this->notifySectionChanged();
     }
 
@@ -223,6 +232,8 @@ class ModulePlayer extends Component
         if (! array_key_exists($section, $this->steps)) {
             return;
         }
+
+        $this->guardCheckpointSection();
 
         $this->notifySectionChanged();
     }
@@ -324,7 +335,7 @@ class ModulePlayer extends Component
     {
         $response = $this->responseFor($form_id);
 
-        if ($response === null) {
+        if ($response === null || ! $response->canRetryEvaluation()) {
             return;
         }
 
@@ -351,6 +362,15 @@ class ModulePlayer extends Component
      */
     public function saveModuleFeedback(): void
     {
+        $blocked = $this->checkpointBlockMessage();
+
+        if ($blocked !== null) {
+            $this->addError('module_feedback', $blocked);
+            $this->dispatch('toast', variant: 'warning', text: $blocked);
+
+            return;
+        }
+
         app(ModuleFeedbackServiceInterface::class)->save(
             $this->user(),
             $this->module,
@@ -370,8 +390,10 @@ class ModulePlayer extends Component
             return;
         }
 
-        if ($this->practicePending > 0) {
-            $this->addError('checkpoint', 'Selesaikan semua latihan praktik modul ini dulu sebelum mengunci checkpoint.');
+        $blocked = $this->checkpointBlockMessage();
+
+        if ($blocked !== null) {
+            $this->addError('checkpoint', $blocked);
 
             return;
         }
@@ -505,6 +527,80 @@ class ModulePlayer extends Component
         }
 
         return (int) round($scores->avg());
+    }
+
+    /**
+     * Why the checkpoint (and the module feedback) is still closed, if it is.
+     *
+     * The final step opens only once every active practice form has a saved
+     * answer and the AI finished evaluating each of them. A completed module
+     * stays open so the mentee can always look back at it.
+     *
+     * @return 'unsaved'|'evaluating'|'failed'|null
+     */
+    private function checkpointBlock(): ?string
+    {
+        if ($this->module_completed) {
+            return null;
+        }
+
+        $responses = $this->responses();
+        $blocked = null;
+
+        foreach ($this->activeForms as $form) {
+            $response = $responses->get($form->id);
+
+            if ($response === null) {
+                return 'unsaved';
+            }
+
+            if ($response->canRetryEvaluation()) {
+                $blocked = 'failed';
+            } elseif ($response->ai_status !== AiFeedbackStatus::Completed && $blocked === null) {
+                $blocked = 'evaluating';
+            }
+        }
+
+        return $blocked;
+    }
+
+    /**
+     * The message explaining why the checkpoint is still closed.
+     */
+    private function checkpointBlockMessage(): ?string
+    {
+        return match ($this->checkpointBlock()) {
+            'unsaved' => 'Simpan jawaban semua latihan praktik dulu sebelum masuk ke tahap akhir.',
+            'evaluating' => 'Jawabanmu sedang dinilai AI. Tahap akhir terbuka setelah penilaian selesai.',
+            'failed' => 'Penilaian AI untuk salah satu jawabanmu belum berhasil. Tekan "Nilai ulang" di langkah Praktik dulu ya.',
+            default => null,
+        };
+    }
+
+    /**
+     * Send the mentee back to Praktik when the checkpoint is still closed.
+     *
+     * Runs for every way the section can change (buttons, the URL on first
+     * load, and back/forward), so hiding the button is never the only guard.
+     */
+    private function guardCheckpointSection(): void
+    {
+        if ($this->section !== 'checkpoint') {
+            $this->gate_notice = null;
+
+            return;
+        }
+
+        $blocked = $this->checkpointBlockMessage();
+
+        if ($blocked === null) {
+            $this->gate_notice = null;
+
+            return;
+        }
+
+        $this->section = 'praktik';
+        $this->gate_notice = $blocked;
     }
 
     /**
@@ -643,6 +739,9 @@ class ModulePlayer extends Component
             'responses' => $this->responses(),
             'rating_options' => ModuleFeedbackService::RATING_OPTIONS,
             'average_score' => $this->averageScore(),
+            'checkpoint_block' => $this->checkpointBlock(),
+            'checkpoint_block_message' => $this->checkpointBlockMessage(),
+            'evaluating' => $this->responses()->contains(fn (UserPracticeResponse $response): bool => $response->isEvaluating()),
             'practice_pending' => $this->practicePending,
             // Resolving the next module walks the whole learning path; only the
             // checkpoint section shows it, so other sections skip that work.

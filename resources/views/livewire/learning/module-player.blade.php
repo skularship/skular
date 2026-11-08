@@ -74,6 +74,7 @@
                 @php
                     $is_active = $key === $section;
                     $is_done = $loop->index < $current_index;
+                    $is_gated = $key === 'checkpoint' && $checkpoint_block !== null && ! $is_active;
                 @endphp
 
                 <li class="flex-1">
@@ -84,8 +85,13 @@
                         wire:loading.class="opacity-70"
                         wire:target="goToSection('{{ $key }}')"
                         aria-current="{{ $is_active ? 'step' : 'false' }}"
+                        @if ($is_gated)
+                            disabled
+                            title="{{ $checkpoint_block_message }}"
+                            data-test="checkpoint-step-locked"
+                        @endif
                         @class([
-                            'flex w-full min-w-[6.5rem] items-center justify-center gap-2 rounded-2xl border px-3 py-2.5 text-xs font-semibold transition',
+                            'flex min-h-11 w-full min-w-[6.5rem] items-center justify-center gap-2 rounded-2xl border px-3 py-2.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60',
                             'border-transparent brand-gradient text-brand-ink shadow-pop' => $is_active,
                             'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-950/50 dark:text-emerald-300' => $is_done && ! $is_active,
                             'border-brand-teal/15 bg-white/70 text-zinc-500 hover:border-brand-teal/40 hover:text-brand-teal dark:border-white/10 dark:bg-zinc-800/60 dark:text-zinc-300' => ! $is_active && ! $is_done,
@@ -97,7 +103,9 @@
                             'bg-emerald-500 text-white' => $is_done && ! $is_active,
                             'bg-zinc-200/80 text-zinc-600 dark:bg-white/10 dark:text-zinc-300' => ! $is_active && ! $is_done,
                         ])>
-                            @if ($is_done)
+                            @if ($is_gated)
+                                <x-icons.app-icon name="lock-closed" class="size-3" />
+                            @elseif ($is_done)
                                 <x-icons.app-icon name="check" class="size-3" />
                             @else
                                 {{ $loop->iteration }}
@@ -120,6 +128,12 @@
         class="px-1"
         data-test="module-section-loading"
     />
+
+    {{-- Present only while an AI evaluation is running: removing the element
+         stops the polling as soon as every answer has been assessed. --}}
+    @if ($evaluating)
+        <div wire:poll.5s aria-hidden="true" data-test="evaluation-poll"></div>
+    @endif
 
     <main class="flex flex-col gap-6">
         @if ($section === 'opening')

@@ -1,6 +1,6 @@
 @php
     $submitted_forms = $forms->filter(fn ($form) => $responses->has($form->id))->count();
-    $score_display = $average_score !== null && $average_score > 0 ? (string) $average_score : '—';
+    $score_label = \App\Enums\AiScoreLabel::tryFromScore($average_score);
 @endphp
 
 <div class="sk-rise flex flex-col gap-6">
@@ -27,9 +27,9 @@
         <x-ui.stat
             icon="sparkles"
             tone="teal"
-            :label="__('Rata-rata skor AI')"
-            :value="$score_display"
-            :hint="__('dari feedback AI')"
+            :label="__('Hasil penilaian AI')"
+            :value="$score_label?->label() ?? '—'"
+            :hint="$score_label?->hint() ?? __('belum ada penilaian')"
         />
 
         <x-ui.stat
@@ -55,13 +55,13 @@
             </div>
 
             @error('checkpoint')
-                <x-feedback.callout variant="warning" :heading="__('Latihan praktik belum lengkap')" data-test="checkpoint-blocked">
+                <x-feedback.callout variant="warning" :heading="__('Tahap akhir belum terbuka')" data-test="checkpoint-blocked">
                     {{ $message }}
                 </x-feedback.callout>
             @enderror
 
             <div class="flex flex-wrap gap-3">
-                @if ($practice_pending === 0)
+                @if ($checkpoint_block === null)
                     <x-actions.button
                         type="button"
                         icon="check-badge"
@@ -73,7 +73,11 @@
                     </x-actions.button>
                 @else
                     <x-actions.button type="button" icon="beaker" wire:click="goToSection('praktik')" loading="module.section">
-                        {{ trans_choice('Kerjakan :count latihan dulu|Kerjakan :count latihan dulu', $practice_pending, ['count' => $practice_pending]) }}
+                        @if ($checkpoint_block === 'unsaved')
+                            {{ trans_choice('Kerjakan :count latihan dulu|Kerjakan :count latihan dulu', $practice_pending, ['count' => $practice_pending]) }}
+                        @else
+                            {{ __('Lihat status penilaian') }}
+                        @endif
                     </x-actions.button>
                 @endif
 
@@ -158,6 +162,10 @@
 
         <div class="flex flex-wrap items-center justify-between gap-3 border-t border-brand-teal/10 pt-4 dark:border-white/10">
             <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Masukanmu bersifat anonim di laporan admin.') }}</p>
+
+            @error('module_feedback')
+                <p class="text-sm font-medium text-amber-700" role="alert">{{ $message }}</p>
+            @enderror
 
             <x-actions.button
                 type="button"

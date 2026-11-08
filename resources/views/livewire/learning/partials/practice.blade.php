@@ -23,6 +23,12 @@
         @endif
     </div>
 
+    @if (filled($gate_notice) && $checkpoint_block !== null)
+        <x-feedback.callout variant="warning" :heading="__('Tahap akhir belum terbuka')" data-test="checkpoint-gate-notice">
+            {{ $gate_notice }}
+        </x-feedback.callout>
+    @endif
+
     @if (filled($module->introduction))
         @include('livewire.learning.partials.module-introduction', ['variant' => 'practice'])
     @endif
@@ -40,8 +46,14 @@
                     <h3 class="text-base font-bold text-zinc-900 dark:text-white">{{ $form->title }}</h3>
 
                     @if ($response instanceof \App\Models\UserPracticeResponse)
-                        <x-ui.pill :variant="$response->hasFeedback() ? 'success' : ($response->ai_status->value === 'failed' ? 'warning' : 'neutral')">
-                            {{ $response->ai_status->label() }}
+                        <x-ui.pill :variant="$response->hasFeedback() ? 'success' : ($response->canRetryEvaluation() ? 'warning' : 'info')" data-test="evaluation-status">
+                            @if ($response->hasFeedback())
+                                {{ __('Sudah dinilai') }}
+                            @elseif ($response->canRetryEvaluation())
+                                {{ __('Penilaian gagal') }}
+                            @else
+                                {{ __('Sedang dinilai AI') }}
+                            @endif
                         </x-ui.pill>
 
                         @if ($response->attempts > 1)
@@ -114,17 +126,21 @@
 
                         <section class="flex flex-col gap-5 rounded-3xl border border-brand-teal/20 bg-brand-teal/5 p-5 dark:border-brand-teal-light/20 dark:bg-brand-teal/10" data-test="ai-feedback">
                             <div class="flex flex-wrap items-center justify-between gap-4">
-                                <div class="flex items-center gap-4">
-                                    @if ($response->ai_score !== null)
-                                        <x-ui.ring-progress :value="$response->ai_score" :size="84" :caption="__('Skor')" />
+                                @php $score_label = \App\Enums\AiScoreLabel::tryFromScore($response->ai_score); @endphp
+
+                                <div class="flex flex-col gap-1.5">
+                                    <p class="text-xs font-bold tracking-wide text-brand-teal uppercase">{{ __('Feedback AI') }}</p>
+
+                                    @if ($score_label !== null)
+                                        <div class="flex flex-wrap items-center gap-2" data-test="ai-score-label">
+                                            <x-ui.pill :variant="$score_label->variant()" icon="star" class="text-sm">{{ $score_label->label() }}</x-ui.pill>
+                                            <span class="text-sm text-zinc-600">{{ $score_label->hint() }}</span>
+                                        </div>
                                     @endif
 
-                                    <div>
-                                        <p class="text-xs font-bold tracking-wide text-brand-teal uppercase dark:text-brand-teal-light">{{ __('Feedback AI') }}</p>
-                                        <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-                                            {{ $response->submitted_at?->translatedFormat('d M Y, H:i') ?? '' }}
-                                        </p>
-                                    </div>
+                                    <p class="text-xs text-zinc-500">
+                                        {{ $response->submitted_at?->translatedFormat('d M Y, H:i') ?? '' }}
+                                    </p>
                                 </div>
 
                                 <x-ui.pill variant="info" icon="sparkles">{{ __('Dari evaluasi AI') }}</x-ui.pill>
@@ -187,9 +203,15 @@
                                 @endif
                             </div>
                         </section>
-                    @elseif ($response->ai_status->value === 'failed')
+                    @elseif ($response->canRetryEvaluation())
                         <x-feedback.callout variant="warning" :heading="__('Feedback AI belum tersedia')" data-test="ai-failed">
-                            {{ filled($response->ai_error) ? $response->ai_error : __('Layanan AI sedang tidak bisa dihubungi. Jawabanmu tetap tersimpan, coba lagi nanti.') }}
+                            @if ($response->ai_status->value === 'failed' && filled($response->ai_error))
+                                {{ $response->ai_error }}
+                            @elseif ($response->ai_status->value === 'failed')
+                                {{ __('Layanan AI sedang tidak bisa dihubungi. Jawabanmu tetap tersimpan, coba lagi nanti.') }}
+                            @else
+                                {{ __('Penilaian AI berhenti sebelum selesai. Jawabanmu tetap tersimpan, nilai ulang ya.') }}
+                            @endif
 
                             <div class="mt-3">
                                 <x-actions.button
@@ -201,12 +223,15 @@
                                     loading="ai.feedback_retry"
                                     data-test="retry-feedback"
                                 >
-                                    {{ __('Coba lagi') }}
+                                    {{ __('Nilai ulang') }}
                                 </x-actions.button>
                             </div>
                         </x-feedback.callout>
                     @else
-                        <x-loading.ai loading="ai.feedback" :active="true" skeleton :skeleton-lines="2" data-test="feedback-pending" />
+                        <div class="flex flex-col gap-2" role="status" aria-live="polite">
+                            <p class="text-sm font-semibold text-brand-teal">{{ __('Jawabanmu sedang dinilai AI. Halaman ini diperbarui otomatis.') }}</p>
+                            <x-loading.ai loading="ai.feedback" :active="true" skeleton :skeleton-lines="2" data-test="feedback-pending" />
+                        </div>
                     @endif
                 @endif
 
@@ -250,8 +275,24 @@
             {{ __('Kembali') }}
         </x-actions.button>
 
-        <x-actions.button type="button" iconTrailing="arrow-right" wire:click="nextSection" loading="module.section" data-test="next-section">
-            {{ __('Lanjut ke checkpoint') }}
-        </x-actions.button>
+        <div class="flex flex-col items-end gap-1.5">
+            <x-actions.button
+                type="button"
+                iconTrailing="arrow-right"
+                wire:click="nextSection"
+                loading="module.section"
+                :disabled="$checkpoint_block !== null"
+                aria-describedby="checkpoint-gate-status"
+                data-test="next-section"
+            >
+                {{ __('Lanjut ke checkpoint') }}
+            </x-actions.button>
+
+            @if ($checkpoint_block_message !== null)
+                <p id="checkpoint-gate-status" class="max-w-xs text-end text-xs font-medium text-zinc-500" data-test="checkpoint-gate-status">
+                    {{ $checkpoint_block_message }}
+                </p>
+            @endif
+        </div>
     </div>
 </div>

@@ -179,7 +179,7 @@ test('a failed ai request keeps the submission and offers a retry', function () 
         ->call('submitPractice', $form->id)
         ->assertHasNoErrors()
         ->assertSee('Feedback AI belum tersedia')
-        ->assertSee('Coba lagi');
+        ->assertSee('Nilai ulang');
 
     $response = $this->mentee->practiceResponses()->firstWhere('practice_form_id', $form->id);
 

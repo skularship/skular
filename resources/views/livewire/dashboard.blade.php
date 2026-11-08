@@ -104,9 +104,9 @@
         <x-ui.stat
             icon="sparkles"
             tone="teal"
-            :label="__('Rata-rata skor')"
-            :value="$summary->average_score > 0 ? $summary->average_score : '—'"
-            :hint="__('Dari feedback AI')"
+            :label="__('Hasil penilaian AI')"
+            :value="$summary->average_score > 0 ? \App\Enums\AiScoreLabel::fromScore($summary->average_score)->label() : '—'"
+            :hint="__('Rata-rata dari feedback AI')"
         />
 
         <x-ui.stat
@@ -448,7 +448,8 @@
                                             <x-ui.pill :variant="$module->isCompleted() ? 'success' : ($module->isInProgress() ? 'info' : 'neutral')" :icon="$module->statusIcon()">{{ $module->status->label() }}</x-ui.pill>
 
                                             @if ($module->score !== null)
-                                                <x-ui.pill variant="success" icon="star">{{ __('Skor :score', ['score' => $module->score]) }}</x-ui.pill>
+                                                @php $module_score_label = \App\Enums\AiScoreLabel::fromScore($module->score); @endphp
+                                                <x-ui.pill :variant="$module_score_label->variant()" icon="star">{{ $module_score_label->label() }}</x-ui.pill>
                                             @endif
 
                                             @if ($module->isLocked())
