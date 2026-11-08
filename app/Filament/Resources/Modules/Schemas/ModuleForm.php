@@ -326,6 +326,38 @@ class ModuleForm
                     ->columns(1)
                     ->collapsible(),
 
+                Section::make('5. Saran pertanyaan AI Mentor')
+                    ->description('Tampil sebagai tombol di chatbot AI Mentor pada langkah Praktik. Isi jawaban bila pertanyaannya sudah bisa dijawab tim: jawaban langsung tampil tanpa AI dan tidak mengurangi kuota mentee. Kosongkan jawaban agar pertanyaan dikirim ke AI (memakai 1 kuota).')
+                    ->schema([
+                        Repeater::make('mentor_suggestions')
+                            ->label('Saran pertanyaan')
+                            ->schema([
+                                TextInput::make('question')
+                                    ->label('Pertanyaan')
+                                    ->placeholder('Contoh: Bagaimana cara membuka esai motivasi yang kuat?')
+                                    ->required()
+                                    ->maxLength(200)
+                                    ->columnSpanFull(),
+                                Textarea::make('answer')
+                                    ->label('Jawaban tim (opsional)')
+                                    ->placeholder('Tulis singkat dengan pola Poin, Alasan, Contoh, Poin. Pakai sapaan "kamu".')
+                                    ->rows(4)
+                                    ->maxLength(1500)
+                                    ->helperText('Kosongkan bila ingin AI Mentor yang menjawab.')
+                                    ->columnSpanFull(),
+                            ])
+                            ->itemLabel(fn (array $state): string => filled($state['question'] ?? null)
+                                ? Str::limit((string) $state['question'], 70)
+                                : 'Pertanyaan baru')
+                            ->addActionLabel('Tambah saran pertanyaan')
+                            ->reorderable()
+                            ->defaultItems(0)
+                            ->maxItems(Module::MAX_MENTOR_SUGGESTIONS)
+                            ->helperText('Maksimal '.Module::MAX_MENTOR_SUGGESTIONS.' pertanyaan. Bila kosong, chatbot menampilkan saran umum dari judul modul dan latihan.')
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible(),
+
                 Section::make('Konteks untuk AI')
                     ->description('Rubrik dan basis pengetahuan yang dipakai AI Mentor, Brainstorming, dan penilaian latihan. Pengaturan teknis AI — penyedia, model, dan API key — tidak diubah dari halaman ini.')
                     ->schema([

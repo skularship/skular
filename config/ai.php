@@ -23,6 +23,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | AI Mentor Chat Quota
+    |--------------------------------------------------------------------------
+    |
+    | How many questions a mentee may send to the language model through the
+    | AI Mentor chat of a single module. Suggested questions that already
+    | carry an admin-written answer are shown without the model and do not
+    | count. A failed model call never consumes the quota.
+    |
+    */
+
+    'module_chat' => [
+        'limit' => (int) env('AI_MODULE_CHAT_LIMIT', 5),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Caching
     |--------------------------------------------------------------------------
     |

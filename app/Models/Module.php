@@ -36,6 +36,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $link_video
  * @property string|null $ai_knowledge
  * @property array<int, array<string, mixed>>|null $brainstorming_questions
+ * @property array<int, mixed>|null $mentor_suggestions
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read int|null $practice_forms_count
@@ -58,6 +59,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'link_video',
     'ai_knowledge',
     'brainstorming_questions',
+    'mentor_suggestions',
 ])]
 class Module extends Model
 {
@@ -74,6 +76,7 @@ class Module extends Model
         return [
             'insights' => 'array',
             'brainstorming_questions' => 'array',
+            'mentor_suggestions' => 'array',
             'type' => ModuleType::class,
             'content_status' => ContentStatus::class,
             'category' => ModuleCategory::class,
@@ -206,6 +209,46 @@ class Module extends Model
                 return is_array($value) ? array_values($value) : [];
             },
         );
+    }
+
+    /**
+     * Maximum number of suggested questions shown in the AI Mentor chat.
+     */
+    public const MAX_MENTOR_SUGGESTIONS = 5;
+
+    /**
+     * Get the admin-written AI Mentor suggestions in display order.
+     *
+     * Blank questions are skipped and an empty answer becomes null, which
+     * means the question is sent to the AI Mentor instead of answered directly.
+     *
+     * @return array<int, array{question: string, answer: string|null}>
+     */
+    public function mentorSuggestionList(): array
+    {
+        $suggestions = [];
+
+        foreach (is_array($this->mentor_suggestions) ? $this->mentor_suggestions : [] as $suggestion) {
+            if (! is_array($suggestion)) {
+                continue;
+            }
+
+            $question = is_string($suggestion['question'] ?? null) ? trim($suggestion['question']) : '';
+
+            if ($question === '') {
+                continue;
+            }
+
+            $answer = is_string($suggestion['answer'] ?? null) ? trim($suggestion['answer']) : '';
+
+            $suggestions[] = ['question' => $question, 'answer' => $answer === '' ? null : $answer];
+
+            if (count($suggestions) >= self::MAX_MENTOR_SUGGESTIONS) {
+                break;
+            }
+        }
+
+        return $suggestions;
     }
 
     /**
