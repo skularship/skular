@@ -7,8 +7,10 @@ use App\Contracts\ModuleOutlineServiceInterface;
 use App\Contracts\PracticeSubmissionServiceInterface;
 use App\Contracts\ProgressServiceInterface;
 use App\Data\ModuleProgressData;
+use App\Data\PracticeFieldData;
 use App\Enums\AiFeedbackStatus;
 use App\Enums\CheckpointStatus;
+use App\Enums\PracticeFieldType;
 use App\Models\Module;
 use App\Models\PracticeForm;
 use App\Models\QuickQuestion;
@@ -514,11 +516,39 @@ class ModulePlayer extends Component
             $this->answers[(string) $response->practice_form_id] = $response->answers ?? [];
         }
 
+        $this->initialiseCheckboxAnswers();
+
         $feedback = $user->moduleFeedbacks()->where('module_id', $this->module->id)->first();
 
         if ($feedback !== null) {
             $this->ratings = array_values(is_array($feedback->ratings) ? $feedback->ratings : []);
             $this->suggestion = $feedback->suggestion;
+        }
+    }
+
+    /**
+     * Give every multiple-choice (checkbox) field an array answer.
+     *
+     * Livewire binds a group of checkboxes as a list only when the bound value
+     * is already an array. A missing or scalar value is bound as a single
+     * boolean instead, so ticking one option ticks every option of the field.
+     */
+    private function initialiseCheckboxAnswers(): void
+    {
+        foreach ($this->activeForms as $form) {
+            $key = (string) $form->id;
+
+            foreach (PracticeFieldData::collectFromSchema($form->fields ?? []) as $field) {
+                if ($field->type !== PracticeFieldType::Checkbox) {
+                    continue;
+                }
+
+                $current = $this->answers[$key][$field->name] ?? null;
+
+                $this->answers[$key][$field->name] = is_array($current)
+                    ? array_values(array_filter($current, is_string(...)))
+                    : (is_string($current) && $current !== '' ? [$current] : []);
+            }
         }
     }
 

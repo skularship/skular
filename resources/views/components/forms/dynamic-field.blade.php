@@ -11,13 +11,23 @@
     $helpText = $field->help_text;
     $type = $field->type->value;
     $selected = data_get($this, $model);
+    $isGroup = in_array($type, ['radio', 'checkbox'], true);
+    $selectedList = is_array($selected) ? $selected : [];
 @endphp
 
 <div class="w-full" data-field="{{ $field->name }}">
     <div class="mb-1.5 flex flex-wrap items-baseline gap-1.5">
-        <label for="{{ $fieldId }}" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            {{ $field->label }}
-        </label>
+        @if ($isGroup)
+            {{-- An option group has no single control to point at, so the
+                 question text names the group through aria-labelledby. --}}
+            <span id="{{ $fieldId }}-label" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                {{ $field->label }}
+            </span>
+        @else
+            <label for="{{ $fieldId }}" class="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                {{ $field->label }}
+            </label>
+        @endif
 
         @if ($field->required)
             <span class="text-xs font-medium text-red-500">{{ __('wajib') }}</span>
@@ -79,24 +89,46 @@
         </x-forms.select>
 
     @elseif ($type === 'radio')
-        <div class="flex flex-col gap-2" id="{{ $fieldId }}">
+        <div class="flex flex-col gap-2" id="{{ $fieldId }}" role="radiogroup" aria-labelledby="{{ $fieldId }}-label">
             @foreach ($field->options as $option)
-                <label @class([
-                    'flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-2.5 text-sm font-medium transition',
+                @php $optionId = $fieldId.'-option-'.$loop->index; @endphp
+
+                <label for="{{ $optionId }}" @class([
+                    'flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border px-4 py-2.5 text-sm font-medium transition has-focus-visible:ring-2 has-focus-visible:ring-brand-teal',
                     'border-brand-teal bg-brand-teal/5 text-brand-teal dark:text-brand-teal-light' => $selected === $option,
                     'border-zinc-200 text-zinc-600 hover:border-zinc-300 dark:border-zinc-700 dark:text-zinc-300' => $selected !== $option,
                 ])>
-                    <input type="radio" wire:model="{{ $model }}" value="{{ $option }}" class="size-4 border-zinc-300 text-brand-teal focus:ring-brand-teal">
+                    <input
+                        type="radio"
+                        id="{{ $optionId }}"
+                        name="{{ $fieldId }}"
+                        wire:model="{{ $model }}"
+                        value="{{ $option }}"
+                        class="size-4 border-zinc-300 text-brand-teal focus:ring-brand-teal"
+                    >
                     {{ $option }}
                 </label>
             @endforeach
         </div>
 
     @elseif ($type === 'checkbox')
-        <div class="flex flex-col gap-2" id="{{ $fieldId }}">
+        {{-- Each option is its own control: a unique id, a matching label and
+             an array name. The Livewire model is always an array (seeded by
+             ModulePlayer), so ticking one option never ticks the others. --}}
+        <div class="flex flex-col gap-2" id="{{ $fieldId }}" role="group" aria-labelledby="{{ $fieldId }}-label" data-test="checkbox-group">
             @foreach ($field->options as $option)
-                <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-600 transition hover:border-zinc-300 dark:border-zinc-700 dark:text-zinc-300">
-                    <input type="checkbox" wire:model="{{ $model }}" value="{{ $option }}" class="size-4 rounded border-zinc-300 text-brand-teal focus:ring-brand-teal">
+                @php $optionId = $fieldId.'-option-'.$loop->index; @endphp
+
+                <label for="{{ $optionId }}" class="flex min-h-11 cursor-pointer items-center gap-3 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-600 transition hover:border-zinc-300 has-checked:border-brand-teal has-checked:bg-brand-teal/5 has-checked:text-brand-teal has-focus-visible:ring-2 has-focus-visible:ring-brand-teal dark:border-zinc-700 dark:text-zinc-300">
+                    <input
+                        type="checkbox"
+                        id="{{ $optionId }}"
+                        name="{{ $fieldId }}[]"
+                        wire:model="{{ $model }}"
+                        value="{{ $option }}"
+                        @checked(in_array($option, $selectedList, true))
+                        class="size-4 rounded border-zinc-300 text-brand-teal focus:ring-brand-teal"
+                    >
                     {{ $option }}
                 </label>
             @endforeach
