@@ -21,6 +21,11 @@ class CurriculumOverview extends StatsOverviewWidget
 {
     protected static ?int $sort = 0;
 
+    /**
+     * Show the widget only to admins who may list Module records.
+     *
+     * @return bool Mirrors ModuleResource::canViewAny().
+     */
     public static function canView(): bool
     {
         return ModuleResource::canViewAny();

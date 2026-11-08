@@ -24,11 +24,22 @@ class ContentReadiness extends TableWidget
 
     protected int|string|array $columnSpan = 'full';
 
+    /**
+     * Show the widget only to admins who may list Module records.
+     *
+     * @return bool Mirrors ModuleResource::canViewAny().
+     */
     public static function canView(): bool
     {
         return ModuleResource::canViewAny();
     }
 
+    /**
+     * Build the widget table.
+     *
+     * @param  Table  $table  The table provided by Filament.
+     * @return Table The configured table.
+     */
     public function table(Table $table): Table
     {
         return $table

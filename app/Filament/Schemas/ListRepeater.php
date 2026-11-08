@@ -16,6 +16,17 @@ use Filament\Forms\Components\TextInput;
  */
 class ListRepeater
 {
+    /**
+     * Build a reorderable repeater that stores a plain list of strings.
+     *
+     * @param  string  $name  Model attribute holding the list.
+     * @param  string  $addItemLabel  Label of the add-row button.
+     * @param  string  $placeholder  Placeholder of each row input.
+     * @param  string|null  $label  Field label; null hides it.
+     * @param  string|null  $helperText  Helper text under the field.
+     * @param  int  $maxLength  Maximum characters per item.
+     * @return Repeater The configured repeater.
+     */
     public static function make(
         string $name,
         string $addItemLabel,

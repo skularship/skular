@@ -11,17 +11,31 @@ use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * Admin dashboard table of scholarships whose registration deadline is closest.
+ */
 class UpcomingDeadlines extends TableWidget
 {
     protected static ?int $sort = 3;
 
     protected int|string|array $columnSpan = 'full';
 
+    /**
+     * Show the widget only to admins who may list Scholarship records.
+     *
+     * @return bool Mirrors ScholarshipResource::canViewAny().
+     */
     public static function canView(): bool
     {
         return ScholarshipResource::canViewAny();
     }
 
+    /**
+     * Build the widget table.
+     *
+     * @param  Table  $table  The table provided by Filament.
+     * @return Table The configured table.
+     */
     public function table(Table $table): Table
     {
         return $table

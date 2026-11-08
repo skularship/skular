@@ -15,6 +15,10 @@ use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
+/**
+ * Admin dashboard headline numbers: mentees (users without an admin role),
+ * active scholarships, modules and applications waiting for a result.
+ */
 class StatsOverview extends StatsOverviewWidget
 {
     protected static ?int $sort = 2;
