@@ -34,6 +34,12 @@ class PracticeFormsRelationManager extends RelationManager
 
     protected static ?string $pluralModelLabel = 'Latihan praktik';
 
+    /**
+     * Build the form used to create/edit the module's practice forms.
+     *
+     * @param  Schema  $schema  The schema provided by Filament.
+     * @return Schema The configured schema.
+     */
     public function form(Schema $schema): Schema
     {
         return $schema
@@ -47,6 +53,12 @@ class PracticeFormsRelationManager extends RelationManager
             ]);
     }
 
+    /**
+     * Build the table listing the module's practice forms.
+     *
+     * @param  Table  $table  The table provided by Filament.
+     * @return Table The configured table.
+     */
     public function table(Table $table): Table
     {
         return $table

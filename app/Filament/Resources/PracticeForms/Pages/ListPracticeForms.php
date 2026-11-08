@@ -6,6 +6,9 @@ use App\Filament\Resources\PracticeForms\PracticeFormResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
+/**
+ * List page of the Latihan praktik resource (PracticeFormResource).
+ */
 class ListPracticeForms extends ListRecords
 {
     protected static string $resource = PracticeFormResource::class;

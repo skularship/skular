@@ -19,11 +19,22 @@ use Illuminate\Contracts\Support\Htmlable;
  */
 class Dashboard extends BaseDashboard
 {
+    /**
+     * Get the dashboard subheading.
+     *
+     * @return string|null Subheading text.
+     */
     public function getSubheading(): string|Htmlable|null
     {
         return 'Ringkasan kurikulum, konten yang perlu diselesaikan, dan proses belajar mentee.';
     }
 
+    /**
+     * Lay out the dashboard widgets.
+     *
+     * @param  Schema  $schema  The page schema.
+     * @return Schema The configured schema.
+     */
     public function content(Schema $schema): Schema
     {
         return $schema

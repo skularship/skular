@@ -6,6 +6,9 @@ use App\Filament\Resources\TwibbonTemplates\TwibbonTemplateResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
+/**
+ * List page of the Template Twibbon resource (TwibbonTemplateResource).
+ */
 class ListTwibbonTemplates extends ListRecords
 {
     protected static string $resource = TwibbonTemplateResource::class;

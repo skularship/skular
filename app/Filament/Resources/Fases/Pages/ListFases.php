@@ -6,6 +6,9 @@ use App\Filament\Resources\Fases\FaseResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
+/**
+ * List page of the Fase pembelajaran resource (FaseResource).
+ */
 class ListFases extends ListRecords
 {
     protected static string $resource = FaseResource::class;

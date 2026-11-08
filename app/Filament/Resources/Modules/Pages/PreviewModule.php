@@ -38,6 +38,11 @@ class PreviewModule extends Page
 
     protected static string $resource = ModuleResource::class;
 
+    /**
+     * Resolve the module and check that the admin may view it.
+     *
+     * @param  int|string  $record  Module key from the route.
+     */
     public function mount(int|string $record): void
     {
         $this->record = $this->resolveRecord($record);
@@ -45,16 +50,29 @@ class PreviewModule extends Page
         $this->authorizeAccess();
     }
 
+    /**
+     * Re-check authorization on every Livewire request.
+     */
     public function hydrate(): void
     {
         $this->authorizeAccess();
     }
 
+    /**
+     * Get the page title.
+     *
+     * @return string|Htmlable "Pratinjau: {module title}".
+     */
     public function getTitle(): string|Htmlable
     {
         return 'Pratinjau: '.$this->module()->title;
     }
 
+    /**
+     * Get the page subheading.
+     *
+     * @return string|Htmlable|null Explains that the preview never changes mentee data.
+     */
     public function getSubheading(): string|Htmlable|null
     {
         return 'Tampilan mentee untuk modul ini. Membuka halaman ini tidak mengubah progres, jawaban latihan, atau checkpoint siapa pun.';
@@ -76,6 +94,12 @@ class PreviewModule extends Page
         ];
     }
 
+    /**
+     * Build the read-only preview in the order of the learning loop.
+     *
+     * @param  Schema  $schema  The page schema.
+     * @return Schema The configured schema.
+     */
     public function content(Schema $schema): Schema
     {
         $module = $this->module();

@@ -9,8 +9,17 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
+/**
+ * Create/edit form schema of the Checkpoint mentee resource.
+ */
 class CheckpointForm
 {
+    /**
+     * Add the form components to the schema.
+     *
+     * @param  Schema  $schema  The schema to configure.
+     * @return Schema The configured schema.
+     */
     public static function configure(Schema $schema): Schema
     {
         return $schema

@@ -19,6 +19,12 @@ use Illuminate\Support\HtmlString;
  */
 class PublishModuleAction extends Action
 {
+    /**
+     * Publishes a module after its readiness checklist passes; mentees can then open it.
+     *
+     * @param  string|null  $name  Action name; defaults to the class default.
+     * @return static The configured header action.
+     */
     public static function make(?string $name = 'publish'): static
     {
         return parent::make($name)

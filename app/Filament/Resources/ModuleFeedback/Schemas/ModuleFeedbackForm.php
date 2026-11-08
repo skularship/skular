@@ -6,8 +6,17 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Schema;
 
+/**
+ * Create/edit form schema of the Feedback modul resource.
+ */
 class ModuleFeedbackForm
 {
+    /**
+     * Add the form components to the schema.
+     *
+     * @param  Schema  $schema  The schema to configure.
+     * @return Schema The configured schema.
+     */
     public static function configure(Schema $schema): Schema
     {
         return $schema

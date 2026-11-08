@@ -9,12 +9,19 @@ use App\Filament\Resources\Scholarships\Schemas\ScholarshipForm;
 use App\Filament\Resources\Scholarships\Tables\ScholarshipsTable;
 use App\Models\Scholarship;
 use BackedEnum;
+use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
+/**
+ * Filament resource for Scholarship ("Beasiswa") at /admin/scholarships.
+ *
+ * Scholarship catalogue used for matching. Names must stay descriptive with a link to the official source.
+ * Access is governed by the matching Shield policy in app/Policies.
+ */
 class ScholarshipResource extends Resource
 {
     protected static ?string $model = Scholarship::class;
@@ -33,16 +40,33 @@ class ScholarshipResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'scholarship_name';
 
+    /**
+     * Build the create/edit form.
+     *
+     * @param  Schema  $schema  The schema provided by Filament.
+     * @return Schema The configured form schema.
+     */
     public static function form(Schema $schema): Schema
     {
         return ScholarshipForm::configure($schema);
     }
 
+    /**
+     * Build the list table.
+     *
+     * @param  Table  $table  The table provided by Filament.
+     * @return Table The configured table.
+     */
     public static function table(Table $table): Table
     {
         return ScholarshipsTable::configure($table);
     }
 
+    /**
+     * Get the relation managers shown on the edit page.
+     *
+     * @return array<int, class-string>
+     */
     public static function getRelations(): array
     {
         return [
@@ -50,6 +74,11 @@ class ScholarshipResource extends Resource
         ];
     }
 
+    /**
+     * Get the pages (routes) of this resource.
+     *
+     * @return array<string, PageRegistration>
+     */
     public static function getPages(): array
     {
         return [

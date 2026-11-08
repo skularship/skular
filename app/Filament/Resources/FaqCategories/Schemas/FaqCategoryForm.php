@@ -10,8 +10,17 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
 
+/**
+ * Create/edit form schema of the Kategori FAQ resource.
+ */
 class FaqCategoryForm
 {
+    /**
+     * Add the form components to the schema.
+     *
+     * @param  Schema  $schema  The schema to configure.
+     * @return Schema The configured schema.
+     */
     public static function configure(Schema $schema): Schema
     {
         return $schema

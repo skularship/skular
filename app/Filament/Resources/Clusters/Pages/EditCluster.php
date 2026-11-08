@@ -6,6 +6,9 @@ use App\Filament\Resources\Clusters\ClusterResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
+/**
+ * Edit page of the Cluster bidang resource (ClusterResource).
+ */
 class EditCluster extends EditRecord
 {
     protected static string $resource = ClusterResource::class;

@@ -114,6 +114,12 @@ class ModuleForm
         return 'Pratinjau: '.$question.($count > 0 ? ' ('.$count.' pilihan jawaban)' : ' (tanpa pilihan jawaban)');
     }
 
+    /**
+     * Add every curriculum section of the module editor to the schema.
+     *
+     * @param  Schema  $schema  The schema to configure.
+     * @return Schema The configured schema.
+     */
     public static function configure(Schema $schema): Schema
     {
         return $schema

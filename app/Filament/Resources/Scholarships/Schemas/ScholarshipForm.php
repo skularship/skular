@@ -14,8 +14,17 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
+/**
+ * Create/edit form schema of the Beasiswa resource.
+ */
 class ScholarshipForm
 {
+    /**
+     * Add the form components to the schema.
+     *
+     * @param  Schema  $schema  The schema to configure.
+     * @return Schema The configured schema.
+     */
     public static function configure(Schema $schema): Schema
     {
         return $schema

@@ -6,6 +6,9 @@ use App\Filament\Resources\Modules\ModuleResource;
 use App\Services\BrainstormingConfigService;
 use Filament\Resources\Pages\CreateRecord;
 
+/**
+ * Create page of the Modul pembelajaran resource (ModuleResource).
+ */
 class CreateModule extends CreateRecord
 {
     protected static string $resource = ModuleResource::class;

@@ -7,8 +7,17 @@ use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
+/**
+ * Create/edit form schema of the Fase pembelajaran resource.
+ */
 class FaseForm
 {
+    /**
+     * Add the form components to the schema.
+     *
+     * @param  Schema  $schema  The schema to configure.
+     * @return Schema The configured schema.
+     */
     public static function configure(Schema $schema): Schema
     {
         return $schema

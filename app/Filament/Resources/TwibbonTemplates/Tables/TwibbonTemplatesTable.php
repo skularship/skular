@@ -11,8 +11,17 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
+/**
+ * List table of the Template Twibbon resource (columns, filters and actions).
+ */
 class TwibbonTemplatesTable
 {
+    /**
+     * Add columns, filters and actions to the table.
+     *
+     * @param  Table  $table  The table to configure.
+     * @return Table The configured table.
+     */
     public static function configure(Table $table): Table
     {
         return $table

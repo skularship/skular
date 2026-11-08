@@ -6,6 +6,9 @@ use App\Filament\Resources\Scholarships\ScholarshipResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
+/**
+ * Edit page of the Beasiswa resource (ScholarshipResource).
+ */
 class EditScholarship extends EditRecord
 {
     protected static string $resource = ScholarshipResource::class;

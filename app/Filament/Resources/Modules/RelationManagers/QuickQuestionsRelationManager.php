@@ -35,6 +35,12 @@ class QuickQuestionsRelationManager extends RelationManager
 
     protected static ?string $pluralModelLabel = 'Quick Question';
 
+    /**
+     * Build the form used to create/edit the module's quick questions.
+     *
+     * @param  Schema  $schema  The schema provided by Filament.
+     * @return Schema The configured schema.
+     */
     public function form(Schema $schema): Schema
     {
         return $schema
@@ -73,6 +79,12 @@ class QuickQuestionsRelationManager extends RelationManager
             ->columns(2);
     }
 
+    /**
+     * Build the table listing the module's quick questions.
+     *
+     * @param  Table  $table  The table provided by Filament.
+     * @return Table The configured table.
+     */
     public function table(Table $table): Table
     {
         return $table

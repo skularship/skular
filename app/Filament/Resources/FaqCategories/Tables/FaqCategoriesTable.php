@@ -11,8 +11,17 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * List table of the Kategori FAQ resource (columns, filters and actions).
+ */
 class FaqCategoriesTable
 {
+    /**
+     * Add columns, filters and actions to the table.
+     *
+     * @param  Table  $table  The table to configure.
+     * @return Table The configured table.
+     */
     public static function configure(Table $table): Table
     {
         return $table

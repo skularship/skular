@@ -11,8 +11,17 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
+/**
+ * List table of the Jawaban latihan resource (columns, filters and actions).
+ */
 class UserPracticeResponsesTable
 {
+    /**
+     * Add columns, filters and actions to the table.
+     *
+     * @param  Table  $table  The table to configure.
+     * @return Table The configured table.
+     */
     public static function configure(Table $table): Table
     {
         return $table

@@ -13,6 +13,12 @@ use Filament\Notifications\Notification;
  */
 class UnpublishModuleAction extends Action
 {
+    /**
+     * Moves a module back to draft; drafts 404 for mentees and leave learning paths.
+     *
+     * @param  string|null  $name  Action name; defaults to the class default.
+     * @return static The configured header action.
+     */
     public static function make(?string $name = 'unpublish'): static
     {
         return parent::make($name)

@@ -12,6 +12,12 @@ use Filament\Notifications\Notification;
  */
 class UnpublishFaqAction extends Action
 {
+    /**
+     * Hides an FAQ entry from the public FAQ page.
+     *
+     * @param  string|null  $name  Action name; defaults to the class default.
+     * @return static The configured header action.
+     */
     public static function make(?string $name = 'unpublish'): static
     {
         return parent::make($name)

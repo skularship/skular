@@ -9,12 +9,19 @@ use App\Filament\Resources\PracticeForms\Schemas\PracticeFormForm;
 use App\Filament\Resources\PracticeForms\Tables\PracticeFormsTable;
 use App\Models\PracticeForm;
 use BackedEnum;
+use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
+/**
+ * Filament resource for PracticeForm ("Latihan praktik") at /admin/practice-forms.
+ *
+ * Practice forms (dynamic question builder) evaluated by AI; may feed the mentee CV.
+ * Access is governed by the matching Shield policy in app/Policies.
+ */
 class PracticeFormResource extends Resource
 {
     protected static ?string $model = PracticeForm::class;
@@ -33,16 +40,33 @@ class PracticeFormResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
+    /**
+     * Build the create/edit form.
+     *
+     * @param  Schema  $schema  The schema provided by Filament.
+     * @return Schema The configured form schema.
+     */
     public static function form(Schema $schema): Schema
     {
         return PracticeFormForm::configure($schema);
     }
 
+    /**
+     * Build the list table.
+     *
+     * @param  Table  $table  The table provided by Filament.
+     * @return Table The configured table.
+     */
     public static function table(Table $table): Table
     {
         return PracticeFormsTable::configure($table);
     }
 
+    /**
+     * Get the relation managers shown on the edit page.
+     *
+     * @return array<int, class-string>
+     */
     public static function getRelations(): array
     {
         return [
@@ -50,6 +74,11 @@ class PracticeFormResource extends Resource
         ];
     }
 
+    /**
+     * Get the pages (routes) of this resource.
+     *
+     * @return array<string, PageRegistration>
+     */
     public static function getPages(): array
     {
         return [

@@ -20,8 +20,17 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
+/**
+ * List table of the FAQ resource (columns, filters and actions).
+ */
 class FaqsTable
 {
+    /**
+     * Add columns, filters and actions to the table.
+     *
+     * @param  Table  $table  The table to configure.
+     * @return Table The configured table.
+     */
     public static function configure(Table $table): Table
     {
         return $table

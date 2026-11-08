@@ -9,12 +9,19 @@ use App\Filament\Resources\Clusters\Schemas\ClusterForm;
 use App\Filament\Resources\Clusters\Tables\ClustersTable;
 use App\Models\Cluster;
 use BackedEnum;
+use Filament\Resources\Pages\PageRegistration;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
+/**
+ * Filament resource for Cluster ("Cluster bidang") at /admin/clusters.
+ *
+ * Fields of study offered in profiling; a mentee picks one and scholarships are matched against it.
+ * Access is governed by the matching Shield policy in app/Policies.
+ */
 class ClusterResource extends Resource
 {
     protected static ?string $model = Cluster::class;
@@ -33,16 +40,33 @@ class ClusterResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    /**
+     * Build the create/edit form.
+     *
+     * @param  Schema  $schema  The schema provided by Filament.
+     * @return Schema The configured form schema.
+     */
     public static function form(Schema $schema): Schema
     {
         return ClusterForm::configure($schema);
     }
 
+    /**
+     * Build the list table.
+     *
+     * @param  Table  $table  The table provided by Filament.
+     * @return Table The configured table.
+     */
     public static function table(Table $table): Table
     {
         return ClustersTable::configure($table);
     }
 
+    /**
+     * Get the relation managers shown on the edit page.
+     *
+     * @return array<int, class-string>
+     */
     public static function getRelations(): array
     {
         return [
@@ -50,6 +74,11 @@ class ClusterResource extends Resource
         ];
     }
 
+    /**
+     * Get the pages (routes) of this resource.
+     *
+     * @return array<string, PageRegistration>
+     */
     public static function getPages(): array
     {
         return [

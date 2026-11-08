@@ -6,6 +6,9 @@ use App\Filament\Resources\ModuleFeedback\ModuleFeedbackResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
+/**
+ * List page of the Feedback modul resource (ModuleFeedbackResource).
+ */
 class ListModuleFeedback extends ListRecords
 {
     protected static string $resource = ModuleFeedbackResource::class;

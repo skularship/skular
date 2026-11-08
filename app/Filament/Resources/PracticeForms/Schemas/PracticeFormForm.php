@@ -166,6 +166,12 @@ class PracticeFormForm
             ->columns(2);
     }
 
+    /**
+     * Add the exercise fields, question builder and CV settings to the schema.
+     *
+     * @param  Schema  $schema  The schema to configure.
+     * @return Schema The configured schema.
+     */
     public static function configure(Schema $schema): Schema
     {
         return $schema

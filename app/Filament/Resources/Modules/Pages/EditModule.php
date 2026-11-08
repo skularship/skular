@@ -10,6 +10,9 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
+/**
+ * Edit page of the Modul pembelajaran resource (ModuleResource).
+ */
 class EditModule extends EditRecord
 {
     protected static string $resource = ModuleResource::class;

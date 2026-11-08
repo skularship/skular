@@ -24,8 +24,17 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
+/**
+ * List table of the Modul pembelajaran resource (columns, filters and actions).
+ */
 class ModulesTable
 {
+    /**
+     * Add columns, filters and actions to the table.
+     *
+     * @param  Table  $table  The table to configure.
+     * @return Table The configured table.
+     */
     public static function configure(Table $table): Table
     {
         return $table

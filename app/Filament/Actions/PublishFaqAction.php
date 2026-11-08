@@ -14,6 +14,12 @@ use Filament\Notifications\Notification;
  */
 class PublishFaqAction extends Action
 {
+    /**
+     * Publishes an FAQ entry so it appears on the public FAQ page.
+     *
+     * @param  string|null  $name  Action name; defaults to the class default.
+     * @return static The configured header action.
+     */
     public static function make(?string $name = 'publish'): static
     {
         return parent::make($name)

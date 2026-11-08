@@ -6,6 +6,9 @@ use App\Filament\Resources\Fases\FaseResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
+/**
+ * Edit page of the Fase pembelajaran resource (FaseResource).
+ */
 class EditFase extends EditRecord
 {
     protected static string $resource = FaseResource::class;
