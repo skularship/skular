@@ -60,6 +60,52 @@ class UserPracticeResponse extends Model
     }
 
     /**
+     * Seconds after which an unfinished evaluation is treated as stalled.
+     *
+     * The queued job is capped at 60 seconds, so an evaluation still marked
+     * as running after three minutes lost its worker and will never finish.
+     */
+    public const STALLED_AFTER_SECONDS = 180;
+
+    /**
+     * Determine whether the AI evaluation is still expected to finish.
+     */
+    public function isEvaluating(): bool
+    {
+        return $this->isUnfinished() && ! $this->isStalled();
+    }
+
+    /**
+     * Determine whether an unfinished evaluation stopped without an outcome.
+     */
+    public function isStalled(): bool
+    {
+        if (! $this->isUnfinished()) {
+            return false;
+        }
+
+        $since = $this->updated_at ?? $this->submitted_at;
+
+        return $since === null || $since->lt(now()->subSeconds(self::STALLED_AFTER_SECONDS));
+    }
+
+    /**
+     * Determine whether the mentee may ask the AI to evaluate again.
+     */
+    public function canRetryEvaluation(): bool
+    {
+        return $this->ai_status === AiFeedbackStatus::Failed || $this->isStalled();
+    }
+
+    /**
+     * Determine whether the evaluation has neither completed nor failed.
+     */
+    private function isUnfinished(): bool
+    {
+        return in_array($this->ai_status, [AiFeedbackStatus::Pending, AiFeedbackStatus::Processing], true);
+    }
+
+    /**
      * Determine whether the AI feedback is available to display.
      */
     public function hasFeedback(): bool

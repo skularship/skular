@@ -7,7 +7,7 @@ use App\Ai\AiConfiguration;
 use App\Concerns\ExtractsStructuredResponse;
 use App\Contracts\AiFeedbackServiceInterface;
 use App\Data\AiFeedbackData;
-use App\Exceptions\AiConfigurationException;
+use App\Enums\AiFailureReason;
 use App\Exceptions\AiFeedbackException;
 use App\Models\Module;
 use App\Models\PracticeForm;
@@ -35,35 +35,34 @@ class AiFeedbackService implements AiFeedbackServiceInterface
 
             $response = $agent->prompt($agent->buildPrompt());
         } catch (Throwable $exception) {
+            $reason = AiFailureReason::fromThrowable($exception);
+
             Log::warning('AI Feedback request failed', [
                 'module_id' => $module->id,
                 'practice_form_id' => $practice_form->id,
+                'reason' => $reason->value,
                 'exception' => $exception::class,
                 'message' => $exception->getMessage(),
             ]);
 
-            if ($exception instanceof AiConfigurationException) {
-                throw new AiFeedbackException('Layanan AI belum dikonfigurasi dengan lengkap. Silakan hubungi admin ya.', 0, $exception);
-            }
-
-            $timedOut = $exception->getCode() === 28
-                || str_contains(strtolower($exception->getMessage()), 'timed out')
-                || str_contains(strtolower($exception->getMessage()), 'timeout');
-
-            throw new AiFeedbackException(
-                $timedOut
-                    ? 'Penilaian AI butuh waktu lebih lama dari biasanya. Jawabanmu tetap tersimpan, coba lagi ya.'
-                    : 'Layanan AI tidak dapat dihubungi. Jawabanmu tetap tersimpan, coba lagi nanti.',
-                0,
-                $exception,
-            );
+            throw new AiFeedbackException(match ($reason) {
+                AiFailureReason::Configuration => 'Layanan AI belum dikonfigurasi dengan lengkap. Jawabanmu tetap tersimpan, silakan hubungi admin ya.',
+                AiFailureReason::RateLimited => 'Penilaian AI sedang ramai. Jawabanmu tetap tersimpan, coba nilai ulang sekitar satu menit lagi ya.',
+                AiFailureReason::Timeout => 'Penilaian AI butuh waktu lebih lama dari biasanya. Jawabanmu tetap tersimpan, coba lagi ya.',
+                AiFailureReason::Unavailable => 'Layanan AI tidak dapat dihubungi. Jawabanmu tetap tersimpan, coba lagi nanti.',
+            }, 0, $exception);
         }
 
         $payload = $this->structuredPayload($response);
         $feedback = (string) ($payload['feedback'] ?? '');
 
         if (trim($feedback) === '') {
-            throw new AiFeedbackException('AI tidak mengembalikan feedback yang valid.');
+            Log::warning('AI Feedback returned an empty evaluation', [
+                'module_id' => $module->id,
+                'practice_form_id' => $practice_form->id,
+            ]);
+
+            throw new AiFeedbackException('AI belum memberi penilaian yang lengkap. Jawabanmu tetap tersimpan, coba nilai ulang ya.');
         }
 
         Log::debug('ai.request', [

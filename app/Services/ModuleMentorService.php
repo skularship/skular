@@ -6,7 +6,7 @@ use App\Ai\Agents\ModuleMentorAgent;
 use App\Ai\AiConfiguration;
 use App\Contracts\ModuleMentorServiceInterface;
 use App\Data\MentorReplyData;
-use App\Exceptions\AiConfigurationException;
+use App\Enums\AiFailureReason;
 use App\Exceptions\AiMentorException;
 use App\Models\Module;
 use App\Models\PracticeForm;
@@ -86,33 +86,29 @@ class ModuleMentorService implements ModuleMentorServiceInterface
                 ? $agent->prompt($agent->buildPrompt($question))
                 : $agent->withMessages($messages)->prompt($agent->buildPrompt($question));
         } catch (Throwable $exception) {
+            $reason = AiFailureReason::fromThrowable($exception);
+
             Log::warning('AI Mentor request failed', [
                 'module_id' => $module->id,
+                'reason' => $reason->value,
                 'exception' => $exception::class,
                 'message' => $exception->getMessage(),
             ]);
 
-            if ($exception instanceof AiConfigurationException) {
-                throw new AiMentorException('Layanan AI belum dikonfigurasi dengan lengkap. Silakan hubungi admin ya.', 0, $exception);
-            }
-
-            $timedOut = $exception->getCode() === 28
-                || str_contains(strtolower($exception->getMessage()), 'timed out')
-                || str_contains(strtolower($exception->getMessage()), 'timeout');
-
-            throw new AiMentorException(
-                $timedOut
-                    ? 'AI Mentor butuh waktu lebih lama dari biasanya. Pertanyaanmu aman, coba kirim lagi ya.'
-                    : 'AI Mentor sedang tidak bisa dihubungi. Coba lagi sebentar lagi ya.',
-                0,
-                $exception,
-            );
+            throw new AiMentorException(match ($reason) {
+                AiFailureReason::Configuration => 'Layanan AI belum dikonfigurasi dengan lengkap. Silakan hubungi admin ya.',
+                AiFailureReason::RateLimited => 'AI Mentor sedang menerima banyak pertanyaan. Tunggu sekitar satu menit, lalu coba lagi ya.',
+                AiFailureReason::Timeout => 'AI Mentor butuh waktu lebih lama dari biasanya. Pertanyaanmu aman, coba kirim lagi ya.',
+                AiFailureReason::Unavailable => 'AI Mentor sedang tidak bisa dihubungi. Coba lagi sebentar lagi ya.',
+            }, 0, $exception);
         }
 
         $answer = trim((string) $response);
 
         if ($answer === '') {
-            throw new AiMentorException('AI Mentor tidak mengembalikan jawaban yang valid.');
+            Log::warning('AI Mentor returned an empty answer', ['module_id' => $module->id]);
+
+            throw new AiMentorException('AI Mentor belum memberi jawaban. Pertanyaanmu aman, coba kirim lagi ya.');
         }
 
         Log::debug('ai.request', [

@@ -9,8 +9,8 @@ use App\Contracts\ModuleBrainstormingServiceInterface;
 use App\Data\BrainstormOutlineData;
 use App\Data\BrainstormOutlineSectionData;
 use App\Data\BrainstormResultData;
+use App\Enums\AiFailureReason;
 use App\Exceptions\AiBrainstormingException;
-use App\Exceptions\AiConfigurationException;
 use App\Models\Module;
 use App\Models\PracticeForm;
 use Illuminate\Support\Facades\Log;
@@ -113,6 +113,7 @@ class ModuleBrainstormingService implements ModuleBrainstormingServiceInterface
         } catch (Throwable $exception) {
             Log::warning('AI Brainstorming request failed', [
                 'operation' => 'outline',
+                'reason' => AiFailureReason::fromThrowable($exception)->value,
                 'module_id' => $module->id,
                 'practice_form_id' => $practice_form->id,
                 'exception' => $exception::class,
@@ -142,19 +143,12 @@ class ModuleBrainstormingService implements ModuleBrainstormingServiceInterface
      */
     private function failureMessage(Throwable $exception): string
     {
-        if ($exception instanceof AiConfigurationException) {
-            return 'Layanan AI belum dikonfigurasi dengan lengkap. Silakan hubungi admin ya.';
-        }
-
-        $message = strtolower($exception->getMessage());
-
-        $timedOut = $exception->getCode() === 28
-            || str_contains($message, 'timed out')
-            || str_contains($message, 'timeout');
-
-        return $timedOut
-            ? 'AI butuh waktu lebih lama dari biasanya. Jawaban brainstormingmu tetap aman, coba lagi ya.'
-            : 'AI belum berhasil menyusun kerangka. Jawaban brainstormingmu tetap aman, coba lagi ya.';
+        return match (AiFailureReason::fromThrowable($exception)) {
+            AiFailureReason::Configuration => 'Layanan AI belum dikonfigurasi dengan lengkap. Silakan hubungi admin ya.',
+            AiFailureReason::RateLimited => 'AI sedang ramai dipakai. Jawaban brainstormingmu tetap aman, coba lagi sekitar satu menit lagi ya.',
+            AiFailureReason::Timeout => 'AI butuh waktu lebih lama dari biasanya. Jawaban brainstormingmu tetap aman, coba lagi ya.',
+            AiFailureReason::Unavailable => 'AI belum berhasil menyusun kerangka. Jawaban brainstormingmu tetap aman, coba lagi ya.',
+        };
     }
 
     /**

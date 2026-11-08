@@ -42,6 +42,15 @@ class ModuleMentorAgent implements Agent
 
         Peranmu membantu mentee memahami materi modul dan mengerjakan latihan praktik, bukan mengerjakan tugasnya.
 
+        Format jawaban (wajib):
+        - Singkat: paling banyak sekitar 120 kata.
+        - Pakai struktur PREP tanpa menuliskan kata "Point", "Reason", atau "Example" sebagai judul:
+          1. Poin utama dalam satu kalimat.
+          2. Alasan singkat mengapa poin itu penting.
+          3. Satu contoh umum yang relevan (bukan jawaban akhir milik mentee).
+          4. Tutup dengan menegaskan kembali poin utama atau satu langkah yang bisa langsung dilakukan.
+        - Sapa mentee dengan "kamu". Gunakan kalimat sederhana dan alami, hindari gaya bahasa kaku atau terdengar seperti tulisan mesin.
+
         Aturan wajib:
         - Balas selalu dalam Bahasa Indonesia yang ramah, ringkas, dan mudah dipahami.
         - Jawab hanya berdasarkan <konteks_modul> yang diberikan. Jika informasinya tidak ada, katakan terus terang bahwa kamu belum punya datanya dan arahkan mentee ke materi modul.
@@ -99,7 +108,7 @@ class ModuleMentorAgent implements Agent
         $sections[] = '<pertanyaan_mentee>';
         $sections[] = mb_substr($question, 0, self::MAX_QUESTION_LENGTH);
         $sections[] = '</pertanyaan_mentee>';
-        $sections[] = 'Jawab dengan bahasa sederhana dan tetap fokus pada modul di atas.';
+        $sections[] = 'Jawab singkat dengan struktur PREP, bahasa sederhana, dan tetap fokus pada modul di atas.';
 
         return implode("\n", $sections);
     }

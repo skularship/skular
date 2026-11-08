@@ -420,7 +420,7 @@ php artisan queue:listen
 | Variabel | Keterangan |
 |---|---|
 | `OPENROUTER_API_KEY` | Kunci API AI — dipakai untuk feedback praktik, **AI Mentor**, dan **AI Brainstorming** (driver `openrouter` di `config/ai.php`). Ada di `.env` lokal dan `OPENROUTER_API_KEY` kosong di `.env.example` |
-| Model AI | **Tidak** diatur lewat env. `config/ai.php` menetapkan model teks OpenRouter `deepseek/deepseek-v4.1-flash` secara langsung. `OPENROUTER_TEXT_MODEL` di `.env`/`.env.example` **tidak dibaca** aplikasi; ganti modelnya di `config/ai.php`. |
+| Model AI | **Tidak** diatur lewat env. `config/ai.php` menetapkan model teks OpenRouter `deepseek/deepseek-v4.1-flash` secara langsung. Semua agent (Mentor, Brainstorming, Feedback) memakai model default ini dan tidak boleh memasang `#[Model]`/`#[Provider]` sendiri (dijaga `tests/Feature/Learning/AiResilienceTest.php`). `OPENROUTER_TEXT_MODEL` sudah dihapus dari `.env.example` karena tidak pernah dibaca; ganti modelnya di `config/ai.php`. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Login Google (Socialite) |
 | `DB_CONNECTION` | `sqlite` untuk lokal (dibuat oleh `composer setup`); `mysql`/`pgsql` untuk production |
 | `SESSION_DRIVER` / `CACHE_STORE` / `QUEUE_CONNECTION` | Default `database` untuk ketiganya. Untuk trafik tinggi gunakan `redis` bila hosting menyediakan (lihat [Deployment Production](#deployment-production)) |

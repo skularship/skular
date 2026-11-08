@@ -3,11 +3,15 @@
 namespace App\Jobs;
 
 use App\Contracts\PracticeSubmissionServiceInterface;
+use App\Enums\AiFeedbackStatus;
+use App\Models\UserPracticeResponse;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Evaluate a stored practice submission with AI feedback off the web request.
@@ -67,5 +71,30 @@ final class EvaluatePracticeFeedback implements ShouldBeUnique, ShouldQueue
     public function handle(PracticeSubmissionServiceInterface $submission_service): void
     {
         $submission_service->evaluateSubmission($this->response_id, $this->practice_form_id);
+    }
+
+    /**
+     * Surface a crashed or timed-out evaluation as a retryable failure.
+     *
+     * Without this the response would stay "processing" forever: the mentee
+     * would never see the retry button and could never reach the checkpoint.
+     */
+    public function failed(?Throwable $exception): void
+    {
+        Log::warning('AI Feedback job failed', [
+            'response_id' => $this->response_id,
+            'practice_form_id' => $this->practice_form_id,
+            'exception' => $exception === null ? null : $exception::class,
+            'message' => $exception?->getMessage(),
+        ]);
+
+        UserPracticeResponse::query()
+            ->whereKey($this->response_id)
+            ->whereIn('ai_status', [AiFeedbackStatus::Pending->value, AiFeedbackStatus::Processing->value])
+            ->update([
+                'ai_status' => AiFeedbackStatus::Failed->value,
+                'ai_error' => 'Penilaian AI terhenti sebelum selesai. Jawabanmu tetap tersimpan, coba nilai ulang ya.',
+                'updated_at' => now(),
+            ]);
     }
 }
