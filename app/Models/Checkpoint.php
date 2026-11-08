@@ -24,6 +24,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable|null $completed_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property-read User $user
+ * @property-read Module $module
+ * @property-read Fase $fase
  */
 #[Fillable([
     'user_id',

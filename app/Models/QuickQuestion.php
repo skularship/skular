@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property bool $is_active
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property-read Module $module
  */
 #[Fillable(['module_id', 'question', 'answer', 'explanation', 'ordering', 'is_active'])]
 class QuickQuestion extends Model

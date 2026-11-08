@@ -21,6 +21,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $summary
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property-read User $user
+ * @property-read Module $module
+ * @property-read PracticeForm $practiceForm
  */
 #[Fillable([
     'user_id',

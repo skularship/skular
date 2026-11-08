@@ -42,6 +42,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable|null $updated_at
  * @property-read int|null $practice_forms_count
  * @property-read Fase $fase
+ * @property-read Scholarship|null $scholarship
+ * @property-read Collection<int, PracticeForm> $practiceForms
+ * @property-read Collection<int, ModuleCoreSection> $coreSections
+ * @property-read Collection<int, QuickQuestion> $quickQuestions
+ * @property-read Collection<int, Checkpoint> $checkpoints
+ * @property-read Collection<int, UserPracticeResponse> $practiceResponses
+ * @property-read Collection<int, UserBrainstormingSession> $brainstormingSessions
+ * @property-read Collection<int, ModuleFeedback> $feedbacks
  */
 #[Fillable([
     'fase_id',

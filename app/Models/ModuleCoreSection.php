@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $ordering
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property-read Module $module
  */
 #[Fillable(['module_id', 'subtitle', 'body', 'ordering'])]
 class ModuleCoreSection extends Model

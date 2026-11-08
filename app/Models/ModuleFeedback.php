@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $suggestion
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property-read User $user
+ * @property-read Module $module
  */
 #[Fillable(['user_id', 'module_id', 'ratings', 'suggestion'])]
 class ModuleFeedback extends Model

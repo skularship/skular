@@ -11,6 +11,7 @@ use Database\Factories\ScholarshipFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,6 +40,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property ScholarshipStatus $status
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property-read Cluster|null $cluster
+ * @property-read Collection<int, ScholarshipApplication> $applications
+ * @property-read Collection<int, Module> $templateModules
+ * @property-read Collection<int, User> $applicants
  */
 #[Fillable([
     'scholarship_name',

@@ -11,6 +11,7 @@ use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -50,6 +51,13 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Cluster|null $cluster
+ * @property-read Collection<int, ScholarshipApplication> $scholarshipApplications
+ * @property-read Collection<int, Scholarship> $scholarships
+ * @property-read ScholarshipApplication|null $primaryApplication
+ * @property-read Collection<int, Checkpoint> $checkpoints
+ * @property-read Collection<int, UserPracticeResponse> $practiceResponses
+ * @property-read Collection<int, UserBrainstormingSession> $brainstormingSessions
+ * @property-read Collection<int, ModuleFeedback> $moduleFeedbacks
  */
 #[Fillable([
     'name',
