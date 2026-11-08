@@ -34,7 +34,7 @@
 
                 @if ($scholarship->scope)
                     <span class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">
-                        <x-icons.app-icon name="globe-alt" class="size-3.5" />
+                        <x-icons.app-icon :name="$scholarship->scope->isStudyDestination() ? 'globe-alt' : 'banknotes'" class="size-3.5" />
                         {{ $scholarship->scope->label() }}
                     </span>
                 @endif

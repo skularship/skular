@@ -61,17 +61,43 @@ test('a mentee is only matched with scholarships in their desired location', fun
     expect($matches)->toHaveCount(0);
 });
 
-test('a funding category on a scholarship is not treated as a study location match', function () {
+test('a funding category scope never excludes a scholarship and is not claimed as a location fit', function (LocationScope $funding, LocationScope $desired) {
+    $mentee = User::factory()->profiled()->create([
+        'level' => EducationLevel::S1,
+        'desired_location' => $desired,
+    ]);
+
+    Scholarship::factory()->forLevel(EducationLevel::S1)->create([
+        'scope' => $funding,
+    ]);
+
+    $matches = $this->matching->match(UserProfileData::fromUser($mentee));
+
+    expect($matches)->toHaveCount(1)
+        ->and(collect($matches->first()->reasons)->pluck('label')->all())->not->toContain('Lokasi');
+})->with([
+    'penuh, dalam negeri' => [LocationScope::Penuh, LocationScope::DalamNegeri],
+    'parsial, luar negeri' => [LocationScope::Parsial, LocationScope::LuarNegeri],
+    'tunjangan saja, dalam negeri' => [LocationScope::TunjanganSaja, LocationScope::DalamNegeri],
+]);
+
+test('a study destination scope still excludes mentees who want the other destination', function () {
     $mentee = User::factory()->profiled()->create([
         'level' => EducationLevel::S1,
         'desired_location' => LocationScope::DalamNegeri,
     ]);
 
-    Scholarship::factory()->forLevel(EducationLevel::S1)->create([
-        'scope' => LocationScope::Penuh,
-    ]);
+    Scholarship::factory()->forLevel(EducationLevel::S1)->create(['scope' => LocationScope::Penuh]);
+    Scholarship::factory()->forLevel(EducationLevel::S1)->create(['scope' => LocationScope::LuarNegeri]);
+    Scholarship::factory()->forLevel(EducationLevel::S1)->create(['scope' => LocationScope::DalamNegeri]);
 
-    expect($this->matching->match(UserProfileData::fromUser($mentee)))->toHaveCount(0);
+    $scopes = $this->matching->match(UserProfileData::fromUser($mentee))
+        ->map(fn ($match) => $match->scholarship->scope)
+        ->all();
+
+    expect($scopes)->toHaveCount(2)
+        ->and($scopes)->toContain(LocationScope::Penuh, LocationScope::DalamNegeri)
+        ->and($scopes)->not->toContain(LocationScope::LuarNegeri);
 });
 
 test('a scholarship without a location scope is available to every mentee', function () {

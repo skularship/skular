@@ -78,7 +78,10 @@ class Index extends Component
         return view('livewire.scholarships.index', [
             'scholarships' => $this->query()->paginate(9),
             'levels' => EducationLevel::cases(),
-            'scopes' => LocationScope::studyDestinations(),
+            // Every stored scope is offered: production records mostly hold a
+            // funding category (Penuh, Parsial, Tunjangan saja), so a filter
+            // limited to study destinations would always return nothing.
+            'scopes' => LocationScope::cases(),
             'locations' => $this->locations(),
             'selected_ids' => $selected_ids,
             'selected_count' => $selected_count,

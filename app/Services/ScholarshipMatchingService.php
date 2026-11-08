@@ -7,6 +7,7 @@ use App\Data\MatchReasonData;
 use App\Data\ScholarshipData;
 use App\Data\ScholarshipMatchData;
 use App\Data\UserProfileData;
+use App\Enums\LocationScope;
 use App\Enums\MatchTier;
 use App\Enums\ScholarshipStatus;
 use App\Models\Scholarship;
@@ -58,10 +59,17 @@ class ScholarshipMatchingService implements ScholarshipMatchingServiceInterface
             ->where('status', ScholarshipStatus::Active)
             ->whereIn('level', $profile_data->level->matchingLevelValues())
             ->where(function (Builder $query) use ($profile_data): void {
-                // Compare the stored study-location value, not the enum object,
-                // so the predicate behaves the same on SQLite and MySQL. A null
-                // scope means the location is unspecified and stays available.
+                // Only a study-destination scope (dalam/luar negeri) can rule a
+                // scholarship out. A null scope, or a funding category stored in
+                // the same column (Penuh, Parsial, Tunjangan saja — what most
+                // production records hold), says nothing about where the mentee
+                // studies, so those scholarships stay candidates. Stored values
+                // are compared, not enum objects, so SQLite and MySQL agree.
                 $query->whereNull('scope')
+                    ->orWhereNotIn('scope', array_map(
+                        fn (LocationScope $destination): string => $destination->value,
+                        LocationScope::studyDestinations(),
+                    ))
                     ->orWhere('scope', $profile_data->desired_location->value);
             })
             ->orderBy('closing_date')

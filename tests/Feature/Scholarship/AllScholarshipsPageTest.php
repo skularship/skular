@@ -181,3 +181,18 @@ test('an already selected scholarship shows the continue call to action', functi
         ->test(Show::class, ['scholarship' => $scholarship])
         ->assertSee('Lanjutkan Persiapan');
 });
+
+test('the catalog scope filter also offers funding categories and filters by them', function () {
+    $mentee = User::factory()->profiled()->create();
+
+    Scholarship::factory()->create(['scholarship_name' => 'Beasiswa Dana Penuh', 'scope' => LocationScope::Penuh]);
+    Scholarship::factory()->create(['scholarship_name' => 'Beasiswa Dana Parsial', 'scope' => LocationScope::Parsial]);
+
+    Livewire::actingAs($mentee)
+        ->test(Index::class)
+        ->assertSeeHtml('value="Penuh"')
+        ->assertSeeHtml('value="dalam_negeri"')
+        ->set('scope', LocationScope::Penuh->value)
+        ->assertSee('Beasiswa Dana Penuh')
+        ->assertDontSee('Beasiswa Dana Parsial');
+});

@@ -157,7 +157,7 @@
                             <x-ui.pill>{{ $scholarship->level->label() }}</x-ui.pill>
 
                             @if ($scholarship->scope)
-                                <x-ui.pill icon="globe-alt">{{ $scholarship->scope->label() }}</x-ui.pill>
+                                <x-ui.pill :icon="$scholarship->scope->isStudyDestination() ? 'globe-alt' : 'banknotes'">{{ $scholarship->scope->label() }}</x-ui.pill>
                             @endif
 
                             @if ($scholarship->location)
