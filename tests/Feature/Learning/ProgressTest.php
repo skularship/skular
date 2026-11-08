@@ -91,25 +91,39 @@ test('a module with practice forms cannot be completed before they are submitted
     expect($progress->completeModule($mentee, $first, 80)->status)->toBe(CheckpointStatus::Completed);
 });
 
-test('a module can be completed when its practice submission failed to get ai feedback', function () {
+test('a module cannot be completed until every submission is assessed by the ai', function (AiFeedbackStatus $status) {
     [$fase, $first] = curriculum();
     $mentee = User::factory()->profiled()->create();
 
     $form = PracticeForm::factory()->create(['module_id' => $first->id]);
     $progress = app(ProgressServiceInterface::class);
 
-    $mentee->practiceResponses()->create([
+    $response = $mentee->practiceResponses()->create([
         'module_id' => $first->id,
         'practice_form_id' => $form->id,
         'answers' => ['jawaban' => 'Jawaban saya.'],
-        'ai_status' => AiFeedbackStatus::Failed,
+        'ai_status' => $status,
         'ai_score' => null,
         'attempts' => 1,
         'submitted_at' => now(),
     ]);
 
-    expect($progress->completeModule($mentee, $first)->status)->toBe(CheckpointStatus::Completed);
-});
+    expect(fn () => $progress->completeModule($mentee, $first))
+        ->toThrow(ValidationException::class, 'selesai dinilai AI');
+
+    expect($progress->checkpointFor($mentee, $first)->status)->not->toBe(CheckpointStatus::Completed);
+
+    // Once the (re-)assessment completes, the module can be finished and the
+    // stored answer is kept untouched.
+    $response->update(['ai_status' => AiFeedbackStatus::Completed, 'ai_score' => 75]);
+
+    expect($progress->completeModule($mentee, $first, 75)->status)->toBe(CheckpointStatus::Completed)
+        ->and($response->refresh()->answers['jawaban'])->toBe('Jawaban saya.');
+})->with([
+    'gagal dinilai' => [AiFeedbackStatus::Failed],
+    'sedang dinilai' => [AiFeedbackStatus::Processing],
+    'menunggu' => [AiFeedbackStatus::Pending],
+]);
 
 test('a locked module cannot be started', function () {
     [$fase, $first, $second] = curriculum();

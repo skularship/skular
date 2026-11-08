@@ -8,6 +8,7 @@ use App\Data\FaseProgressData;
 use App\Data\LearningOverviewData;
 use App\Data\ModuleProgressData;
 use App\Data\ProgressSummaryData;
+use App\Enums\AiFeedbackStatus;
 use App\Enums\CheckpointStatus;
 use App\Enums\ModuleCategory;
 use App\Models\Checkpoint;
@@ -574,12 +575,14 @@ class ProgressService implements ProgressServiceInterface
     }
 
     /**
-     * Ensure every active practice form of the module has been submitted.
+     * Ensure every active practice form of the module has been submitted and
+     * assessed by the AI.
      *
-     * The mentee may still unlock a checkpoint when the AI evaluation failed,
-     * because a failed submission is stored too — only missing answers block it.
+     * This mirrors the checkpoint gate of ModulePlayer on the service layer, so
+     * no caller can complete a module while an answer is missing, still being
+     * assessed, or failed to be assessed (the mentee re-assesses it instead).
      *
-     * @throws ValidationException
+     * @throws ValidationException When an answer is missing or not yet assessed.
      */
     private function assertPracticeSubmitted(User $user, Module $module): void
     {
@@ -593,15 +596,22 @@ class ProgressService implements ProgressServiceInterface
             return;
         }
 
-        /** @var Collection<int, int> $answered */
-        $answered = UserPracticeResponse::query()
+        /** @var Collection<int, string> $statuses AI status keyed by practice form id. */
+        $statuses = UserPracticeResponse::query()
             ->where('user_id', $user->id)
             ->whereIn('practice_form_id', $form_ids->all())
-            ->pluck('practice_form_id');
+            ->toBase()
+            ->pluck('ai_status', 'practice_form_id');
 
-        if ($form_ids->diff($answered)->isNotEmpty()) {
+        if ($form_ids->diff($statuses->keys())->isNotEmpty()) {
             throw ValidationException::withMessages([
                 'checkpoint' => 'Selesaikan semua latihan praktik modul ini dulu sebelum mengunci checkpoint.',
+            ]);
+        }
+
+        if ($statuses->contains(fn (mixed $status): bool => $status !== AiFeedbackStatus::Completed->value)) {
+            throw ValidationException::withMessages([
+                'checkpoint' => 'Tunggu sampai semua jawabanmu selesai dinilai AI. Bila penilaian gagal, tekan "Nilai ulang" di langkah Praktik.',
             ]);
         }
     }

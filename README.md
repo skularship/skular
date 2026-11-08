@@ -154,7 +154,7 @@ public/build/              # Aset Vite hasil build (DI-COMMIT)
 | Praktik + penilaian AI (label, bukan skor) | (di langkah Praktik) | `app/Services/PracticeSubmissionService.php`, `app/Jobs/EvaluatePracticeFeedback.php`, `app/Services/AiFeedbackService.php`, `app/Enums/AiScoreLabel.php` |
 | AI Mentor (saran pertanyaan admin + kuota 5/modul) | (di langkah Praktik) | `app/Livewire/Learning/MentorChat.php`, `app/Services/ModuleMentorService.php`, `MentorQuotaService.php` |
 | AI Brainstorming (kerangka draf dari jawaban mentee) | (di form praktik) | `app/Livewire/Learning/Brainstorming.php`, `app/Services/ModuleBrainstormingService.php`, `BrainstormingSessionService.php` |
-| Gate tahap Feedback/Checkpoint | (di langkah Checkpoint) | `ModulePlayer::checkpointBlock()` / `guardCheckpointSection()` |
+| Gate tahap Feedback/Checkpoint | (di langkah Checkpoint) | `ModulePlayer::checkpointBlock()` / `guardCheckpointSection()`, `ProgressService::completeModule()` |
 | Perpustakaan (modul opsional) | `/library` | `app/Livewire/Learning/Library.php` |
 | CV otomatis dari jawaban praktik | `/cv` | `app/Livewire/Cv/Show.php`, `app/Services/CvService.php` |
 | Twibbon | `/scholarships/{application}/twibbon` | `app/Livewire/Twibbon/Generator.php`, `app/Services/TwibbonService.php` |
