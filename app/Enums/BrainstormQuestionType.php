@@ -19,6 +19,11 @@ enum BrainstormQuestionType: string implements HasLabel
     case MultipleChoice = 'multiple_choice';
     case ShortText = 'short_text';
 
+    /**
+     * Get the Indonesian label shown to mentees and in the Filament admin.
+     *
+     * @return string Human readable label.
+     */
     public function getLabel(): string
     {
         return match ($this) {

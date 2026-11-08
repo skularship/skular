@@ -17,6 +17,11 @@ enum QuickProfilingGoal: string implements HasLabel
     case S2LuarNegeri = 's2_luar_negeri';
     case Lomba = 'lomba';
 
+    /**
+     * Get the Indonesian label shown to mentees and in the Filament admin.
+     *
+     * @return string Human readable label.
+     */
     public function getLabel(): string
     {
         return match ($this) {

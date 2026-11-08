@@ -5,6 +5,12 @@ namespace App\Enums;
 use App\Enums\Concerns\HasSelectOptions;
 use Filament\Support\Contracts\HasLabel;
 
+/**
+ * Roles of the Filament admin panel (spatie/laravel-permission via Shield).
+ *
+ * super_admin bypasses every policy; co_admin and staff_divisi only get the
+ * permissions assigned by RoleSeeder.
+ */
 enum AdminRole: string implements HasLabel
 {
     use HasSelectOptions;
@@ -13,6 +19,11 @@ enum AdminRole: string implements HasLabel
     case CoAdmin = 'co_admin';
     case StaffDivisi = 'staff_divisi';
 
+    /**
+     * Get the Indonesian label shown to mentees and in the Filament admin.
+     *
+     * @return string Human readable label.
+     */
     public function getLabel(): string
     {
         return match ($this) {

@@ -19,6 +19,11 @@ enum ContentStatus: string implements HasColor, HasLabel
     case Draft = 'draft';
     case Published = 'published';
 
+    /**
+     * Get the Indonesian label shown to mentees and in the Filament admin.
+     *
+     * @return string Human readable label.
+     */
     public function getLabel(): string
     {
         return match ($this) {
@@ -27,6 +32,11 @@ enum ContentStatus: string implements HasColor, HasLabel
         };
     }
 
+    /**
+     * Get the Filament color used for badges of this case.
+     *
+     * @return string Filament color name (gray, info, success, warning, danger, ...).
+     */
     public function getColor(): string
     {
         return match ($this) {

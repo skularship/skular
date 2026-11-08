@@ -20,6 +20,11 @@ enum QuickProfilingAsset: string implements HasLabel
     case Achievement = 'achievement';
     case None = 'none';
 
+    /**
+     * Get the Indonesian label shown to mentees and in the Filament admin.
+     *
+     * @return string Human readable label.
+     */
     public function getLabel(): string
     {
         return match ($this) {

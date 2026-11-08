@@ -5,6 +5,9 @@ namespace App\Enums;
 use App\Enums\Concerns\HasSelectOptions;
 use Filament\Support\Contracts\HasLabel;
 
+/**
+ * Education levels used for the mentee profile (current and target level) and scholarship requirements.
+ */
 enum EducationLevel: string implements HasLabel
 {
     use HasSelectOptions;
@@ -17,6 +20,11 @@ enum EducationLevel: string implements HasLabel
     case S2 = 'S2';
     case S3 = 'S3';
 
+    /**
+     * Get the Indonesian label shown to mentees and in the Filament admin.
+     *
+     * @return string Human readable label.
+     */
     public function getLabel(): string
     {
         return strtoupper($this->value);

@@ -16,6 +16,11 @@ enum ReadinessCategory: string implements HasLabel
     case BuildingReadiness = 'building_readiness';
     case StrongFoundation = 'strong_foundation';
 
+    /**
+     * Get the Indonesian label shown to mentees and in the Filament admin.
+     *
+     * @return string Human readable label.
+     */
     public function getLabel(): string
     {
         return match ($this) {

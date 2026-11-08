@@ -17,6 +17,11 @@ enum QuickProfilingStatus: string implements HasLabel
     case FreshGraduate = 'fresh_graduate';
     case Worker = 'worker';
 
+    /**
+     * Get the Indonesian label shown to mentees and in the Filament admin.
+     *
+     * @return string Human readable label.
+     */
     public function getLabel(): string
     {
         return match ($this) {

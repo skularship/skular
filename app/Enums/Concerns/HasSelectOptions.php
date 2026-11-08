@@ -2,6 +2,9 @@
 
 namespace App\Enums\Concerns;
 
+/**
+ * Adds label() and options() helpers to backed enums that implement Filament HasLabel, used for select inputs.
+ */
 trait HasSelectOptions
 {
     /**

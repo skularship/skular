@@ -5,6 +5,11 @@ namespace App\Enums;
 use App\Enums\Concerns\HasSelectOptions;
 use Filament\Support\Contracts\HasLabel;
 
+/**
+ * Scholarship location/funding scope. Profiling only offers the study destinations
+ * (dalam_negeri, luar_negeri); the funding values (Tunjangan saja, Parsial, Penuh)
+ * are scholarship attributes and must never be stored as a mentee answer.
+ */
 enum LocationScope: string implements HasLabel
 {
     use HasSelectOptions;
@@ -15,6 +20,11 @@ enum LocationScope: string implements HasLabel
     case Parsial = 'Parsial';
     case Penuh = 'Penuh';
 
+    /**
+     * Get the Indonesian label shown to mentees and in the Filament admin.
+     *
+     * @return string Human readable label.
+     */
     public function getLabel(): string
     {
         return match ($this) {

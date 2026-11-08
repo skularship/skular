@@ -37,6 +37,11 @@ enum AiScoreLabel: string
         return $score === null ? null : self::fromScore((int) round($score));
     }
 
+    /**
+     * Get the label shown to mentees instead of the numeric score.
+     *
+     * @return string Sangat baik, Baik, Cukup or Perlu diperbaiki.
+     */
     public function label(): string
     {
         return match ($this) {

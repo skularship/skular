@@ -5,6 +5,9 @@ namespace App\Enums;
 use App\Enums\Concerns\HasSelectOptions;
 use Filament\Support\Contracts\HasLabel;
 
+/**
+ * Input types an admin can choose for a practice form question; decides the rendered input and its validation rules.
+ */
 enum PracticeFieldType: string implements HasLabel
 {
     use HasSelectOptions;
@@ -19,6 +22,11 @@ enum PracticeFieldType: string implements HasLabel
     case Url = 'url';
     case File = 'file';
 
+    /**
+     * Get the Indonesian label shown to mentees and in the Filament admin.
+     *
+     * @return string Human readable label.
+     */
     public function getLabel(): string
     {
         return match ($this) {

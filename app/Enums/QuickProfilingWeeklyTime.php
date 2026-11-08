@@ -16,6 +16,11 @@ enum QuickProfilingWeeklyTime: string implements HasLabel
     case TwoToFiveHours = '2_5_hours';
     case OverFiveHours = 'over_5_hours';
 
+    /**
+     * Get the Indonesian label shown to mentees and in the Filament admin.
+     *
+     * @return string Human readable label.
+     */
     public function getLabel(): string
     {
         return match ($this) {

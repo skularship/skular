@@ -6,6 +6,9 @@ use App\Enums\Concerns\HasSelectOptions;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
+/**
+ * Progress of a scholarship application in the "Beasiswa Saya" tracker, from selected to result reported.
+ */
 enum ApplicationStatus: string implements HasColor, HasLabel
 {
     use HasSelectOptions;
@@ -15,6 +18,11 @@ enum ApplicationStatus: string implements HasColor, HasLabel
     case Submitted = 'submitted';
     case ResultReported = 'result_reported';
 
+    /**
+     * Get the Indonesian label shown to mentees and in the Filament admin.
+     *
+     * @return string Human readable label.
+     */
     public function getLabel(): string
     {
         return match ($this) {
@@ -25,6 +33,11 @@ enum ApplicationStatus: string implements HasColor, HasLabel
         };
     }
 
+    /**
+     * Get the Filament color used for badges of this case.
+     *
+     * @return string Filament color name (gray, info, success, warning, danger, ...).
+     */
     public function getColor(): string
     {
         return match ($this) {
