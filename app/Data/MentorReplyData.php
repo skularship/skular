@@ -9,6 +9,9 @@ use Spatie\LaravelData\Data;
  */
 class MentorReplyData extends Data
 {
+    /**
+     * @param  string  $answer  Trimmed, non-empty answer text from the AI Mentor.
+     */
     public function __construct(
         public string $answer,
     ) {}

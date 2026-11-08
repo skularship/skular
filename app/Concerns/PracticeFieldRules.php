@@ -7,6 +7,12 @@ use App\Enums\PracticeFieldType;
 use App\Models\PracticeForm;
 use Illuminate\Validation\Rule;
 
+/**
+ * Builds validation rules for a practice form from its admin-defined field schema.
+ *
+ * Used by PracticeSubmissionService so every mentee answer is validated against
+ * the exact fields, types and options the curriculum team configured.
+ */
 trait PracticeFieldRules
 {
     /**

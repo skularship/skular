@@ -16,6 +16,11 @@ use Laravel\Ai\Messages\AssistantMessage;
 use Laravel\Ai\Messages\UserMessage;
 use Throwable;
 
+/**
+ * Answers AI Mentor chat questions with ModuleMentorAgent using the module
+ * material and bounded chat history. Quota is enforced by MentorQuotaService in
+ * the MentorChat component, not here.
+ */
 class ModuleMentorService implements ModuleMentorServiceInterface
 {
     /**

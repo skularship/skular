@@ -7,6 +7,12 @@ use App\Enums\LocationScope;
 use App\Models\Cluster;
 use Illuminate\Validation\Rule;
 
+/**
+ * Validation rules and attribute names of the eight profiling wizard questions.
+ *
+ * Shared by the wizard component and ProfilingService so the browser batch is
+ * re-validated with the same rules before it is stored.
+ */
 trait ProfilingRules
 {
     /**

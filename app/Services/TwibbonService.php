@@ -11,6 +11,9 @@ use GdImage;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+/**
+ * Renders a twibbon PNG with GD: the admin template image plus text placed from the mentee and application data, stored on the public disk.
+ */
 class TwibbonService implements TwibbonServiceInterface
 {
     /**

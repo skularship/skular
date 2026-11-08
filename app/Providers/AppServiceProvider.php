@@ -51,6 +51,11 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Blaze\Blaze;
 
+/**
+ * Application bootstrapping: binds every App\Contracts interface to its
+ * App\Services implementation, configures framework defaults, Blaze for Blade
+ * components, and the optional slow request/query logging.
+ */
 class AppServiceProvider extends ServiceProvider
 {
     /**

@@ -26,6 +26,11 @@ class ModuleMentorAgent implements Agent
      */
     private const MAX_QUESTION_LENGTH = 1000;
 
+    /**
+     * @param  Module  $module  The module the mentee is studying; its material is the only knowledge source.
+     * @param  PracticeForm|null  $practice_form  The practice form anchoring the chat, if any.
+     * @param  string|null  $active_field  Label of the practice field the mentee is filling, if any.
+     */
     public function __construct(
         private readonly Module $module,
         private readonly ?PracticeForm $practice_form = null,

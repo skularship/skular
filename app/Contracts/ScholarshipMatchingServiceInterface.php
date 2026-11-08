@@ -6,6 +6,9 @@ use App\Data\ScholarshipMatchData;
 use App\Data\UserProfileData;
 use Illuminate\Support\Collection;
 
+/**
+ * Matches open scholarships against a mentee profile for the recommendation page.
+ */
 interface ScholarshipMatchingServiceInterface
 {
     /**

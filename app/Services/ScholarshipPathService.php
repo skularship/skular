@@ -13,8 +13,15 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Owns the ordered scholarship queue and the move to the next scholarship once a learning path is finished.
+ */
 class ScholarshipPathService implements ScholarshipPathServiceInterface
 {
+    /**
+     * @param  ScholarshipApplicationServiceInterface  $applications  Reads the mentee applications.
+     * @param  ProgressServiceInterface  $progress  Checks whether the active path is finished.
+     */
     public function __construct(
         private readonly ScholarshipApplicationServiceInterface $applications,
         private readonly ProgressServiceInterface $progress,

@@ -7,6 +7,12 @@ use App\Exceptions\AiFeedbackException;
 use App\Models\Module;
 use App\Models\PracticeForm;
 
+/**
+ * Asks the AI evaluator to grade one practice submission against the module rubric.
+ *
+ * Implemented by AiFeedbackService (PracticeFeedbackAgent). The model always
+ * comes from config/ai.php.
+ */
 interface AiFeedbackServiceInterface
 {
     /**

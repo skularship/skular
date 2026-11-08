@@ -35,6 +35,9 @@ use Illuminate\Validation\ValidationException;
  */
 class ProgressService implements ProgressServiceInterface
 {
+    /**
+     * @param  LearningPathServiceInterface  $learning_path  Resolves the modules of the active path.
+     */
     public function __construct(
         private readonly LearningPathServiceInterface $learning_path,
     ) {}

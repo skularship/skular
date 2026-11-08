@@ -9,8 +9,14 @@ use App\Models\PracticeForm;
 use App\Models\User;
 use App\Models\UserBrainstormingSession;
 
+/**
+ * Persists the brainstorming answers and generated outline per mentee, module and practice form so they survive reloads.
+ */
 class BrainstormingSessionService implements BrainstormingSessionServiceInterface
 {
+    /**
+     * @param  BrainstormingConfigService  $config  Normalises and validates the admin brainstorming configuration.
+     */
     public function __construct(
         private readonly BrainstormingConfigService $config,
     ) {}

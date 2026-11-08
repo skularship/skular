@@ -13,6 +13,23 @@ use Spatie\LaravelData\Data;
  */
 class ScholarshipData extends Data
 {
+    /**
+     * @param  int  $id  Scholarship id.
+     * @param  string  $scholarship_name  Descriptive scholarship name.
+     * @param  string|null  $institution  Organiser.
+     * @param  EducationLevel  $level  Target education level.
+     * @param  string|null  $location  Free text location.
+     * @param  LocationScope|null  $scope  Domestic or international study.
+     * @param  bool  $sktm_require  Whether an SKTM/KHI is required.
+     * @param  float|null  $minimum_value  Minimum GPA.
+     * @param  int|null  $maximum_age  Maximum applicant age.
+     * @param  string|null  $closing_date  Registration deadline (Y-m-d).
+     * @param  int|null  $estimated_quota  Estimated awardees.
+     * @param  string|null  $link  Link to the official source.
+     * @param  ScholarshipStatus  $status  Admin status.
+     * @param  bool  $is_open  Whether registration is open today.
+     * @param  int|null  $days_remaining  Days until the deadline.
+     */
     public function __construct(
         public int $id,
         public string $scholarship_name,

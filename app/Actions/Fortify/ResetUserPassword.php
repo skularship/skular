@@ -7,6 +7,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\ResetsUserPasswords;
 
+/**
+ * Fortify action that validates and stores a new password from the reset-password flow.
+ */
 class ResetUserPassword implements ResetsUserPasswords
 {
     use PasswordValidationRules;

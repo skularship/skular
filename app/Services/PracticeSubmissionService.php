@@ -19,10 +19,18 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * Validates and stores practice answers, then evaluates them with AI in the
+ * queue (EvaluatePracticeFeedback). One row per mentee per practice form; a
+ * resubmission updates that row and increments attempts.
+ */
 class PracticeSubmissionService implements PracticeSubmissionServiceInterface
 {
     use PracticeFieldRules;
 
+    /**
+     * @param  AiFeedbackServiceInterface  $ai_feedback_service  Grades a submission with the AI evaluator.
+     */
     public function __construct(
         private readonly AiFeedbackServiceInterface $ai_feedback_service,
     ) {}

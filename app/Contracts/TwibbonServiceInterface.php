@@ -7,6 +7,9 @@ use App\Models\ScholarshipApplication;
 use App\Models\TwibbonTemplate;
 use App\Models\User;
 
+/**
+ * Renders a personalised twibbon image (GD) for a mentee scholarship application.
+ */
 interface TwibbonServiceInterface
 {
     /**

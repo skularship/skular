@@ -10,6 +10,9 @@ use App\Models\User;
 use App\Models\UserPracticeResponse;
 use Illuminate\Support\Collection;
 
+/**
+ * Builds the CV page sections from the latest practice answers of forms flagged "include in CV".
+ */
 class CvService implements CvServiceInterface
 {
     /**

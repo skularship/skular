@@ -8,6 +8,10 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 
+/**
+ * Manages the scholarships a mentee selects, including the five scholarship cap
+ * (ScholarshipApplicationService::MAX_SELECTIONS).
+ */
 interface ScholarshipApplicationServiceInterface
 {
     /**

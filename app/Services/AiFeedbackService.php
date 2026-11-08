@@ -14,6 +14,12 @@ use App\Models\PracticeForm;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
+/**
+ * Grades one practice submission with PracticeFeedbackAgent.
+ *
+ * Provider errors are classified with AiFailureReason, logged, and rethrown as
+ * AiFeedbackException with a friendly Indonesian message.
+ */
 class AiFeedbackService implements AiFeedbackServiceInterface
 {
     use ExtractsStructuredResponse;

@@ -11,8 +11,17 @@ use Laravel\Socialite\Facades\Socialite;
 use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse;
 use Throwable;
 
+/**
+ * Google OAuth sign-in (routes auth.google.redirect / auth.google.callback).
+ *
+ * Account linking lives in GoogleAuthService; when the Google credentials are
+ * not configured both actions send the mentee back to the login page.
+ */
 class GoogleAuthController extends Controller
 {
+    /**
+     * @param  GoogleAuthServiceInterface  $google_auth_service  Links or creates the mentee for a Google account.
+     */
     public function __construct(
         private readonly GoogleAuthServiceInterface $google_auth_service,
     ) {}

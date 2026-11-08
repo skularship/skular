@@ -9,6 +9,13 @@ use Spatie\LaravelData\Data;
  */
 class ModuleReadinessCheckData extends Data
 {
+    /**
+     * @param  string  $key  Stable check identifier.
+     * @param  string  $label  Checklist text for the admin.
+     * @param  string  $hint  How to fix the check when it fails.
+     * @param  bool  $passed  Whether the module satisfies the check.
+     * @param  bool  $required  Whether a failure blocks publication.
+     */
     public function __construct(
         public string $key,
         public string $label,

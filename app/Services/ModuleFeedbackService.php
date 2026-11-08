@@ -7,6 +7,9 @@ use App\Models\Module;
 use App\Models\ModuleFeedback;
 use App\Models\User;
 
+/**
+ * Stores the module feedback (checklist + suggestion) a mentee leaves in the checkpoint step, one row per mentee per module.
+ */
 class ModuleFeedbackService implements ModuleFeedbackServiceInterface
 {
     /**

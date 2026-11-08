@@ -12,8 +12,15 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
+/**
+ * Resolves which published modules make up a mentee's learning path:
+ * shared Inti modules plus the Template modules of the scholarship in focus.
+ */
 class LearningPathService implements LearningPathServiceInterface
 {
+    /**
+     * @param  ScholarshipApplicationServiceInterface  $applications  Resolves the scholarship currently in focus.
+     */
     public function __construct(
         private readonly ScholarshipApplicationServiceInterface $applications,
     ) {}

@@ -6,6 +6,9 @@ use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
+/**
+ * Shared name and email validation rules for registration and the profile settings page.
+ */
 trait ProfileValidationRules
 {
     /**

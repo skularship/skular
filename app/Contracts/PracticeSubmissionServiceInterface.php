@@ -6,6 +6,12 @@ use App\Models\PracticeForm;
 use App\Models\User;
 use App\Models\UserPracticeResponse;
 
+/**
+ * Saves practice answers and drives their AI evaluation lifecycle.
+ *
+ * Answers are stored first (never lost), then evaluated in the queue; a failed
+ * evaluation can be retried without resubmitting.
+ */
 interface PracticeSubmissionServiceInterface
 {
     /**

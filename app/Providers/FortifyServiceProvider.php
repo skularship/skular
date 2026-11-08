@@ -15,6 +15,9 @@ use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use Laravel\Fortify\Fortify;
 
+/**
+ * Configures Laravel Fortify: auth views (Livewire), custom login/register responses, user actions and rate limiters.
+ */
 class FortifyServiceProvider extends ServiceProvider
 {
     /**

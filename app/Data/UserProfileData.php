@@ -12,6 +12,16 @@ use Spatie\LaravelData\Data;
  */
 class UserProfileData extends Data
 {
+    /**
+     * @param  EducationLevel  $level  Current education level.
+     * @param  int  $age  Age in years.
+     * @param  float|null  $gpa  GPA on a 0-4 scale.
+     * @param  bool  $has_sktm  Whether the mentee holds an SKTM/KHI.
+     * @param  EducationLevel  $desired_level  Target education level.
+     * @param  LocationScope  $desired_location  Domestic or international study.
+     * @param  int|null  $cluster_id  Field of study cluster.
+     * @param  string|null  $cluster_name  Cluster label for match explanations.
+     */
     public function __construct(
         public EducationLevel $level,
         public int $age,

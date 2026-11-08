@@ -5,6 +5,9 @@ namespace App\Contracts;
 use App\Exceptions\GoogleAuthException;
 use App\Models\User;
 
+/**
+ * Signs mentees in with Google OAuth (Socialite) and links or creates their account.
+ */
 interface GoogleAuthServiceInterface
 {
     /**

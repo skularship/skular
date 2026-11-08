@@ -5,6 +5,9 @@ namespace App\Contracts;
 use App\Data\ModuleReadinessCheckData;
 use App\Models\Module;
 
+/**
+ * Computes the completeness checklist that decides whether a module may be published.
+ */
 interface ModuleReadinessServiceInterface
 {
     /**

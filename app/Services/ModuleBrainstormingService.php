@@ -16,6 +16,10 @@ use App\Models\PracticeForm;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
+/**
+ * Shows admin-written brainstorming questions and asks ModuleBrainstormingAgent
+ * to turn the mentee's own answers into a draft outline (never a final answer).
+ */
 class ModuleBrainstormingService implements ModuleBrainstormingServiceInterface
 {
     use ExtractsStructuredResponse;
@@ -35,6 +39,9 @@ class ModuleBrainstormingService implements ModuleBrainstormingServiceInterface
      */
     private const MAX_BULLET_LENGTH = 500;
 
+    /**
+     * @param  BrainstormingConfigService  $config  Normalises and validates the admin brainstorming configuration.
+     */
     public function __construct(
         private readonly BrainstormingConfigService $config,
     ) {}

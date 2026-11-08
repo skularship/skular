@@ -10,6 +10,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * Reads and persists the eight profiling answers on the users table in one transaction.
+ */
 class ProfilingService implements ProfilingServiceInterface
 {
     use ProfilingRules;

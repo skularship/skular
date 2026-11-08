@@ -12,6 +12,19 @@ use Spatie\LaravelData\Data;
  */
 class ModuleProgressData extends Data
 {
+    /**
+     * @param  int  $id  Module id.
+     * @param  int  $fase_id  Fase the module belongs to.
+     * @param  string  $title  Module title.
+     * @param  int  $modul_order  Order inside the fase.
+     * @param  ModuleType  $type  Presentation format (legacy field).
+     * @param  ModuleCategory  $category  Inti, Template or Perpustakaan.
+     * @param  int|null  $duration  Estimated minutes.
+     * @param  CheckpointStatus  $status  Locked, available, in progress or completed.
+     * @param  int|null  $score  Internal 0-100 AI score; show AiScoreLabel to mentees, never the number.
+     * @param  bool  $has_practice_form  Whether the module has an active practice form.
+     * @param  int|null  $scholarship_id  Scholarship of a Template module.
+     */
     public function __construct(
         public int $id,
         public int $fase_id,

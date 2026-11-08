@@ -22,6 +22,11 @@ class MentorQuotaService implements MentorQuotaServiceInterface
      */
     public const DEFAULT_LIMIT = 5;
 
+    /**
+     * Get the configured number of model questions per mentee per module.
+     *
+     * @return int config('ai.module_chat.limit'), falling back to DEFAULT_LIMIT when invalid.
+     */
     public function limit(): int
     {
         $limit = config('ai.module_chat.limit', self::DEFAULT_LIMIT);
@@ -29,6 +34,13 @@ class MentorQuotaService implements MentorQuotaServiceInterface
         return is_numeric($limit) ? max(0, (int) $limit) : self::DEFAULT_LIMIT;
     }
 
+    /**
+     * Get how many model questions the mentee may still send for the module.
+     *
+     * @param  User  $user  The mentee.
+     * @param  Module  $module  The module of the chat.
+     * @return int Remaining questions, never below zero.
+     */
     public function remaining(User $user, Module $module): int
     {
         $used = ModuleMentorUsage::query()
@@ -39,6 +51,13 @@ class MentorQuotaService implements MentorQuotaServiceInterface
         return max(0, $this->limit() - (int) $used);
     }
 
+    /**
+     * Reserve one question under a row lock before calling the model.
+     *
+     * @param  User  $user  The mentee.
+     * @param  Module  $module  The module of the chat.
+     * @return bool False when the quota is already used up.
+     */
     public function reserve(User $user, Module $module): bool
     {
         $limit = $this->limit();
@@ -63,6 +82,12 @@ class MentorQuotaService implements MentorQuotaServiceInterface
         });
     }
 
+    /**
+     * Give a reserved question back after the model call failed.
+     *
+     * @param  User  $user  The mentee.
+     * @param  Module  $module  The module of the chat.
+     */
     public function release(User $user, Module $module): void
     {
         ModuleMentorUsage::query()

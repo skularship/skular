@@ -40,6 +40,16 @@ class ReadinessScoringService implements ReadinessScoringServiceInterface
         QuickProfilingAsset::Organization,
     ];
 
+    /**
+     * Turn a finished Profiling Kilat submission into a readiness result.
+     *
+     * @param  QuickProfilingStatus  $status  Current study/work status.
+     * @param  QuickProfilingGoal  $goal  Scholarship goal.
+     * @param  QuickProfilingTimeline  $timeline  When the mentee plans to apply.
+     * @param  array<int, mixed>  $assets  Selected QuickProfilingAsset values; unknown values are ignored.
+     * @param  QuickProfilingWeeklyTime  $weekly_time  Weekly preparation time.
+     * @return ReadinessResultData Score, category, headline, main blocker and recommendations.
+     */
     public function score(
         QuickProfilingStatus $status,
         QuickProfilingGoal $goal,

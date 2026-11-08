@@ -9,6 +9,11 @@ use App\Enums\QuickProfilingStatus;
 use App\Enums\QuickProfilingTimeline;
 use App\Enums\QuickProfilingWeeklyTime;
 
+/**
+ * Scores the public Profiling Kilat quiz into a readiness result.
+ *
+ * Deterministic and rule based; no AI involved and nothing is stored.
+ */
 interface ReadinessScoringServiceInterface
 {
     /**

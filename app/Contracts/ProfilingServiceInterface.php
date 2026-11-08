@@ -4,6 +4,9 @@ namespace App\Contracts;
 
 use App\Models\User;
 
+/**
+ * Reads and persists the mentee profile collected by the profiling wizard.
+ */
 interface ProfilingServiceInterface
 {
     /**

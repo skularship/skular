@@ -18,6 +18,11 @@ use Illuminate\Http\Response;
  */
 class SitemapController
 {
+    /**
+     * Render the public sitemap.xml.
+     *
+     * @return Response XML response listing public pages only.
+     */
     public function __invoke(): Response
     {
         return response()

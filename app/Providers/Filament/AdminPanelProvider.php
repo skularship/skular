@@ -22,8 +22,18 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 
+/**
+ * Defines the Filament admin panel at /admin (resources, widgets, Shield
+ * authorization and Breezy profile).
+ */
 class AdminPanelProvider extends PanelProvider
 {
+    /**
+     * Configure the admin panel.
+     *
+     * @param  Panel  $panel  The panel instance provided by Filament.
+     * @return Panel The configured panel.
+     */
     public function panel(Panel $panel): Panel
     {
         return $panel

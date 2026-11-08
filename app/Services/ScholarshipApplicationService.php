@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Manages a mentee's scholarship selections. Enforces MAX_SELECTIONS (5) with
+ * lockForUpdate inside select() so parallel requests cannot exceed the cap.
+ */
 class ScholarshipApplicationService implements ScholarshipApplicationServiceInterface
 {
     /**

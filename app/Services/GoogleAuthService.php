@@ -7,6 +7,9 @@ use App\Exceptions\GoogleAuthException;
 use App\Models\User;
 use Illuminate\Support\Str;
 
+/**
+ * Resolves a Google account to a mentee: matches by google_id, then links an existing account by email, otherwise creates a new verified one. Unverified Google emails are rejected.
+ */
 class GoogleAuthService implements GoogleAuthServiceInterface
 {
     /**
