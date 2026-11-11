@@ -25,6 +25,13 @@ class RoleSeeder extends Seeder
     private const WRITE = ['ViewAny', 'View', 'Create', 'Update'];
 
     /**
+     * Read and update existing records without creating or deleting them (report review).
+     *
+     * @var array<int, string>
+     */
+    private const REVIEW = ['ViewAny', 'View', 'Update'];
+
+    /**
      * Full management of a resource, including deletion and reordering.
      *
      * @var array<int, string>
@@ -49,6 +56,7 @@ class RoleSeeder extends Seeder
             'Cluster' => self::MANAGE,
             'Scholarship' => self::MANAGE,
             'ScholarshipApplication' => self::MANAGE,
+            'ScholarshipInfoReport' => self::MANAGE,
             'Faq' => self::MANAGE,
             'FaqCategory' => self::MANAGE,
             'UserPracticeResponse' => self::READ,
@@ -66,6 +74,8 @@ class RoleSeeder extends Seeder
             'FaqCategory' => self::READ,
             'Scholarship' => self::READ,
             'ScholarshipApplication' => self::READ,
+            // Staff may review reports (change status) but never delete them.
+            'ScholarshipInfoReport' => self::REVIEW,
             'UserPracticeResponse' => self::READ,
             'Checkpoint' => self::READ,
             'ModuleFeedback' => self::READ,

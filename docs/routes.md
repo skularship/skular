@@ -129,5 +129,6 @@ Semua route di bawah `/admin` memakai middleware panel Filament (`SetUpPanel:adm
 | `shield` | `/admin/shield/roles`<br>`/admin/shield/roles/create`<br>`/admin/shield/roles/{record}`<br>`/admin/shield/roles/{record}/edit` |
 | `twibbon-templates` | `/admin/twibbon-templates`<br>`/admin/twibbon-templates/create`<br>`/admin/twibbon-templates/{record}/edit` |
 | `two-factor-authentication` | `/admin/two-factor-authentication` |
+| `scholarship-info-reports` | `/admin/scholarship-info-reports` |
 | `user-practice-responses` | `/admin/user-practice-responses` |
 | `users` | `/admin/users`<br>`/admin/users/create`<br>`/admin/users/{record}/edit` |
