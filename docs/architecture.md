@@ -25,8 +25,6 @@ flowchart LR
     LC --> V[Blade view<br/>resources/views/livewire]
     B -->|aksi wire:click / wire:model| LW[POST /livewire-*/update]
     LW --> LC
-    S -->|dispatch| Q[Queue database<br/>EvaluatePracticeFeedback]
-    Q --> S
 ```
 
 - Halaman mentee **tidak memakai controller**; controller hanya untuk Google OAuth, sitemap, health check, endpoint passkey, dan unduh bukti pendaftaran.
@@ -80,10 +78,10 @@ flowchart TD
     P --> Q[Quick Question<br/>Benar/Salah, dikoreksi sistem]
     Q --> PR[Praktik<br/>form dinamis + Brainstorming + AI Mentor]
     PR -->|submitPractice| S[(user_practice_responses<br/>status processing)]
-    S --> J[[Job EvaluatePracticeFeedback]]
+    S --> J[[Penilaian AI sinkron<br/>PracticeSubmissionService]]
     J --> FB{ai_status}
     FB -- completed --> LBL[Label hasil AI<br/>Sangat baik/Baik/Cukup/Perlu diperbaiki]
-    FB -- failed / macet > 3 menit --> RT[Tombol Nilai ulang]
+    FB -- failed / macet > 75 detik --> RT[Tombol Nilai ulang]
     RT --> J
     LBL --> G{Gate checkpoint:<br/>semua form tersimpan<br/>dan selesai dinilai?}
     G -- belum --> PR
@@ -93,12 +91,14 @@ flowchart TD
 
 Catatan:
 
-- **Gate checkpoint** ditegakkan di server (`ModulePlayer::guardCheckpointSection()` untuk `mount`, `goToSection`, dan perubahan `?section=`; serta `confirmCheckpoint()` dan `saveModuleFeedback()`). Lapisan kedua ada di `ProgressService::completeModule()`: modul tidak bisa diselesaikan oleh pemanggil mana pun selama ada jawaban yang belum tersimpan atau belum berstatus `completed`. UI hanya mencerminkan status (langkah terkunci, tombol nonaktif, polling 5 detik selama penilaian).
+- **Gate checkpoint** ditegakkan di server (`ModulePlayer::guardCheckpointSection()` untuk `mount`, `goToSection`, dan perubahan `?section=`; serta `confirmCheckpoint()` dan `saveModuleFeedback()`). Lapisan kedua ada di `ProgressService::completeModule()`: modul tidak bisa diselesaikan oleh pemanggil mana pun selama ada jawaban yang belum tersimpan atau belum berstatus `completed`. UI hanya mencerminkan status (langkah terkunci, tombol nonaktif selama request penilaian berjalan, polling 5 detik hanya bila penilaian dipegang request lain).
 - **AI Mentor** (`MentorChat`) tampil di langkah Praktik: saran pertanyaan admin (jawaban tim gratis) lalu chat LLM dengan kuota per modul (`MentorQuotaService`).
 - **Brainstorming** menampilkan pertanyaan pemancing buatan admin; AI hanya menyusun kerangka dari jawaban mentee, tidak pernah menimpa jawaban praktik.
 - Modul **Perpustakaan** dibuka dari `/library` dan tidak menghalangi jalur beasiswa.
 
 ## 5. Alur penilaian AI praktik
+
+Penilaian berjalan **sinkron di dalam request Livewire** (tanpa queue/worker). Penilaian pertama dan *Nilai ulang* memakai satu jalur: `PracticeSubmissionService::evaluate()`.
 
 ```mermaid
 sequenceDiagram
@@ -106,22 +106,17 @@ sequenceDiagram
     participant MP as ModulePlayer
     participant PSS as PracticeSubmissionService
     participant DB as user_practice_responses
-    participant Q as Queue (database)
-    participant J as EvaluatePracticeFeedback
     participant AF as AiFeedbackService
     participant AG as PracticeFeedbackAgent
 
     M->>MP: submitPractice(form_id) (rate limit 10/menit)
+    Note over M,MP: tombol nonaktif + "AI sedang menilai jawabanmu, biasanya 10–30 detik"
     MP->>PSS: submit(user, form, answers)
-    PSS->>DB: transaksi: firstOrCreate + lockForUpdate,<br/>validasi PracticeFieldRules, simpan jawaban,<br/>attempts+1, ai_status=processing
-    PSS->>Q: dispatch job (afterCommit)
-    MP-->>M: toast "Jawabanmu tersimpan. AI sedang meninjau…"
-    Q->>J: handle() (tries=1, timeout=100s, unik per response:attempts 120s)
-    J->>PSS: evaluateSubmission(id, form, attempt) (lewati bila bukan processing atau attempt lama)
-    PSS->>PSS: Cache::lock ai-feedback:{id} 110s
-    loop maks 2 percobaan, jeda jitter 1,5-3,5s (rate limit 5-8s), heartbeat updated_at
+    PSS->>DB: transaksi: firstOrCreate + lockForUpdate,<br/>validasi PracticeFieldRules, simpan jawaban,<br/>attempts+1, ai_status=processing (commit)
+    PSS->>PSS: Cache::lock ai-feedback:{id} 60s (gagal dapat lock → kembalikan processing)
+    loop maks 2 percobaan, jeda jitter 1-2,5s (rate limit 3-5s), heartbeat updated_at
         PSS->>AF: generate(module, form, answers)
-        AF->>AG: prompt (model dari config/ai.php, timeout 40s)
+        AF->>AG: prompt (model dari config/ai.php, timeout 22s)
     end
     alt sukses (skor + minimal satu teks)
         AG-->>AF: {score, strengths, improvements, feedback, next_steps}
@@ -130,18 +125,23 @@ sequenceDiagram
     else gagal (configuration / rate_limited / timeout / unavailable / invalid_response)
         AF-->>PSS: AiFeedbackException (pesan ramah, log ai.feedback.attempt dengan reason)
         PSS->>DB: ai_status=failed, ai_error
+    else Throwable lain (bug, DB putus)
+        PSS->>DB: processing (attempts versi ini) → failed + "Penilaian AI terhenti…"
     end
-    opt mentee kirim ulang saat model menjawab
-        PSS->>PSS: hasil lama dibuang, jawaban terbaru dinilai sekali lagi
+    opt mentee kirim ulang dari tab lain saat model menjawab
+        PSS->>PSS: hasil lama dibuang, jawaban terbaru dinilai sekali lagi di lock yang sama
     end
-    opt worker mati / job timeout
-        J->>DB: failed(): processing (attempt job ini) → failed
+    PSS->>PSS: finally: lepas lock
+    PSS-->>MP: response (completed / failed)
+    MP-->>M: toast + label hasil atau tombol Nilai ulang
+    opt lock dipegang tab lain / request mati di tengah
+        loop tiap 5s selama processing
+            M->>MP: wire:poll (render ulang status)
+        end
+        Note over M,MP: tanpa heartbeat > 75 detik → macet → tombol Nilai ulang
     end
-    loop 3s / 5s / 10s selama processing
-        M->>MP: wire:poll (render ulang status)
-    end
-    M->>MP: retryFeedback() bila failed atau macet > 120 detik tanpa heartbeat
-    MP->>PSS: retryAiFeedback(): lock bebas → processing + dispatch job yang sama
+    M->>MP: retryFeedback() bila failed atau macet
+    MP->>PSS: retryAiFeedback(): lock bebas → processing → evaluasi sinkron yang sama
 ```
 
 ## 6. Otorisasi

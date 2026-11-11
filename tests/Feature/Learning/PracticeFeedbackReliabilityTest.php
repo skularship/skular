@@ -7,20 +7,16 @@ use App\Data\AiFeedbackData;
 use App\Enums\AiFailureReason;
 use App\Enums\AiFeedbackStatus;
 use App\Exceptions\AiFeedbackException;
-use App\Jobs\EvaluatePracticeFeedback;
 use App\Models\Module;
 use App\Models\PracticeForm;
 use App\Models\User;
 use App\Models\UserPracticeResponse;
 use App\Services\PracticeSubmissionService;
 use GuzzleHttp\Psr7\Response as GuzzleResponse;
-use Illuminate\Bus\UniqueLock;
-use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response as ClientResponse;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Sleep;
 use Laravel\Ai\Exceptions\ProviderConnectionException;
 
@@ -102,7 +98,7 @@ test('provider http errors that repeat on every retry are configuration problems
     'server error' => [500, AiFailureReason::Unavailable],
 ]);
 
-test('a unique job lock left by a dead worker never outlives the stall window', function () {
+test('an evaluation lock left by a dead request never outlives the stall window', function () {
     $fake = reliabilityAiFake();
     app()->instance(AiFeedbackServiceInterface::class, $fake);
 
@@ -114,19 +110,19 @@ test('a unique job lock left by a dead worker never outlives the stall window', 
         'attempts' => 1,
     ]);
 
-    // A worker that died mid-job never runs failed(), so its unique lock stays behind.
-    (new UniqueLock(app(CacheRepository::class)))->acquire(new EvaluatePracticeFeedback($response->id, $this->form->id, 1));
+    // A request killed by the web server never reaches its finally block, so its lock stays behind.
+    Cache::lock('ai-feedback:'.$response->id, PracticeSubmissionService::EVALUATION_LOCK_SECONDS)->get();
 
     // Once the mentee is offered "Nilai ulang", a new evaluation must be accepted.
     $this->travel(UserPracticeResponse::STALLED_AFTER_SECONDS + 1)->seconds();
 
-    app(PracticeSubmissionServiceInterface::class)->retryAiFeedback($response->fresh());
+    $retried = app(PracticeSubmissionServiceInterface::class)->retryAiFeedback($response->fresh());
 
     expect($fake->graded)->toHaveCount(1)
-        ->and($response->fresh()->ai_status)->toBe(AiFeedbackStatus::Completed);
+        ->and($retried->ai_status)->toBe(AiFeedbackStatus::Completed);
 });
 
-test('a resubmission after a worker died mid-job is still evaluated', function () {
+test('a resubmission after a dead request lock expired is evaluated at once', function () {
     $fake = reliabilityAiFake();
     app()->instance(AiFeedbackServiceInterface::class, $fake);
 
@@ -139,9 +135,8 @@ test('a resubmission after a worker died mid-job is still evaluated', function (
         'attempts' => 1,
     ]);
 
-    // The queued job for the first answer was taken by a worker that then died:
-    // its unique lock was acquired at dispatch and is never released.
-    (new UniqueLock(app(CacheRepository::class)))->acquire(new EvaluatePracticeFeedback($response->id, $this->form->id, 1));
+    Cache::lock('ai-feedback:'.$response->id, PracticeSubmissionService::EVALUATION_LOCK_SECONDS)->get();
+    $this->travel(PracticeSubmissionService::EVALUATION_LOCK_SECONDS + 1)->seconds();
 
     app(PracticeSubmissionServiceInterface::class)->submit($this->mentee, $this->form, ['jawaban' => 'Versi kedua.']);
 
@@ -220,45 +215,59 @@ test('a model answer without a readable score is rejected instead of graded as z
     }
 });
 
-test('the evaluation time budget stays consistent across agent, job, queue, lock and stall window', function () {
+test('the evaluation time budget fits the web request, the lock and the stall window', function () {
     $agent_timeout = (new ReflectionClass(PracticeFeedbackAgent::class))
         ->getAttributes(Laravel\Ai\Attributes\Timeout::class)[0]->newInstance()->value;
-    $job = new EvaluatePracticeFeedback(1, 1, 1);
-    $longest_pause_seconds = PracticeSubmissionService::RATE_LIMITED_PAUSE_MS[1] / 1000;
-    $retry_after = config('queue.connections.database.retry_after');
+    $longest_pause_seconds = intdiv(max(PracticeSubmissionService::RATE_LIMITED_PAUSE_MS[1], PracticeSubmissionService::RETRY_PAUSE_MS[1]) + 999, 1000);
+    // Pauses happen only between attempts.
+    $worst_case_seconds = $agent_timeout * PracticeSubmissionService::EVALUATION_ATTEMPTS
+        + $longest_pause_seconds * (PracticeSubmissionService::EVALUATION_ATTEMPTS - 1);
+    $request_limit = PracticeSubmissionService::REQUEST_TIME_LIMIT_SECONDS;
 
     expect($agent_timeout)->toBe(PracticeFeedbackAgent::TIMEOUT_SECONDS)
-        // Every queued attempt fits inside one job run...
-        ->and($agent_timeout * PracticeSubmissionService::QUEUED_EVALUATION_ATTEMPTS + $longest_pause_seconds)->toBeLessThan($job->timeout)
-        // ...which is never reserved twice by the database queue...
-        ->and($job->timeout)->toBeLessThan($retry_after)
-        // ...and the provider lock outlives the whole run.
-        ->and(PracticeSubmissionService::EVALUATION_LOCK_SECONDS)->toBeGreaterThanOrEqual($job->timeout)
-        ->and($job->uniqueFor)->toBeGreaterThanOrEqual(PracticeSubmissionService::EVALUATION_LOCK_SECONDS)
-        // Once "Nilai ulang" appears, no lock from a dead worker can block it.
-        ->and(UserPracticeResponse::STALLED_AFTER_SECONDS)->toBeGreaterThanOrEqual($job->uniqueFor);
+        // The whole synchronous evaluation finishes before the web server
+        // gives up on the request, with room left for the database and rendering...
+        ->and($worst_case_seconds)->toBeLessThanOrEqual($request_limit - PracticeSubmissionService::REQUEST_SAFETY_MARGIN_SECONDS)
+        // ...the provider lock outlives the whole evaluation...
+        ->and(PracticeSubmissionService::EVALUATION_LOCK_SECONDS)->toBeGreaterThanOrEqual($worst_case_seconds)
+        // ...a healthy evaluation touches its heartbeat well within the stall window...
+        ->and($agent_timeout + $longest_pause_seconds)->toBeLessThan(UserPracticeResponse::STALLED_AFTER_SECONDS)
+        // ...and once "Nilai ulang" appears, no lock from a dead request can block it.
+        ->and(UserPracticeResponse::STALLED_AFTER_SECONDS)->toBeGreaterThanOrEqual(PracticeSubmissionService::EVALUATION_LOCK_SECONDS);
 });
 
 test('a slow but healthy evaluation keeps its heartbeat and is never flagged as stalled', function () {
-    $fake = reliabilityAiFake();
-    app()->instance(AiFeedbackServiceInterface::class, $fake);
+    $fake = new class($this) implements AiFeedbackServiceInterface
+    {
+        public int $calls = 0;
 
-    Queue::fake();
-    $response = app(PracticeSubmissionServiceInterface::class)->submit($this->mentee, $this->form, ['jawaban' => 'Jawaban.']);
+        public ?bool $stalled_during_retry = null;
 
-    // The job is picked up late, close to the stall window...
-    $this->travel(UserPracticeResponse::STALLED_AFTER_SECONDS - 10)->seconds();
+        public function __construct(private object $test_case) {}
 
-    $observed = null;
-    $fake->while_grading = function () use ($response, &$observed) {
-        // ...and the provider is slow too: far past the window since the
-        // submission, but the heartbeat written when the attempt started keeps it alive.
-        $this->travel(UserPracticeResponse::STALLED_AFTER_SECONDS - 10)->seconds();
-        $observed = $response->fresh()->isStalled();
+        public function generate(Module $module, PracticeForm $practice_form, array $answers): AiFeedbackData
+        {
+            $this->calls++;
+
+            // Each attempt is slow, together far past the stall window since
+            // the submission; the heartbeat written when the second attempt
+            // started keeps it alive.
+            $this->test_case->travel(UserPracticeResponse::STALLED_AFTER_SECONDS - 10)->seconds();
+
+            if ($this->calls === 1) {
+                throw new AiFeedbackException('Penilaian AI butuh waktu lebih lama dari biasanya.', reason: AiFailureReason::Timeout);
+            }
+
+            $this->stalled_during_retry = UserPracticeResponse::query()->sole()->isStalled();
+
+            return new AiFeedbackData(score: 75, strengths: [], improvements: [], feedback: 'Baik.', next_steps: []);
+        }
     };
 
-    app(PracticeSubmissionServiceInterface::class)->evaluateSubmission($response->id, $this->form->id, $response->attempts);
+    app()->instance(AiFeedbackServiceInterface::class, $fake);
 
-    expect($observed)->toBeFalse()
-        ->and($response->fresh()->ai_status)->toBe(AiFeedbackStatus::Completed);
+    $response = app(PracticeSubmissionServiceInterface::class)->submit($this->mentee, $this->form, ['jawaban' => 'Jawaban.']);
+
+    expect($fake->stalled_during_retry)->toBeFalse()
+        ->and($response->ai_status)->toBe(AiFeedbackStatus::Completed);
 });

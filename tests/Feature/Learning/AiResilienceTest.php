@@ -5,16 +5,18 @@ use App\Ai\Agents\ModuleMentorAgent;
 use App\Ai\Agents\PracticeFeedbackAgent;
 use App\Contracts\AiFeedbackServiceInterface;
 use App\Contracts\ModuleMentorServiceInterface;
+use App\Contracts\PracticeSubmissionServiceInterface;
+use App\Data\AiFeedbackData;
 use App\Enums\AiFailureReason;
 use App\Enums\AiFeedbackStatus;
 use App\Exceptions\AiConfigurationException;
 use App\Exceptions\AiFeedbackException;
 use App\Exceptions\AiMentorException;
-use App\Jobs\EvaluatePracticeFeedback;
 use App\Models\Module;
 use App\Models\PracticeForm;
 use App\Models\User;
 use App\Models\UserPracticeResponse;
+use App\Services\PracticeSubmissionService;
 use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Attributes\Model as ModelAttribute;
 use Laravel\Ai\Attributes\Provider as ProviderAttribute;
@@ -84,32 +86,85 @@ test('the mentor is instructed to answer briefly with the PREP structure', funct
         ->and($instructions)->toContain('"kamu"');
 });
 
-test('a crashed evaluation job marks the response as failed so the mentee can retry', function () {
-    $response = UserPracticeResponse::factory()->create([
-        'practice_form_id' => $this->form->id,
-        'module_id' => $this->module->id,
-        'ai_status' => AiFeedbackStatus::Processing,
-    ]);
+/**
+ * An AI fake that runs an optional side effect, then crashes with an
+ * unexpected (non AiFeedbackException) error, as a bug or a lost database
+ * connection would.
+ */
+function crashingAiFake(?Closure $before_crash = null): object
+{
+    return new class($before_crash) implements AiFeedbackServiceInterface
+    {
+        public int $calls = 0;
 
-    (new EvaluatePracticeFeedback($response->id, $this->form->id))->failed(new RuntimeException('worker killed'));
+        public function __construct(private ?Closure $before_crash) {}
+
+        public function generate(Module $module, PracticeForm $practice_form, array $answers): AiFeedbackData
+        {
+            $this->calls++;
+
+            if ($this->before_crash !== null) {
+                ($this->before_crash)();
+            }
+
+            throw new LogicException('unexpected crash');
+        }
+    };
+}
+
+test('an unexpected error during the evaluation fails the response and releases the lock', function () {
+    $fake = crashingAiFake();
+    app()->instance(AiFeedbackServiceInterface::class, $fake);
+
+    $service = app(PracticeSubmissionServiceInterface::class);
+    $response = $service->submit(User::factory()->profiled()->create(), $this->form, ['jawaban' => 'Jawaban aman.']);
 
     $response->refresh();
 
-    expect($response->ai_status)->toBe(AiFeedbackStatus::Failed)
-        ->and($response->ai_error)->toContain('coba nilai ulang')
-        ->and($response->canRetryEvaluation())->toBeTrue();
+    // Not retried like a provider hiccup, never left hanging in processing.
+    expect($fake->calls)->toBe(1)
+        ->and($response->ai_status)->toBe(AiFeedbackStatus::Failed)
+        ->and($response->ai_error)->toBe(PracticeSubmissionService::ABORTED_EVALUATION_MESSAGE)
+        ->and($response->answers['jawaban'])->toBe('Jawaban aman.')
+        ->and($response->canRetryEvaluation())->toBeTrue()
+        ->and($service->isEvaluationRunning($response))->toBeFalse();
 });
 
-test('a crashed job never overwrites a completed evaluation', function () {
+test('an unexpected error never overwrites an evaluation another request completed', function () {
+    $response = null;
+
+    app()->instance(AiFeedbackServiceInterface::class, crashingAiFake(function () use (&$response): void {
+        UserPracticeResponse::query()->whereKey($response->id)->update(['ai_status' => AiFeedbackStatus::Completed->value]);
+    }));
+
     $response = UserPracticeResponse::factory()->create([
         'practice_form_id' => $this->form->id,
         'module_id' => $this->module->id,
-        'ai_status' => AiFeedbackStatus::Completed,
+        'ai_status' => AiFeedbackStatus::Failed,
+        'attempts' => 1,
     ]);
 
-    (new EvaluatePracticeFeedback($response->id, $this->form->id))->failed(null);
+    app(PracticeSubmissionServiceInterface::class)->retryAiFeedback($response);
 
     expect($response->refresh()->ai_status)->toBe(AiFeedbackStatus::Completed);
+});
+
+test('an unexpected error while grading old answers never fails a newer submission', function () {
+    $mentee = User::factory()->profiled()->create();
+    $service = app(PracticeSubmissionServiceInterface::class);
+
+    app()->instance(AiFeedbackServiceInterface::class, crashingAiFake(
+        fn () => $service->submit($mentee, $this->form, ['jawaban' => 'Versi kedua.']),
+    ));
+
+    // Resolve again so the service uses the crashing fake.
+    app(PracticeSubmissionServiceInterface::class)->submit($mentee, $this->form, ['jawaban' => 'Versi pertama.']);
+
+    $response = UserPracticeResponse::query()->where('user_id', $mentee->id)->sole();
+
+    expect($response->attempts)->toBe(2)
+        ->and($response->answers['jawaban'])->toBe('Versi kedua.')
+        ->and($response->ai_status)->toBe(AiFeedbackStatus::Processing);
 });
 
 test('an evaluation stuck in processing becomes retryable after the stall window', function () {

@@ -1,10 +1,12 @@
 <?php
 
+use App\Ai\Agents\PracticeFeedbackAgent;
 use App\Contracts\AiFeedbackServiceInterface;
 use App\Data\AiFeedbackData;
+use App\Enums\AiFailureReason;
 use App\Enums\AiFeedbackStatus;
 use App\Enums\AiScoreLabel;
-use App\Jobs\EvaluatePracticeFeedback;
+use App\Exceptions\AiFeedbackException;
 use App\Livewire\Learning\ModulePlayer;
 use App\Models\Fase;
 use App\Models\Module;
@@ -12,7 +14,7 @@ use App\Models\PracticeForm;
 use App\Models\User;
 use App\Models\UserPracticeResponse;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Sleep;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -150,28 +152,65 @@ test('scores map onto four labels', function (int $score, AiScoreLabel $label) {
     [0, AiScoreLabel::PerluDiperbaiki],
 ]);
 
-test('re-assessing queues the same job as the first evaluation instead of waiting for the ai in the request', function () {
-    Queue::fake();
+test('submitting a practice answer shows the ai label in the same request without polling', function () {
+    Sleep::fake();
+    PracticeFeedbackAgent::fake([[
+        'score' => 91,
+        'strengths' => [['point' => 'Tujuan jelas', 'explanation' => 'Tujuan studimu spesifik.']],
+        'improvements' => [],
+        'feedback' => 'Arahnya sudah tepat.',
+        'next_steps' => [],
+    ]])->preventStrayPrompts();
+
+    Livewire::actingAs($this->mentee)
+        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'praktik'])
+        ->set('answers.'.$this->form->id.'.jawaban', 'Jawaban pribadi saya tentang tujuan studi.')
+        ->call('submitPractice', $this->form->id)
+        ->assertDispatched('toast', variant: 'success', text: 'Jawabanmu tersimpan dan feedback AI sudah siap.')
+        ->assertSee('Sangat baik')
+        ->assertDontSee('Skor')
+        ->assertDontSeeHtml('>91<')
+        ->assertDontSeeHtml('data-test="evaluation-poll"')
+        ->assertDontSeeHtml('data-test="checkpoint-step-locked"');
+
+    expect($this->mentee->practiceResponses()->sole()->ai_status)->toBe(AiFeedbackStatus::Completed);
+});
+
+test('re-assessing that fails again keeps the answer and the retry button without polling', function () {
+    Sleep::fake();
     $response = gateResponse($this, AiFeedbackStatus::Failed);
+
+    $this->app->instance(AiFeedbackServiceInterface::class, new class implements AiFeedbackServiceInterface
+    {
+        public function generate(Module $module, PracticeForm $practice_form, array $answers): AiFeedbackData
+        {
+            throw new AiFeedbackException('Layanan AI tidak dapat dihubungi.', reason: AiFailureReason::Unavailable);
+        }
+    });
 
     Livewire::actingAs($this->mentee)
         ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'praktik'])
         ->call('retryFeedback', $this->form->id)
-        ->assertDispatched('toast', variant: 'info', text: 'Penilaian ulang dimulai. Hasilnya muncul otomatis di halaman ini.')
-        ->assertSeeHtml('data-test="evaluation-poll"')
-        ->assertSeeHtml('data-test="feedback-pending"');
+        ->assertDispatched('toast', variant: 'warning', text: 'Feedback AI masih belum tersedia. Coba lagi beberapa saat lagi.')
+        ->assertSee('Nilai ulang')
+        ->assertDontSeeHtml('data-test="evaluation-poll"')
+        ->assertSeeHtml('data-test="checkpoint-step-locked"');
 
-    Queue::assertPushed(EvaluatePracticeFeedback::class, fn (EvaluatePracticeFeedback $job): bool => $job->response_id === $response->id
-        && $job->attempt === 1);
-
-    expect($response->fresh()->ai_status)->toBe(AiFeedbackStatus::Processing)
+    expect($response->fresh()->ai_status)->toBe(AiFeedbackStatus::Failed)
         ->and($response->fresh()->answers['jawaban'])->toBe('Jawaban saya sendiri.');
 });
 
 test('re-assessing while an evaluation still holds the lock only says it is being assessed', function () {
-    Queue::fake();
     $response = gateResponse($this, AiFeedbackStatus::Failed);
     Cache::lock('ai-feedback:'.$response->id, 60)->get();
+
+    $this->app->instance(AiFeedbackServiceInterface::class, new class implements AiFeedbackServiceInterface
+    {
+        public function generate(Module $module, PracticeForm $practice_form, array $answers): AiFeedbackData
+        {
+            throw new LogicException('The provider must not be called while another evaluation holds the lock.');
+        }
+    });
 
     Livewire::actingAs($this->mentee)
         ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'praktik'])
@@ -179,27 +218,14 @@ test('re-assessing while an evaluation still holds the lock only says it is bein
         ->assertDispatched('toast', variant: 'info', text: 'Jawabanmu sedang dinilai AI. Hasilnya muncul otomatis di halaman ini.')
         ->assertNotDispatched('toast', variant: 'warning');
 
-    Queue::assertNothingPushed();
     expect($response->fresh()->ai_status)->toBe(AiFeedbackStatus::Failed);
 });
 
-test('polling backs off while a slow assessment keeps running and shows a wait estimate', function () {
+test('a submission graded by another tab keeps polling as a fallback until it finishes', function () {
     gateResponse($this, AiFeedbackStatus::Processing);
 
     Livewire::actingAs($this->mentee)
         ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'praktik'])
-        ->assertSeeHtml('wire:poll.3s')
-        ->assertSee('Biasanya selesai dalam 10–30 detik');
-
-    $this->travel(60)->seconds();
-
-    Livewire::actingAs($this->mentee)
-        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'praktik'])
-        ->assertSeeHtml('wire:poll.5s');
-
-    $this->travel(40)->seconds();
-
-    Livewire::actingAs($this->mentee)
-        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'praktik'])
-        ->assertSeeHtml('wire:poll.10s');
+        ->assertSeeHtml('wire:poll.'.ModulePlayer::EVALUATION_POLL_SECONDS.'s')
+        ->assertSee('Jawabanmu sedang dinilai AI');
 });

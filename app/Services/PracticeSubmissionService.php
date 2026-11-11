@@ -11,7 +11,6 @@ use App\Enums\AiFailureReason;
 use App\Enums\AiFeedbackStatus;
 use App\Enums\PracticeFieldType;
 use App\Exceptions\AiFeedbackException;
-use App\Jobs\EvaluatePracticeFeedback;
 use App\Models\Module;
 use App\Models\PracticeForm;
 use App\Models\User;
@@ -23,27 +22,49 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Sleep;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
- * Validates and stores practice answers, then evaluates them with AI in the
- * queue (EvaluatePracticeFeedback). The first evaluation and "Nilai ulang"
- * share that one queued path. One row per mentee per practice form; a
- * resubmission updates that row and increments attempts.
+ * Validates and stores practice answers, then evaluates them with AI
+ * synchronously in the same request. The first evaluation and "Nilai ulang"
+ * share that one path, guarded by a per-submission cache lock. One row per
+ * mentee per practice form; a resubmission updates that row and increments
+ * attempts.
  */
 class PracticeSubmissionService implements PracticeSubmissionServiceInterface
 {
     use PracticeFieldRules;
 
     /**
-     * Provider calls the queued evaluation makes before showing a failure.
+     * Shortest wall-clock limit, in seconds, that a web request may hit in front of PHP.
      *
-     * The first call after a submission is the one most likely to hit a
-     * passing timeout or rate limit; one silent retry spares the mentee from
-     * pressing "Nilai ulang" for a hiccup. Two agent calls of
-     * PracticeFeedbackAgent::TIMEOUT_SECONDS plus the longest pause stay
-     * below EvaluatePracticeFeedback::$timeout.
+     * The evaluation runs inside the Livewire request, so it has to finish
+     * before the web server gives up on that request. 60 seconds is the
+     * nginx default for fastcgi_read_timeout and proxy_read_timeout, the
+     * smallest limit among the usual front servers (Apache and LiteSpeed
+     * default to 300s, Cloudflare to 100s). A deployment with a shorter limit
+     * must lower the evaluation budget first.
      */
-    public const QUEUED_EVALUATION_ATTEMPTS = 2;
+    public const REQUEST_TIME_LIMIT_SECONDS = 60;
+
+    /**
+     * Seconds kept free under REQUEST_TIME_LIMIT_SECONDS for everything that is
+     * not a provider call: validation, database writes, rendering the
+     * Livewire response and network latency.
+     */
+    public const REQUEST_SAFETY_MARGIN_SECONDS = 10;
+
+    /**
+     * Provider calls one evaluation makes before showing a failure.
+     *
+     * The first call is the one most likely to hit a passing timeout or rate
+     * limit; one silent retry spares the mentee from pressing "Nilai ulang"
+     * for a hiccup. Worst case, two agent calls of
+     * PracticeFeedbackAgent::TIMEOUT_SECONDS plus the longest pause must fit in
+     * REQUEST_TIME_LIMIT_SECONDS minus REQUEST_SAFETY_MARGIN_SECONDS.
+     */
+    public const EVALUATION_ATTEMPTS = 2;
 
     /**
      * Pause range in milliseconds before retrying a transient failure.
@@ -53,28 +74,37 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
      *
      * @var array{int, int}
      */
-    public const RETRY_PAUSE_MS = [1500, 3500];
+    public const RETRY_PAUSE_MS = [1000, 2500];
 
     /**
      * Longer pause range in milliseconds after a rate limit or overloaded provider.
      *
+     * Its upper bound is the longest pause of the evaluation time budget.
+     *
      * @var array{int, int}
      */
-    public const RATE_LIMITED_PAUSE_MS = [5000, 8000];
+    public const RATE_LIMITED_PAUSE_MS = [3000, 5000];
 
     /**
      * Lifetime in seconds of the per-submission evaluation lock.
      *
-     * At least the job timeout, so a manual retry cannot start a parallel
-     * provider call while the job is still retrying, and at most
-     * UserPracticeResponse::STALLED_AFTER_SECONDS, so a lock left by a dead
-     * worker has expired by the time the mentee is offered "Nilai ulang".
+     * At least the worst-case evaluation, so a double click or a second tab
+     * cannot start a parallel provider call while the first one is still
+     * retrying, and equal to REQUEST_TIME_LIMIT_SECONDS: a lock left by a
+     * request the web server killed has expired by the time the mentee is
+     * offered "Nilai ulang" (UserPracticeResponse::STALLED_AFTER_SECONDS).
      */
-    public const EVALUATION_LOCK_SECONDS = 110;
+    public const EVALUATION_LOCK_SECONDS = 60;
+
+    /**
+     * Message shown when an evaluation stopped on an unexpected error.
+     */
+    public const ABORTED_EVALUATION_MESSAGE = 'Penilaian AI terhenti sebelum selesai. Jawabanmu tetap tersimpan, coba nilai ulang ya.';
 
     /**
      * How many times one evaluation re-grades answers that were replaced while
-     * the provider was answering, before leaving them to their own job.
+     * the provider was answering. The request that stored the newer answers
+     * found the lock taken and left them to the lock holder.
      */
     private const SUPERSEDED_REEVALUATIONS = 1;
 
@@ -86,14 +116,16 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
     ) {}
 
     /**
-     * Validate and store a practice submission, then queue the AI feedback.
+     * Validate and store a practice submission, then evaluate it with AI in the same request.
      *
-     * The submission itself is durable before the response leaves the web
-     * request: the answers are saved in one transaction, then the evaluation
-     * runs in the queue after the commit. That is what keeps the practice
-     * save instant even when the provider is slow.
+     * The answers are saved and committed in one transaction before the
+     * provider is called, so the mentee keeps their work even when the AI
+     * call is slow, fails, or the request dies halfway.
      *
      * @param  array<string, mixed>  $answers
+     * @return UserPracticeResponse Completed or Failed; Processing only when another request holds the evaluation lock.
+     *
+     * @throws ValidationException When the answers do not match the form schema.
      */
     public function submit(User $user, PracticeForm $practice_form, array $answers): UserPracticeResponse
     {
@@ -139,77 +171,33 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
             return $response;
         });
 
-        EvaluatePracticeFeedback::dispatch($response->getKey(), $practice_form->id, $response->attempts);
-
-        return $response;
+        return $this->evaluate($response, 'submit', false);
     }
 
     /**
-     * Evaluate a stored submission from the background job.
+     * Evaluate a stored submission again ("Nilai ulang").
      *
-     * Skipped when the submission is no longer waiting for an evaluation
-     * (completed or failed), so a replayed job can never overwrite feedback
-     * nor bill the provider twice, and when $attempt belongs to an older
-     * submission, whose newer answers have their own job.
+     * Uses the same synchronous path and attempt budget as the first
+     * evaluation. Nothing changes when the evaluation cannot be retried or
+     * another request still holds the evaluation lock: the response is
+     * returned as stored, so it never claims an evaluation that no request
+     * will finish.
      *
-     * @param  int|null  $attempt  The `attempts` value the job was dispatched for; null for jobs queued before this field existed.
-     */
-    public function evaluateSubmission(int $response_id, int $practice_form_id, ?int $attempt = null): void
-    {
-        /** @var UserPracticeResponse|null $response */
-        $response = UserPracticeResponse::query()->find($response_id);
-
-        $practice_form = PracticeForm::query()->find($practice_form_id);
-
-        if ($response === null || $practice_form === null) {
-            return;
-        }
-
-        if (! $this->isAwaitingEvaluation($response)) {
-            return;
-        }
-
-        if ($attempt !== null && $response->attempts !== $attempt) {
-            return;
-        }
-
-        // How long the job waited for a worker: a large value points at a
-        // missing or overloaded queue worker rather than at the provider.
-        Log::info('ai.feedback.job_started', [
-            'ai_response_id' => $response->id,
-            'queue_wait_ms' => $response->updated_at === null ? null : (int) $response->updated_at->diffInMilliseconds(now()),
-        ]);
-
-        $this->requestFeedback($response, $practice_form, self::QUEUED_EVALUATION_ATTEMPTS, 'queue');
-    }
-
-    /**
-     * Queue a new AI evaluation for a stored submission ("Nilai ulang").
-     *
-     * Uses the same queued job and attempt budget as the first evaluation, so
-     * the web request never waits for the provider and both clicks behave the
-     * same. Nothing changes when the evaluation cannot be retried or another
-     * process still holds the evaluation lock: the response is returned as
-     * stored, so it never claims an evaluation that no process will finish.
+     * @return UserPracticeResponse The submission with its new (or unchanged) evaluation outcome.
      */
     public function retryAiFeedback(UserPracticeResponse $response): UserPracticeResponse
     {
-        if (! $response->canRetryEvaluation() || $this->isEvaluationRunning($response)) {
+        if (! $response->canRetryEvaluation()) {
             return $response;
         }
 
-        $response->ai_status = AiFeedbackStatus::Processing;
-        $response->ai_error = null;
-        // Saving moves updated_at, which restarts the stall window.
-        $response->save();
-
-        EvaluatePracticeFeedback::dispatch($response->getKey(), $response->practice_form_id, $response->attempts);
-
-        return $response->refresh();
+        return $this->evaluate($response, 'retry', true);
     }
 
     /**
-     * Determine whether a process currently holds the evaluation lock of a submission.
+     * Determine whether a request currently holds the evaluation lock of a submission.
+     *
+     * @return bool True while another evaluation of this submission is running.
      */
     public function isEvaluationRunning(UserPracticeResponse $response): bool
     {
@@ -225,20 +213,19 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
     }
 
     /**
-     * Ask the AI evaluator for structured feedback and persist the outcome.
+     * Run one guarded evaluation and always leave the submission in a final state.
      *
-     * A transient failure (timeout, rate limit, unusable answer) is retried up
-     * to $max_attempts calls in total; a configuration error fails at once.
-     * Only the final outcome is stored, so the mentee sees "failed" only when
-     * every attempt failed.
+     * The cache lock keeps a double click or a second tab from paying the
+     * provider twice: the caller that finds it taken changes nothing. Any
+     * error that escapes the evaluation (not only AiFeedbackException) fails
+     * the graded answer version with a friendly message instead of leaving
+     * it Processing, and the lock is always released.
      *
-     * @param  'queue'  $trigger  Which path started the evaluation; written to the ai.feedback.attempt log.
+     * @param  'submit'|'retry'  $trigger  Which action started the evaluation; written to the ai.feedback.attempt log.
+     * @param  bool  $restart  Move a failed or stalled submission back to Processing first ("Nilai ulang").
      */
-    private function requestFeedback(UserPracticeResponse $response, PracticeForm $practice_form, int $max_attempts, string $trigger): UserPracticeResponse
+    private function evaluate(UserPracticeResponse $response, string $trigger, bool $restart): UserPracticeResponse
     {
-        // A duplicated job must not pay the provider twice for the same
-        // submission. The process holding the lock stores the outcome itself,
-        // so the second caller changes nothing and leaves the state as it is.
         $lock = Cache::lock(self::lockKey($response), self::EVALUATION_LOCK_SECONDS);
 
         if (! $lock->get()) {
@@ -246,38 +233,119 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
         }
 
         try {
-            $module = $this->moduleOf($practice_form);
+            $this->ensureExecutionTimeForEvaluation();
 
-            for ($round = 0; $round <= self::SUPERSEDED_REEVALUATIONS; $round++) {
-                $outcome = $this->evaluateWithRetries($response, $module, $practice_form, $max_attempts, $trigger);
-
-                $stored = $this->storeOutcome($response, $outcome);
-
-                if ($stored !== null) {
-                    return $stored;
-                }
-
-                // The mentee resubmitted while the provider was answering, so
-                // the outcome belongs to answers that no longer exist. The
-                // newer answers are graded here, still inside the lock: their
-                // own job may already have found the lock taken and stopped.
+            if ($restart) {
+                // Another request may have finished the evaluation after the
+                // mentee saw the retry button.
                 $response->refresh();
 
-                if (! $this->isAwaitingEvaluation($response)) {
+                if (! $response->canRetryEvaluation()) {
                     return $response;
                 }
+
+                $response->ai_status = AiFeedbackStatus::Processing;
+                $response->ai_error = null;
+                // Saving moves updated_at, which restarts the stall window.
+                $response->save();
             }
 
-            return $response;
+            return $this->gradeLatestAnswers($response, $trigger);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            $this->failAbortedEvaluation($response, $exception);
+
+            return $response->fresh() ?? $response;
         } finally {
             $lock->release();
         }
     }
 
     /**
+     * Grade the stored answers and keep grading while a resubmission replaces them.
+     *
+     * Runs inside the evaluation lock. When the mentee resubmits while the
+     * provider is answering, the outcome belongs to answers that no longer
+     * exist: it is dropped and the newer answers are graded here, because
+     * the request that stored them found the lock taken and stopped.
+     *
+     * @param  'submit'|'retry'  $trigger
+     */
+    private function gradeLatestAnswers(UserPracticeResponse $response, string $trigger): UserPracticeResponse
+    {
+        $practice_form = $response->practiceForm()->firstOrFail();
+        $module = $this->moduleOf($practice_form);
+
+        for ($round = 0; $round <= self::SUPERSEDED_REEVALUATIONS; $round++) {
+            $outcome = $this->evaluateWithRetries($response, $module, $practice_form, self::EVALUATION_ATTEMPTS, $trigger);
+
+            $stored = $this->storeOutcome($response, $outcome);
+
+            if ($stored !== null) {
+                return $stored;
+            }
+
+            $response->refresh();
+
+            if (! $this->isAwaitingEvaluation($response)) {
+                return $response;
+            }
+        }
+
+        return $response;
+    }
+
+    /**
+     * Fail the graded answer version after an unexpected error stopped its evaluation.
+     *
+     * Only a Pending or Processing row of the same `attempts` is touched: a
+     * completed outcome is never overwritten, and a newer submission is not
+     * failed for an error that happened while grading older answers. Only
+     * metadata is logged, never the answers.
+     */
+    private function failAbortedEvaluation(UserPracticeResponse $response, Throwable $exception): void
+    {
+        Log::warning('ai.feedback.evaluation_aborted', [
+            'ai_response_id' => $response->getKey(),
+            'attempt' => $response->attempts,
+            'exception' => $exception::class,
+        ]);
+
+        UserPracticeResponse::query()
+            ->whereKey($response->getKey())
+            ->whereIn('ai_status', [AiFeedbackStatus::Pending->value, AiFeedbackStatus::Processing->value])
+            ->where('attempts', $response->attempts)
+            ->update([
+                'ai_status' => AiFeedbackStatus::Failed->value,
+                'ai_error' => self::ABORTED_EVALUATION_MESSAGE,
+                'updated_at' => now(),
+            ]);
+    }
+
+    /**
+     * Give the request enough PHP execution time for a worst-case evaluation.
+     *
+     * Only raises a finite max_execution_time that is lower than
+     * REQUEST_TIME_LIMIT_SECONDS (where PHP counts wall-clock time, a 30s
+     * default would kill a slow evaluation midway); an unlimited setting
+     * (0, as in the CLI) is left alone.
+     */
+    private function ensureExecutionTimeForEvaluation(): void
+    {
+        $limit = (int) ini_get('max_execution_time');
+
+        if ($limit === 0 || $limit >= self::REQUEST_TIME_LIMIT_SECONDS || ! function_exists('set_time_limit')) {
+            return;
+        }
+
+        set_time_limit(self::REQUEST_TIME_LIMIT_SECONDS);
+    }
+
+    /**
      * Call the evaluator until it succeeds, fails permanently, or the attempts run out.
      *
-     * @param  'queue'  $trigger
+     * @param  'submit'|'retry'  $trigger
      * @return array{ai_feedback?: array<string, mixed>, ai_score?: int, ai_status: AiFeedbackStatus, ai_error: string|null}
      */
     private function evaluateWithRetries(UserPracticeResponse $response, Module $module, PracticeForm $practice_form, int $max_attempts, string $trigger): array

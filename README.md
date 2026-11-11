@@ -113,7 +113,6 @@ app/
 ├── Exceptions/            # Exception domain dengan pesan ramah (AiMentorException, AiFeedbackException, ...)
 ├── Filament/              # Panel admin: Resources/{Nama}/{Pages,Schemas,Tables,RelationManagers}, Widgets, Actions
 ├── Http/                  # Controller tipis (Google OAuth, sitemap, health, bukti pendaftaran), middleware, respons Fortify
-├── Jobs/                  # EvaluatePracticeFeedback (penilaian AI di queue)
 ├── Livewire/              # Halaman & komponen publik (Profiling, Learning, Scholarships, Cv, Twibbon, Settings, Faq)
 ├── Models/                # Model Eloquent
 ├── Policies/              # Policy Shield (hasil generate)
@@ -155,7 +154,7 @@ public/build/              # Aset Vite hasil build (DI-COMMIT)
 | Module player (Pembukaan → Pahami → Quick Question → Praktik → Checkpoint) | `/modules/{module}?section=...` | `app/Livewire/Learning/ModulePlayer.php`, `resources/views/livewire/learning/partials/*`, `app/Services/ModuleOutlineService.php` |
 | Pengantar + Inti Materi multi-kolom (Markdown: `#` hijau, `##`, `###`, **tebal**, daftar, kutipan; teks lama tetap tampil) | (di langkah Pahami) | `app/Models/ModuleCoreSection.php`, `partials/pahami.blade.php`, `components/learning/rich-content.blade.php`, `RichContentRenderer.php`, `resources/css/prose.css` |
 | Quick Question (benar/salah, dikoreksi sistem) | (di langkah Quick) | `app/Models/QuickQuestion.php`, `partials/quick.blade.php` |
-| Praktik + penilaian AI (label, bukan skor) | (di langkah Praktik) | `app/Services/PracticeSubmissionService.php`, `app/Jobs/EvaluatePracticeFeedback.php`, `app/Services/AiFeedbackService.php`, `app/Enums/AiScoreLabel.php` |
+| Praktik + penilaian AI sinkron di request (label, bukan skor) | (di langkah Praktik) | `app/Services/PracticeSubmissionService.php`, `app/Services/AiFeedbackService.php`, `app/Enums/AiScoreLabel.php` |
 | AI Mentor (saran pertanyaan admin + kuota 5/modul) | (di langkah Praktik) | `app/Livewire/Learning/MentorChat.php`, `app/Services/ModuleMentorService.php`, `MentorQuotaService.php` |
 | AI Brainstorming (kerangka draf dari jawaban mentee) | (di form praktik) | `app/Livewire/Learning/Brainstorming.php`, `app/Services/ModuleBrainstormingService.php`, `BrainstormingSessionService.php` |
 | Gate tahap Feedback/Checkpoint | (di langkah Checkpoint) | `ModulePlayer::checkpointBlock()` / `guardCheckpointSection()`, `ProgressService::completeModule()` |
@@ -247,7 +246,8 @@ php artisan up
 |---|---|
 | PHP | 8.3+ dengan OPcache aktif; reload PHP-FPM setiap deploy bila `validate_timestamps=0` |
 | Database | MySQL 8+ atau PostgreSQL 15+ (bukan SQLite) |
-| Queue worker | Wajib selalu hidup (Supervisor/systemd) dan **hanya di server produksi**: penilaian AI praktik dan *Nilai ulang* sama-sama lewat queue. `php artisan queue:work --tries=1 --timeout=110` (job sendiri memakai `timeout` 100 detik; butuh ekstensi `pcntl` agar timeout ditegakkan). `retry_after` database queue harus di atas 100 detik (default 150, `DB_QUEUE_RETRY_AFTER`). Queue terpisah opsional: set `AI_FEEDBACK_QUEUE=ai` **setelah** worker dijalankan dengan `--queue=ai,default`. Jalankan `php artisan queue:restart` setiap deploy |
+| Queue worker | **Tidak wajib** untuk penilaian AI praktik: penilaian pertama dan *Nilai ulang* berjalan sinkron di request web. Saat ini tidak ada job lain di codebase |
+| Timeout request | Penilaian praktik menahan request Livewire paling lama ±49 detik (22 dtk × 2 percobaan + jeda 5 dtk). Batas request di depan PHP harus **≥ 60 detik** (`PracticeSubmissionService::REQUEST_TIME_LIMIT_SECONDS`): nginx `fastcgi_read_timeout`/`proxy_read_timeout` (default 60), PHP-FPM `request_terminate_timeout` (0 atau ≥ 60), Apache/LiteSpeed (default 300), Cloudflare (100). Evaluasi menaikkan `max_execution_time` ke 60 bila lebih kecil. Bila batas server lebih pendek, turunkan dulu anggaran di kode (lihat `docs/ai-features.md`) |
 | Storage | Persisten & privat: bukti pendaftaran di disk `local`; twibbon dan gambar kartu beasiswa (`scholarships/`, WebP ≤512 px hasil resize GD) di disk `public` (`php artisan storage:link`). GD dengan dukungan WebP disarankan; tanpa WebP gambar disimpan sebagai JPEG |
 | HTTPS | Wajib; isi `TRUSTED_PROXIES` bila di belakang load balancer |
 | Health check | `GET /up` (liveness), `GET /health` (database + cache, 503 bila gagal), `GET /health/queue` (503 bila ada job menunggu > 120 detik = worker tidak jalan; pasang di uptime monitor, jangan di load balancer) |

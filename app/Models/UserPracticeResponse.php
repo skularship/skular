@@ -65,13 +65,15 @@ class UserPracticeResponse extends Model
     /**
      * Seconds without a heartbeat after which an unfinished evaluation is stalled.
      *
-     * The queued evaluation touches updated_at when it starts and before every
-     * provider attempt (at most 48 seconds apart), so two minutes without a
-     * touch means the job was never picked up or lost its worker. Must stay at
-     * or above the job's uniqueFor and the evaluation lock TTL, so the retry
-     * offered at that point can always start a new evaluation.
+     * The synchronous evaluation touches updated_at when it starts and before
+     * every provider attempt (at most 27 seconds apart: one agent timeout plus
+     * the longest pause), so 75 seconds without a touch means the request
+     * died midway (PHP or proxy timeout, a crashed process). Must stay at or
+     * above PracticeSubmissionService::EVALUATION_LOCK_SECONDS, so the retry
+     * offered at that point can always take the lock and start a new
+     * evaluation.
      */
-    public const STALLED_AFTER_SECONDS = 120;
+    public const STALLED_AFTER_SECONDS = 75;
 
     /**
      * Determine whether the AI evaluation is still expected to finish.

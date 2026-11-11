@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\QueueHealthController;
-use App\Jobs\EvaluatePracticeFeedback;
 use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
@@ -49,12 +48,4 @@ test('the queue probe skips queues it cannot inspect', function () {
     config(['queue.default' => 'sync']);
 
     $this->get(route('health.queue'))->assertOk()->assertJsonPath('checks.queue', 'not_monitored');
-});
-
-test('ai evaluations stay on the default queue unless a dedicated queue is configured', function () {
-    expect((new EvaluatePracticeFeedback(1, 1, 1))->queue)->toBeNull();
-
-    config(['queue.ai_feedback_queue' => 'ai']);
-
-    expect((new EvaluatePracticeFeedback(1, 1, 1))->queue)->toBe('ai');
 });

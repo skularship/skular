@@ -51,6 +51,16 @@ class ModulePlayer extends Component
      */
     private const AI_RATE_LIMIT_PER_MINUTE = 10;
 
+    /**
+     * Polling interval in seconds while an evaluation runs outside this request.
+     *
+     * Submitting and "Nilai ulang" grade the answer inside their own request,
+     * so polling is only a fallback: another tab holds the evaluation lock, or
+     * the page was opened while a request was still grading. It stops as
+     * soon as the outcome is stored or the evaluation is flagged as stalled.
+     */
+    public const EVALUATION_POLL_SECONDS = 5;
+
     #[Locked]
     public Module $module;
 
@@ -286,7 +296,10 @@ class ModulePlayer extends Component
     }
 
     /**
-     * Submit a practice form and request structured AI feedback.
+     * Submit a practice form and grade it with AI in the same request.
+     *
+     * The answers are stored first; the evaluation outcome (normally
+     * Completed or Failed) is known when the request returns.
      *
      * @throws ValidationException
      */
@@ -324,15 +337,18 @@ class ModulePlayer extends Component
         } elseif ($response->ai_status === AiFeedbackStatus::Failed) {
             $this->dispatch('toast', variant: 'warning', text: __('Jawabanmu tersimpan, tapi feedback AI belum tersedia. Kamu bisa coba lagi.'));
         } else {
-            $this->dispatch('toast', variant: 'info', text: __('Jawabanmu tersimpan. AI sedang meninjau praktikmu.'));
+            // Another tab still holds the evaluation lock and grades the
+            // newest answers; the page polls for its outcome.
+            $this->dispatch('toast', variant: 'info', text: __('Jawabanmu tersimpan. AI sedang menilainya, hasilnya muncul otomatis di halaman ini.'));
         }
     }
 
     /**
-     * Queue a new AI evaluation after a failed or stalled one ("Nilai ulang").
+     * Grade a stored answer again after a failed or stalled evaluation ("Nilai ulang").
      *
-     * Runs through the same queued job as the first evaluation, so this
-     * request never waits for the provider; the page polls for the outcome.
+     * Runs the same synchronous evaluation as the first submission, so the
+     * outcome is known when the request returns. When another request still
+     * holds the evaluation lock nothing changes and the page keeps polling.
      */
     public function retryFeedback(int $form_id): void
     {
@@ -362,7 +378,7 @@ class ModulePlayer extends Component
         match ($response->ai_status) {
             AiFeedbackStatus::Completed => $this->dispatch('toast', variant: 'success', text: __('Feedback AI berhasil diperbarui.')),
             AiFeedbackStatus::Failed => $this->dispatch('toast', variant: 'warning', text: __('Feedback AI masih belum tersedia. Coba lagi beberapa saat lagi.')),
-            default => $this->dispatch('toast', variant: 'info', text: __('Penilaian ulang dimulai. Hasilnya muncul otomatis di halaman ini.')),
+            default => $this->dispatch('toast', variant: 'info', text: __('Jawabanmu sedang dinilai AI. Hasilnya muncul otomatis di halaman ini.')),
         };
     }
 
@@ -740,30 +756,6 @@ class ModulePlayer extends Component
     }
 
     /**
-     * Polling interval in seconds while an AI evaluation is running.
-     *
-     * Most evaluations finish within 10-30 seconds, so the page checks often
-     * at first and backs off for the rare slow one instead of re-rendering
-     * every few seconds for minutes.
-     */
-    private function evaluationPollSeconds(): int
-    {
-        $last_activity = $this->responses()
-            ->filter(fn (UserPracticeResponse $response): bool => $response->isEvaluating())
-            ->map(fn (UserPracticeResponse $response) => $response->updated_at ?? $response->submitted_at)
-            ->filter()
-            ->max();
-
-        $elapsed = $last_activity === null ? 0 : (int) $last_activity->diffInSeconds(now(), true);
-
-        return match (true) {
-            $elapsed < 30 => 3,
-            $elapsed < 90 => 5,
-            default => 10,
-        };
-    }
-
-    /**
      * Render the learning loop of one module (route modules.show).
      *
      * @return View The livewire.learning.module-player view.
@@ -780,7 +772,7 @@ class ModulePlayer extends Component
             'checkpoint_block' => $this->checkpointBlock(),
             'checkpoint_block_message' => $this->checkpointBlockMessage(),
             'evaluating' => $this->responses()->contains(fn (UserPracticeResponse $response): bool => $response->isEvaluating()),
-            'evaluation_poll_seconds' => $this->evaluationPollSeconds(),
+            'evaluation_poll_seconds' => self::EVALUATION_POLL_SECONDS,
             'practice_pending' => $this->practicePending,
             // Resolving the next module walks the whole learning path; only the
             // checkpoint section shows it, so other sections skip that work.
