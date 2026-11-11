@@ -2,17 +2,20 @@
 
 namespace App\Filament\Resources\Scholarships\Schemas;
 
+use App\Contracts\ScholarshipImageServiceInterface;
 use App\Enums\EducationLevel;
 use App\Enums\LocationScope;
 use App\Enums\ScholarshipStatus;
 use App\Filament\Schemas\ListRepeater;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 /**
  * Create/edit form schema of the Beasiswa resource.
@@ -63,6 +66,25 @@ class ScholarshipForm
                             ->required(),
                     ])
                     ->columns(2),
+
+                Section::make('Gambar kartu')
+                    ->description('Tampil di kartu rekomendasi mentee. Opsional: tanpa gambar, kartu memakai ilustrasi bawaan Skular.')
+                    ->schema([
+                        FileUpload::make('image_path')
+                            ->label('Gambar kartu')
+                            ->image()
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                            ->maxSize(ScholarshipImageServiceInterface::MAX_UPLOAD_KB)
+                            ->disk(ScholarshipImageServiceInterface::DISK)
+                            ->directory(ScholarshipImageServiceInterface::DIRECTORY)
+                            ->visibility('public')
+                            // The 5 MB upload is downscaled to a small WebP and
+                            // the original is discarded (see ScholarshipImageService).
+                            ->saveUploadedFileUsing(fn (TemporaryUploadedFile $file): string => app(ScholarshipImageServiceInterface::class)->store($file))
+                            ->helperText('JPG, PNG, atau WebP, maksimal 5 MB. Otomatis diperkecil. Pakai ilustrasi Skular atau gambar netral. Jangan unggah logo penyelenggara beasiswa.')
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible(),
 
                 Section::make('Persyaratan')
                     ->schema([

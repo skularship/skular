@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Contracts\ScholarshipImageServiceInterface;
 use App\Enums\EducationLevel;
 use App\Enums\LocationScope;
 use App\Enums\ScholarshipStatus;
@@ -11,12 +12,14 @@ use Database\Factories\ScholarshipFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property int $id
@@ -33,6 +36,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property CarbonImmutable|null $closing_date
  * @property int|null $estimated_quota
  * @property string|null $link
+ * @property string|null $image_path Optional card image on the public disk (never an organiser logo).
  * @property CarbonImmutable|null $verification_date
  * @property string|null $note
  * @property array<int, string>|null $key_benefits
@@ -40,6 +44,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property ScholarshipStatus $status
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property-read string|null $image_url Public URL of the card image, or null for the placeholder.
  * @property-read Cluster|null $cluster
  * @property-read Collection<int, ScholarshipApplication> $applications
  * @property-read Collection<int, Module> $templateModules
@@ -59,6 +64,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'closing_date',
     'estimated_quota',
     'link',
+    'image_path',
     'verification_date',
     'note',
     'key_benefits',
@@ -86,7 +92,19 @@ class Scholarship extends Model
             ContentCache::bump();
         });
 
-        static::deleted(function (): void {
+        // A replaced or cleared card image is removed from the public disk so
+        // orphaned files never pile up.
+        static::updated(function (Scholarship $scholarship): void {
+            if ($scholarship->wasChanged('image_path')) {
+                $previous = $scholarship->getOriginal('image_path');
+
+                app(ScholarshipImageServiceInterface::class)->delete(is_string($previous) ? $previous : null);
+            }
+        });
+
+        static::deleted(function (Scholarship $scholarship): void {
+            app(ScholarshipImageServiceInterface::class)->delete($scholarship->image_path);
+
             ContentCache::bump();
         });
     }
@@ -112,6 +130,18 @@ class Scholarship extends Model
             'key_benefits' => 'array',
             'values_sought' => 'array',
         ];
+    }
+
+    /**
+     * Get the public URL of the card image, or null when the placeholder should be shown.
+     *
+     * @return Attribute<string|null, never>
+     */
+    protected function imageUrl(): Attribute
+    {
+        return Attribute::get(fn (): ?string => filled($this->image_path)
+            ? Storage::disk(ScholarshipImageServiceInterface::DISK)->url((string) $this->image_path)
+            : null);
     }
 
     /**

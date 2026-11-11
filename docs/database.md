@@ -41,7 +41,7 @@ Role & permission memakai tabel spatie/laravel-permission: `roles`, `permissions
 | Tabel | Catatan |
 |---|---|
 | `users` | Akun mentee dan admin. Kolom profiling (`level`, `age`, `gpa`, `has_sktm`, `desired_level`, `desired_location`, `cluster_id`, `phone`, `profile_completed_at`) diisi sekali oleh `ProfilingService::complete()`. Admin = user dengan role Shield; `canAccessPanel()` menolak mentee. |
-| `scholarships` | Katalog beasiswa. `status` (`draft`/`active`/`closed`/`archived`): hanya `active` & `closed` yang tampil ke mentee. `link` = tautan sumber resmi. `key_benefits`, `values_sought` = JSON list. Menolak `delete()` bila sudah dipilih mentee. |
+| `scholarships` | Katalog beasiswa. `status` (`draft`/`active`/`closed`/`archived`): hanya `active` & `closed` yang tampil ke mentee. `link` = tautan sumber resmi. `key_benefits`, `values_sought` = JSON list. `image_path` = gambar kartu opsional di disk `public` (bukan logo penyelenggara, lihat aturan 10 AGENTS.md); upload ≤5 MB di-resize ke WebP ≤512 px dan file asli dibuang; file lama dihapus saat diganti. Menolak `delete()` bila sudah dipilih mentee. |
 | `scholarship_applications` | Pilihan beasiswa mentee: maks 5 per user (`ScholarshipApplicationService::MAX_SELECTIONS`), unique `(user_id, scholarship_id)`, satu `is_primary`. Status `selected → submitted → result_reported` + `result`. Bukti pendaftaran di disk `local` (privat). |
 | `fases` | Pengelompokan modul; urutan fase menentukan roadmap. Menolak `delete()` bila salah satu modulnya punya histori mentee. |
 | `modules` | Tiga atribut berbeda: `type` (format penyajian, kolom lama), `category` (`inti`/`template`/`perpustakaan`), `content_status` (`draft`/`published`). `scholarship_id` hanya untuk `template` (dikosongkan otomatis untuk kategori lain). JSON: `insights` (list string), `brainstorming_questions`, `mentor_suggestions` (`[{question, answer|null}]`, maks 5). `inti_material` = teks Inti Materi lama (fallback bila belum ada `module_core_sections`). `ai_knowledge` = rubrik/basis pengetahuan untuk AI. Menolak `delete()` bila punya checkpoint/jawaban praktik. |
@@ -391,6 +391,7 @@ Unique: `(user_id, scholarship_id)`
 | `closing_date` | date | ya |  |
 | `estimated_quota` | integer | ya |  |
 | `link` | varchar | ya |  |
+| `image_path` | varchar | ya |  |
 | `verification_date` | date | ya |  |
 | `note` | text | ya |  |
 | `status` | varchar |  | 'draft' |

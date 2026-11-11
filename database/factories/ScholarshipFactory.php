@@ -72,6 +72,16 @@ class ScholarshipFactory extends Factory
     }
 
     /**
+     * Indicate that the scholarship has a card image stored on the public disk.
+     */
+    public function withImage(string $path = 'scholarships/contoh.webp'): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'image_path' => $path,
+        ]);
+    }
+
+    /**
      * Indicate that the scholarship is still a draft.
      */
     public function draft(): static

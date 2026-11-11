@@ -26,6 +26,7 @@ class ScholarshipData extends Data
      * @param  string|null  $closing_date  Registration deadline (Y-m-d).
      * @param  int|null  $estimated_quota  Estimated awardees.
      * @param  string|null  $link  Link to the official source.
+     * @param  string|null  $image_url  Public URL of the optional card image; null shows the branded placeholder.
      * @param  ScholarshipStatus  $status  Admin status.
      * @param  bool  $is_open  Whether registration is open today.
      * @param  int|null  $days_remaining  Days until the deadline.
@@ -43,6 +44,7 @@ class ScholarshipData extends Data
         public ?string $closing_date,
         public ?int $estimated_quota,
         public ?string $link,
+        public ?string $image_url,
         public ScholarshipStatus $status,
         public bool $is_open,
         public ?int $days_remaining,
@@ -66,6 +68,7 @@ class ScholarshipData extends Data
             closing_date: $scholarship->closing_date?->toDateString(),
             estimated_quota: $scholarship->estimated_quota,
             link: $scholarship->link,
+            image_url: $scholarship->image_url,
             status: $scholarship->status,
             is_open: $scholarship->isOpen(),
             days_remaining: $scholarship->daysRemaining(),
