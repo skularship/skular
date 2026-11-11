@@ -116,26 +116,32 @@ sequenceDiagram
     PSS->>DB: transaksi: firstOrCreate + lockForUpdate,<br/>validasi PracticeFieldRules, simpan jawaban,<br/>attempts+1, ai_status=processing
     PSS->>Q: dispatch job (afterCommit)
     MP-->>M: toast "Jawabanmu tersimpan. AI sedang meninjau…"
-    Q->>J: handle() (tries=1, timeout=60s)
-    J->>PSS: evaluateSubmission() (lewati bila sudah completed)
-    PSS->>PSS: Cache::lock ai-feedback:{id} 30s
-    PSS->>AF: generate(module, form, answers)
-    AF->>AG: prompt (model dari config/ai.php, timeout 25s)
-    alt sukses
+    Q->>J: handle() (tries=1, timeout=100s, unik per response:attempts 120s)
+    J->>PSS: evaluateSubmission(id, form, attempt) (lewati bila bukan processing atau attempt lama)
+    PSS->>PSS: Cache::lock ai-feedback:{id} 110s
+    loop maks 2 percobaan, jeda jitter 1,5-3,5s (rate limit 5-8s), heartbeat updated_at
+        PSS->>AF: generate(module, form, answers)
+        AF->>AG: prompt (model dari config/ai.php, timeout 40s)
+    end
+    alt sukses (skor + minimal satu teks)
         AG-->>AF: {score, strengths, improvements, feedback, next_steps}
         AF-->>PSS: AiFeedbackData
-        PSS->>DB: ai_feedback, ai_score (0-100), ai_status=completed
-    else gagal (konfigurasi / rate limit / timeout / kosong)
-        AF-->>PSS: AiFeedbackException (pesan ramah, dicatat di log dengan reason)
+        PSS->>DB: lockForUpdate, cek attempts sama → ai_feedback, ai_score (0-100), completed
+    else gagal (configuration / rate_limited / timeout / unavailable / invalid_response)
+        AF-->>PSS: AiFeedbackException (pesan ramah, log ai.feedback.attempt dengan reason)
         PSS->>DB: ai_status=failed, ai_error
     end
-    opt worker mati / job timeout
-        J->>DB: failed(): processing → failed
+    opt mentee kirim ulang saat model menjawab
+        PSS->>PSS: hasil lama dibuang, jawaban terbaru dinilai sekali lagi
     end
-    loop setiap 5 detik selama processing
+    opt worker mati / job timeout
+        J->>DB: failed(): processing (attempt job ini) → failed
+    end
+    loop 3s / 5s / 10s selama processing
         M->>MP: wire:poll (render ulang status)
     end
-    M->>MP: retryFeedback() bila failed atau macet > 180 detik (sinkron)
+    M->>MP: retryFeedback() bila failed atau macet > 120 detik tanpa heartbeat
+    MP->>PSS: retryAiFeedback(): lock bebas → processing + dispatch job yang sama
 ```
 
 ## 6. Otorisasi

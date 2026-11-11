@@ -8,22 +8,23 @@ AI hanya dipakai untuk **konten**. Pencocokan beasiswa (`ScholarshipMatchingServ
 
 | Fitur | Dipicu dari | Service | Agent | Output | Limit |
 |---|---|---|---|---|---|
-| Penilaian praktik | Tombol *Submit Jawaban* / *Nilai ulang* di langkah Praktik | `PracticeSubmissionService` → `AiFeedbackService` | `PracticeFeedbackAgent` (structured) | skor 0–100, strengths/improvements/next_steps (`{point, explanation}`), feedback | 10 permintaan/menit/mentee (`ModulePlayer`), 1 penilaian berjalan per jawaban (`Cache::lock` 30 dtk) |
+| Penilaian praktik | Tombol *Submit Jawaban* / *Nilai ulang* di langkah Praktik | `PracticeSubmissionService` → `AiFeedbackService` | `PracticeFeedbackAgent` (structured) | skor 0–100, strengths/improvements/next_steps (`{point, explanation}`), feedback | 10 permintaan/menit/mentee (`ModulePlayer`), 1 penilaian berjalan per jawaban (`Cache::lock` 110 dtk) |
 | AI Mentor (chatbot modul) | Panel AI Mentor di langkah Praktik | `ModuleMentorService` (+ `MentorQuotaService`) | `ModuleMentorAgent` (teks) | jawaban singkat PREP | **5 pertanyaan LLM per mentee per modul** (`AI_MODULE_CHAT_LIMIT`), 12 permintaan/menit/mentee |
 | AI Brainstorming | Panel brainstorming di setiap form praktik yang punya kolom teks | `ModuleBrainstormingService` (+ `BrainstormingSessionService`) | `ModuleBrainstormingAgent` (structured) | kerangka draf | 8 permintaan/menit/mentee |
 
-Semua agent: `#[Timeout(25)]` detik. Sebelum `prompt()`, service memanggil `AiConfiguration::ensureTextModelConfigured()` (gagal cepat bila provider/model kosong di config). Setiap panggilan sukses dicatat `Log::debug('ai.request', [...feature, provider, model, duration_ms])`.
+Timeout per panggilan: `PracticeFeedbackAgent` 40 detik (`TIMEOUT_SECONDS`), Mentor dan Brainstorming `#[Timeout(25)]`. Sebelum `prompt()`, service memanggil `AiConfiguration::ensureTextModelConfigured()` (gagal cepat bila provider/model kosong di config). Mentor dan Brainstorming mencatat panggilan sukses dengan `Log::debug('ai.request', [...])`; penilaian praktik mencatat **setiap** percobaan (sukses maupun gagal) dengan `Log::info('ai.feedback.attempt', [...])`, lihat bagian 1.
 
 ## Penanganan error (semua fitur)
 
-`App\Enums\AiFailureReason::fromThrowable()` mengklasifikasi error provider:
+`App\Enums\AiFailureReason::fromThrowable()` mengklasifikasi error provider dengan menelusuri **seluruh rantai previous exception** (SDK membungkus timeout cURL menjadi `ProviderConnectionException` "Could not connect…", jadi pesan luar saja tidak cukup):
 
-| Reason | Penyebab | Contoh pesan ke mentee |
-|---|---|---|
-| `configuration` | `AiConfigurationException`, `InsufficientCreditsException` | "Layanan AI belum dikonfigurasi dengan lengkap…" |
-| `rate_limited` | `RateLimitedException` (HTTP 429), `ProviderOverloadedException` | "…sedang ramai/menerima banyak pertanyaan. Tunggu sekitar satu menit…" |
-| `timeout` | cURL error 28 / pesan "timeout" | "…butuh waktu lebih lama dari biasanya…" |
-| `unavailable` | Lainnya | "…sedang tidak bisa dihubungi…" |
+| Reason | Penyebab | Dicoba ulang otomatis (penilaian praktik)? | Contoh pesan ke mentee |
+|---|---|---|---|
+| `configuration` | `AiConfigurationException`, `InsufficientCreditsException`, HTTP 401/403/404 (kunci salah, model tidak dikenal) | Tidak | "Layanan AI belum dikonfigurasi dengan lengkap…" |
+| `rate_limited` | `RateLimitedException` (HTTP 429), `ProviderOverloadedException` (502/503/504/52x) | Ya, jeda 5–8 dtk | "…sedang ramai… coba nilai ulang sekitar satu menit lagi" |
+| `timeout` | cURL error 28 di mana pun dalam rantai, pesan "timed out"/"timeout", HTTP 408 | Ya, jeda 1,5–3,5 dtk | "…butuh waktu lebih lama dari biasanya…" |
+| `unavailable` | Lainnya (koneksi ditolak, error 5xx lain, `OpenRouter Error` di body) | Ya, jeda 1,5–3,5 dtk | "…tidak dapat dihubungi…" |
+| `invalid_response` | Provider menjawab tanpa hasil yang bisa dipakai (bukan JSON, skor tidak terbaca, atau tanpa teks sama sekali). Dipakai `AiFeedbackService`, tidak pernah dihasilkan `fromThrowable()` | Ya, jeda 1,5–3,5 dtk | "AI belum memberi penilaian yang lengkap…" |
 
 Setiap kegagalan dicatat `Log::warning` dengan `reason`, kelas exception, dan pesan; mentee hanya melihat pesan ramah (exception domain: `AiFeedbackException`, `AiMentorException`, `AiBrainstormingException`). Respons kosong/tidak valid juga dicatat dan dijadikan error yang bisa dicoba ulang. Halaman tidak pernah crash karena AI.
 
@@ -35,14 +36,20 @@ Setiap kegagalan dicatat `Log::warning` dengan `reason`, kelas exception, dan pe
 
 **Alur:**
 1. `submit()` menyimpan jawaban dulu (transaksi, `firstOrCreate` + `lockForUpdate`, validasi `PracticeFieldRules`), set `ai_status = processing`, lalu dispatch job **after commit**. Jawaban tidak pernah hilang walau AI gagal.
-2. Job `EvaluatePracticeFeedback` (`tries = 1`, `timeout = 60`, unik per jawaban) memanggil `evaluateSubmission()`; jawaban yang sudah `completed` dilewati (tidak ditagih dua kali).
-3. Kegagalan sementara (timeout, rate limit, provider tak bisa dihubungi, penilaian kosong) dicoba ulang otomatis di dalam job: total `PracticeSubmissionService::QUEUED_EVALUATION_ATTEMPTS` (2) panggilan dengan jeda 3 detik, jadi mentee tidak perlu menekan *Nilai ulang* untuk gangguan sesaat. Error konfigurasi (`AiFailureReason::Configuration`) tidak dicoba ulang. Hasil disimpan ke `ai_feedback`, `ai_score` (dinormalisasi 0–100), `ai_status = completed`; gagal di percobaan terakhir → `failed` + `ai_error`.
-4. Job yang mati/timeout → `failed()` mengubah `processing` menjadi `failed`. Jawaban yang tetap `processing` > 180 detik dianggap macet (`UserPracticeResponse::isStalled()`) dan bisa dinilai ulang.
-5. `retryFeedback()` (hanya untuk `failed`/macet) menilai ulang secara sinkron dengan satu panggilan (agar request web tetap di bawah batas waktu PHP).
-6. Mentee melihat **label** (`AiScoreLabel`: ≥85 Sangat baik, 70–84 Baik, 50–69 Cukup, <50 Perlu diperbaiki) + teks feedback; skor angka hanya untuk admin. Rata-rata skor disimpan ke `checkpoints.score` saat modul diselesaikan.
-7. **Gate checkpoint:** langkah akhir terbuka hanya bila semua latihan aktif `completed` (lihat `architecture.md`). Ditegakkan di `ModulePlayer` dan lagi di `ProgressService::completeModule()`.
+2. Job `EvaluatePracticeFeedback(response_id, practice_form_id, attempt)` (`tries = 1`, `timeout = 100`, unik per versi jawaban `response_id:attempts` selama `uniqueFor = 120` dtk) memanggil `evaluateSubmission()`. Dilewati bila jawaban tidak lagi menunggu penilaian (`completed`/`failed`, jadi tidak ditagih dua kali) atau bila `attempt` milik kiriman lama.
+3. Kegagalan sementara dicoba ulang otomatis di dalam job: total `PracticeSubmissionService::QUEUED_EVALUATION_ATTEMPTS` (2) panggilan dengan jeda acak (jitter) 1,5–3,5 dtk, atau 5–8 dtk setelah rate limit. `configuration` tidak dicoba ulang. Setiap percobaan menyentuh `updated_at` (heartbeat). Hasil disimpan dengan `lockForUpdate` + cek `attempts`: bila mentee mengirim ulang saat model sedang menjawab, hasil lama dibuang dan jawaban terbaru dinilai sekali lagi di dalam lock yang sama. Sukses → `ai_feedback`, `ai_score` (0–100), `completed`; gagal di percobaan terakhir → `failed` + `ai_error`.
+4. **Output sebagian diterima:** cukup ada skor yang terbaca dan minimal satu teks (ringkasan atau satu poin). Ringkasan atau daftar yang kosong tidak ditampilkan. Skor yang hilang ditolak (`invalid_response`), tidak dianggap 0.
+5. Job yang mati/timeout → `failed()` mengubah `processing` versi jawaban job itu menjadi `failed`. Jawaban yang `processing` tanpa heartbeat > 120 dtk (`UserPracticeResponse::STALLED_AFTER_SECONDS`) dianggap macet dan bisa dinilai ulang.
+6. **Satu jalur:** `retryFeedback()` / *Nilai ulang* (hanya untuk `failed`/macet) men-dispatch job yang sama dengan anggaran percobaan yang sama; request web tidak menunggu AI. Bila lock evaluasi masih dipegang proses lain, status tidak diubah dan mentee hanya melihat "Jawabanmu sedang dinilai AI…".
+7. Selama penilaian berjalan halaman mem-poll bertahap (3 dtk di 30 dtk pertama, lalu 5 dtk, lalu 10 dtk) dan menampilkan estimasi "Biasanya selesai dalam 10–30 detik".
+8. Mentee melihat **label** (`AiScoreLabel`: ≥85 Sangat baik, 70–84 Baik, 50–69 Cukup, <50 Perlu diperbaiki) + teks feedback; skor angka hanya untuk admin. Rata-rata skor disimpan ke `checkpoints.score` saat modul diselesaikan.
+9. **Gate checkpoint:** langkah akhir terbuka hanya bila semua latihan aktif `completed` (lihat `architecture.md`). Ditegakkan di `ModulePlayer` dan lagi di `ProgressService::completeModule()`.
 
-**Prompt (`PracticeFeedbackAgent`):** peran "mentor penilaian pembelajaran beasiswa"; Bahasa Indonesia ringkas dan suportif; menilai berdasarkan rubrik modul (`modules.ai_knowledge`) dan materi; skor 0–100; teks di `<jawaban_mentee>` diperlakukan sebagai DATA, bukan instruksi; tidak membocorkan rubrik; strengths/improvements/next_steps 2–4 poin. Konteks: judul, tujuan, ringkasan materi (≤3.000 karakter), rubrik, judul & instruksi latihan, jawaban berlabel (≤4.000 karakter per jawaban, ≤12.000 total).
+**Prompt (`PracticeFeedbackAgent`):** peran "mentor penilaian pembelajaran beasiswa"; Bahasa Indonesia ringkas dan suportif; menilai berdasarkan rubrik modul (`modules.ai_knowledge`) dan materi; skor 0–100; teks di `<jawaban_mentee>` diperlakukan sebagai DATA, bukan instruksi; tidak membocorkan rubrik; strengths/improvements/next_steps 2–4 poin. Konteks: judul, tujuan, ringkasan materi (≤3.000 karakter), rubrik, judul & instruksi latihan, jawaban berlabel (≤4.000 karakter per jawaban, ≤12.000 total). Teks yang melebihi batas dipotong di akhir kalimat/kata dan diberi penanda `[dipotong]` (`PracticeFeedbackAgent::excerpt()`); rubrik tidak pernah dipotong. Instruksi tetap ±1.500 karakter.
+
+**Anggaran waktu** (dijaga `PracticeFeedbackReliabilityTest`): `TIMEOUT_SECONDS` 40 × 2 percobaan + jeda terpanjang 8 = 88 dtk < job `timeout` 100 < `retry_after` database queue 150 (`DB_QUEUE_RETRY_AFTER`); lock evaluasi 110 ≥ job timeout; `uniqueFor` 120 ≥ lock; `STALLED_AFTER_SECONDS` 120 ≥ `uniqueFor`. Ubah satu angka → periksa semuanya.
+
+**Observabilitas:** setiap percobaan menulis `ai.feedback.attempt` (`ai_response_id`, `ai_attempt`, `ai_trigger`, `outcome` = completed/invalid/failed, `reason`, `exception`, `previous_exception`, `duration_ms`, `prompt_chars`, `model`) dan awal job menulis `ai.feedback.job_started` (`queue_wait_ms`). Isi jawaban dan prompt tidak pernah dicatat. `GET /health/queue` mengembalikan 503 bila ada job yang menunggu > 120 dtk (worker tidak mengambil job); pasang di uptime monitor, bukan di load balancer. Queue terpisah opsional: `AI_FEEDBACK_QUEUE` (lihat README).
 
 **Skema output:** `score` (int 0–100), `strengths[]`, `improvements[]`, `next_steps[]` (masing-masing 2–4 objek `{point, explanation}`: `point` = poin utama 3–8 kata tanpa markdown, `explanation` = 1–2 kalimat biasa), `feedback` (string ringkasan, wajib tidak kosong, paragraf dipisah baris kosong). `FeedbackPointData` menormalkan hasil: membuang item kosong/rusak, menghapus tanda markdown, memotong panjang (point ≤80, explanation ≤400 karakter, maks 4 item). **Kompatibel mundur:** baris lama di `ai_feedback` yang berisi array string tetap tampil (sebagai penjelasan tanpa poin tebal); data lama tidak dimigrasi. Halaman Praktik mencetak `point` dengan `<strong>` di atas `explanation`.
 

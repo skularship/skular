@@ -165,7 +165,7 @@ public/build/              # Aset Vite hasil build (DI-COMMIT)
 | Pengaturan akun (profil, keamanan, passkey, 2FA) | `/settings/profile`, `/settings/security` | `app/Livewire/Settings/*` |
 | Panel admin (kurikulum, beasiswa, pemantauan mentee, pengguna) | `/admin/*` | `app/Filament/**`, `app/Policies/*` |
 | Pratinjau modul untuk admin (read-only) | `/admin/modules/{record}/preview` | `app/Filament/Resources/Modules/Pages/PreviewModule.php` |
-| SEO, sitemap, health check | `/sitemap.xml`, `/up`, `/health` | `app/Http/Controllers/SitemapController.php`, `HealthCheckController.php`, `config/seo.php` |
+| SEO, sitemap, health check | `/sitemap.xml`, `/up`, `/health`, `/health/queue` | `app/Http/Controllers/SitemapController.php`, `HealthCheckController.php`, `QueueHealthController.php`, `config/seo.php` |
 
 ### Aturan bisnis ringkas
 
@@ -196,7 +196,7 @@ composer dev              # php artisan serve + queue:listen + vite (paralel)
 npm run dev               # Vite dev server saja (vp dev)
 npm run build             # build aset production (vp build) — hasilnya di-commit
 php artisan migrate       # jalankan migration
-php artisan queue:work    # worker queue (WAJIB untuk penilaian AI praktik)
+php artisan queue:work    # worker queue (WAJIB untuk penilaian AI praktik dan Nilai ulang)
 
 composer test             # config:clear + Pint (test) + PHPStan + seluruh test — gerbang sebelum merge
 composer ci:check         # rantai yang sama dengan CI
@@ -247,10 +247,10 @@ php artisan up
 |---|---|
 | PHP | 8.3+ dengan OPcache aktif; reload PHP-FPM setiap deploy bila `validate_timestamps=0` |
 | Database | MySQL 8+ atau PostgreSQL 15+ (bukan SQLite) |
-| Queue worker | Wajib selalu hidup (Supervisor/systemd): `php artisan queue:work --tries=1 --timeout=60`. `timeout` job 60 detik harus lebih kecil dari `retry_after` 90 detik di `config/queue.php` |
+| Queue worker | Wajib selalu hidup (Supervisor/systemd) dan **hanya di server produksi**: penilaian AI praktik dan *Nilai ulang* sama-sama lewat queue. `php artisan queue:work --tries=1 --timeout=110` (job sendiri memakai `timeout` 100 detik; butuh ekstensi `pcntl` agar timeout ditegakkan). `retry_after` database queue harus di atas 100 detik (default 150, `DB_QUEUE_RETRY_AFTER`). Queue terpisah opsional: set `AI_FEEDBACK_QUEUE=ai` **setelah** worker dijalankan dengan `--queue=ai,default`. Jalankan `php artisan queue:restart` setiap deploy |
 | Storage | Persisten & privat: bukti pendaftaran di disk `local`; twibbon dan gambar kartu beasiswa (`scholarships/`, WebP ≤512 px hasil resize GD) di disk `public` (`php artisan storage:link`). GD dengan dukungan WebP disarankan; tanpa WebP gambar disimpan sebagai JPEG |
 | HTTPS | Wajib; isi `TRUSTED_PROXIES` bila di belakang load balancer |
-| Health check | `GET /up` (liveness) dan `GET /health` (database + cache, 503 bila gagal) |
+| Health check | `GET /up` (liveness), `GET /health` (database + cache, 503 bila gagal), `GET /health/queue` (503 bila ada job menunggu > 120 detik = worker tidak jalan; pasang di uptime monitor, jangan di load balancer) |
 | Uji beban | `tests/Load/skular-smoke.js` (k6), jalankan ke staging |
 
 > CI didefinisikan di `.github/workflows/tests.yml`, tetapi folder `/.github` saat ini tercantum di `.gitignore`, sehingga workflow tidak ikut ter-push. Lihat laporan dokumentasi.
