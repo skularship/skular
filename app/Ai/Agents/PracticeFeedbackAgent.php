@@ -41,6 +41,11 @@ class PracticeFeedbackAgent implements Agent, HasStructuredOutput
     private const MAX_TOTAL_LENGTH = 12000;
 
     /**
+     * Maximum number of characters of the module summary sent as context.
+     */
+    private const MAX_SUMMARY_LENGTH = 3000;
+
+    /**
      * @param  array<string, mixed>  $answers
      */
     public function __construct(
@@ -120,7 +125,7 @@ class PracticeFeedbackAgent implements Agent, HasStructuredOutput
         }
 
         if (filled($this->module->summary_material)) {
-            $sections[] = 'Ringkasan materi: '.mb_substr((string) $this->module->summary_material, 0, 3000);
+            $sections[] = 'Ringkasan materi: '.self::excerpt((string) $this->module->summary_material, self::MAX_SUMMARY_LENGTH);
         }
 
         if (filled($this->module->ai_knowledge)) {
@@ -161,14 +166,51 @@ class PracticeFeedbackAgent implements Agent, HasStructuredOutput
             }
 
             $label = $labels[$key] ?? (string) $key;
-            $text = $this->stringifyAnswer($value);
-            $text = mb_substr($text, 0, min(self::MAX_ANSWER_LENGTH, $remaining));
+            $text = self::excerpt($this->stringifyAnswer($value), min(self::MAX_ANSWER_LENGTH, $remaining));
             $remaining -= mb_strlen($text);
 
             $lines[] = $label.': '.$text;
         }
 
         return $lines === [] ? '(tidak ada jawaban)' : implode("\n", $lines);
+    }
+
+    /**
+     * Shorten text to at most $limit characters without cutting a sentence in half.
+     *
+     * Cuts after the last sentence end (or line break) in the kept part when
+     * that keeps at least 60% of it, otherwise after the last whole word, and
+     * marks the cut so the evaluator does not grade the answer as unfinished.
+     */
+    public static function excerpt(string $text, int $limit): string
+    {
+        $text = trim($text);
+        $marker = ' [dipotong]';
+
+        if (mb_strlen($text) <= $limit) {
+            return $text;
+        }
+
+        $room = max(0, $limit - mb_strlen($marker));
+        $head = mb_substr($text, 0, $room);
+        $floor = (int) floor($room * 0.6);
+
+        if (preg_match_all('/[.!?](?=\s)|\n/u', $head, $matches, PREG_OFFSET_CAPTURE) > 0) {
+            $last = $matches[0][count($matches[0]) - 1];
+            $cut = mb_strlen(substr($head, 0, $last[1] + strlen($last[0])));
+
+            if ($cut >= $floor) {
+                return rtrim(mb_substr($head, 0, $cut)).$marker;
+            }
+        }
+
+        $space = mb_strrpos($head, ' ');
+
+        if ($space !== false && $space >= $floor) {
+            $head = mb_substr($head, 0, $space);
+        }
+
+        return rtrim($head).$marker;
     }
 
     /**

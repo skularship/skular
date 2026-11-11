@@ -172,3 +172,21 @@ test('a failed evaluation keeps the submission and marks it for retry', function
         ->and($response->ai_error)->not->toBeNull()
         ->and($response->ai_score)->toBeNull();
 });
+
+test('long material and answers are shortened at a sentence end and marked as cut', function () {
+    $sentence = 'Kamu menulis tujuan studi yang jelas dan terukur. ';
+    $long = str_repeat($sentence, 200);
+
+    $excerpt = PracticeFeedbackAgent::excerpt($long, 3000);
+
+    expect(mb_strlen($excerpt))->toBeLessThanOrEqual(3000)
+        ->and($excerpt)->toEndWith('terukur. [dipotong]')
+        ->and(PracticeFeedbackAgent::excerpt('Jawaban pendek.', 3000))->toBe('Jawaban pendek.');
+});
+
+test('text without sentence ends is cut after a whole word', function () {
+    $excerpt = PracticeFeedbackAgent::excerpt(str_repeat('kata ', 100), 60);
+
+    expect(mb_strlen($excerpt))->toBeLessThanOrEqual(60)
+        ->and($excerpt)->toEndWith('kata [dipotong]');
+});
