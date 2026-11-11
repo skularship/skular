@@ -151,7 +151,7 @@ public/build/              # Aset Vite hasil build (DI-COMMIT)
 | Dashboard | `/dashboard` | `app/Livewire/Dashboard.php`, `app/Services/ProgressService.php`, `LearningPathService.php` |
 | Roadmap Belajar (fase aktif + modul; fase terkunci hanya nama, ditutup awan) | `/roadmap` | `app/Livewire/Roadmap.php`, `ProgressService::focusRoadmap()`, `app/Data/FocusedRoadmapData.php` |
 | Module player (Pembukaan → Pahami → Quick Question → Praktik → Checkpoint) | `/modules/{module}?section=...` | `app/Livewire/Learning/ModulePlayer.php`, `resources/views/livewire/learning/partials/*`, `app/Services/ModuleOutlineService.php` |
-| Pengantar + Inti Materi multi-kolom | (di langkah Pahami) | `app/Models/ModuleCoreSection.php`, `partials/pahami.blade.php` |
+| Pengantar + Inti Materi multi-kolom (Markdown: `#` hijau, `##`, `###`, **tebal**, daftar, kutipan; teks lama tetap tampil) | (di langkah Pahami) | `app/Models/ModuleCoreSection.php`, `partials/pahami.blade.php`, `components/learning/rich-content.blade.php`, `RichContentRenderer.php`, `resources/css/prose.css` |
 | Quick Question (benar/salah, dikoreksi sistem) | (di langkah Quick) | `app/Models/QuickQuestion.php`, `partials/quick.blade.php` |
 | Praktik + penilaian AI (label, bukan skor) | (di langkah Praktik) | `app/Services/PracticeSubmissionService.php`, `app/Jobs/EvaluatePracticeFeedback.php`, `app/Services/AiFeedbackService.php`, `app/Enums/AiScoreLabel.php` |
 | AI Mentor (saran pertanyaan admin + kuota 5/modul) | (di langkah Praktik) | `app/Livewire/Learning/MentorChat.php`, `app/Services/ModuleMentorService.php`, `MentorQuotaService.php` |
@@ -179,7 +179,7 @@ Detail lengkap: [`AGENTS.md`](AGENTS.md) dan [`docs/architecture.md`](docs/archi
 ### Alur kerja penyusun kurikulum (admin)
 
 1. Buat modul (selalu tersimpan sebagai **Draf**).
-2. Isi informasi dasar, kata pengantar, materi Pahami (ringkasan, poin penting, **kolom Inti Materi**, video), pertanyaan brainstorming, **saran pertanyaan AI Mentor** (jawaban tim opsional), dan rubrik AI.
+2. Isi informasi dasar, kata pengantar, materi Pahami (ringkasan, poin penting, **kolom Inti Materi**, video; kata pengantar, ringkasan, dan isi kolom memakai editor Markdown dengan panduan format singkat, cek hasilnya di *Pratinjau*), pertanyaan brainstorming, **saran pertanyaan AI Mentor** (jawaban tim opsional), dan rubrik AI.
 3. Tambah Quick Question dan Latihan praktik dari tabel di halaman modul.
 4. Buka **Pratinjau**, perbaiki item merah di checklist kelengkapan, lalu **Terbitkan**.
 

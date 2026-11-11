@@ -1,4 +1,4 @@
-{{-- Pahami step: video, Kata Pengantar, Inti Materi columns (falls back to the legacy inti_material text), then Ringkasan and Insight. --}}
+{{-- Pahami step: video, Kata Pengantar, Inti Materi columns (falls back to the legacy inti_material text), then Ringkasan and Insight. Long text is Markdown rendered by x-learning.rich-content. --}}
 @php
     // modules.insights is a JSON list written by the admin editor. Only
     // non-empty text items are shown, so a blank or malformed entry can never
@@ -74,13 +74,14 @@
                                 <span class="min-w-0 pt-0.5 break-words">{{ $core_section->subtitle }}</span>
                             </h4>
 
-                            <p class="mt-3 max-w-3xl text-[0.9375rem] leading-relaxed break-words whitespace-pre-line text-zinc-700 sm:ps-10">{{ $core_section->body }}</p>
+                            {{-- Markdown body: "#" nests under this column's <h4> subtitle, so it starts at <h5>. --}}
+                            <x-learning.rich-content :content="$core_section->body" :level="5" class="mt-3 sm:ps-10" />
                         </li>
                     @endforeach
                 </ol>
             @else
                 <div class="rounded-3xl border border-brand-teal/25 bg-brand-teal/5 p-5">
-                    <p class="max-w-3xl text-[0.9375rem] leading-relaxed whitespace-pre-line text-zinc-700">{{ $module->inti_material }}</p>
+                    <x-learning.rich-content :content="$module->inti_material" :level="4" />
                 </div>
             @endif
         </section>
@@ -95,9 +96,9 @@
                         {{ __('Ringkasan materi') }}
                     </h3>
 
-                    <p class="max-w-3xl border-s-4 border-brand-amber/60 ps-4 text-[0.9375rem] leading-relaxed whitespace-pre-line text-zinc-600 dark:border-brand-amber/40 dark:text-zinc-300">
-                        {{ $module->summary_material }}
-                    </p>
+                    <div class="border-s-4 border-brand-amber/60 ps-4">
+                        <x-learning.rich-content :content="$module->summary_material" :level="4" />
+                    </div>
                 </section>
             @endif
 

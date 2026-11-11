@@ -1,0 +1,143 @@
+/*
+ * .sk-prose: brand style for curriculum material rendered from Markdown
+ * (x-learning.rich-content / RichContentRenderer).
+ *
+ * Plain CSS with literal brand colors so the same file styles the mentee app
+ * (imported by app.css) and the Filament module preview (loaded through a
+ * panel render hook), which does not ship the Tailwind theme tokens.
+ *
+ * Headings: # = .sk-h1 (teal, required by the brand guideline),
+ * ## = .sk-h2 (ink with an orange marker), ### = .sk-h3 (bold ink).
+ * Contrast on white: teal #277c93 4.9:1, ink #1b1b18 17:1, body #3f3f46 10:1 (WCAG AA).
+ */
+.sk-prose {
+    --sk-prose-teal: #277c93;
+    --sk-prose-teal-deep: #1c5f73;
+    --sk-prose-orange: #f2994a;
+    --sk-prose-amber: #f2c94c;
+    --sk-prose-amber-soft: #fdf1cd;
+    --sk-prose-ink: #1b1b18;
+    --sk-prose-body: #3f3f46;
+
+    max-width: 70ch;
+    color: var(--sk-prose-body);
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+}
+
+.sk-prose > * + * {
+    margin-top: 0.9em;
+}
+
+.sk-prose > :first-child {
+    margin-top: 0;
+}
+
+.sk-prose p {
+    margin-bottom: 0;
+}
+
+.sk-prose .sk-h1,
+.sk-prose .sk-h2,
+.sk-prose .sk-h3 {
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+}
+
+.sk-prose .sk-h1 {
+    margin-top: 1.6em;
+    color: var(--sk-prose-teal);
+    font-size: 1.25em;
+    font-weight: 800;
+}
+
+.sk-prose .sk-h2 {
+    margin-top: 1.4em;
+    padding-inline-start: 0.65rem;
+    border-inline-start: 4px solid var(--sk-prose-orange);
+    color: var(--sk-prose-ink);
+    font-size: 1.1em;
+    font-weight: 700;
+}
+
+.sk-prose .sk-h3 {
+    margin-top: 1.2em;
+    color: var(--sk-prose-ink);
+    font-size: 1em;
+    font-weight: 700;
+}
+
+.sk-prose .sk-h1 + *,
+.sk-prose .sk-h2 + *,
+.sk-prose .sk-h3 + * {
+    margin-top: 0.45em;
+}
+
+.sk-prose strong,
+.sk-prose b {
+    color: var(--sk-prose-ink);
+    font-weight: 650;
+}
+
+.sk-prose em {
+    font-style: italic;
+}
+
+.sk-prose ul,
+.sk-prose ol {
+    padding-inline-start: 1.35rem;
+}
+
+.sk-prose ul {
+    list-style: disc;
+}
+
+.sk-prose ol {
+    list-style: decimal;
+}
+
+.sk-prose li + li {
+    margin-top: 0.4em;
+}
+
+.sk-prose li::marker {
+    color: var(--sk-prose-teal);
+    font-weight: 700;
+}
+
+.sk-prose li > ul,
+.sk-prose li > ol {
+    margin-top: 0.4em;
+}
+
+.sk-prose blockquote {
+    padding: 0.75rem 1rem;
+    border-inline-start: 3px solid var(--sk-prose-amber);
+    border-radius: 0 0.75rem 0.75rem 0;
+    background-color: var(--sk-prose-amber-soft);
+    color: var(--sk-prose-ink);
+}
+
+.sk-prose a {
+    color: var(--sk-prose-teal);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.sk-prose a:hover {
+    color: var(--sk-prose-teal-deep);
+}
+
+.sk-prose hr {
+    border: 0;
+    border-top: 1px solid color-mix(in oklab, var(--sk-prose-teal) 20%, transparent);
+}
+
+.sk-prose code {
+    padding: 0.1em 0.35em;
+    border-radius: 0.35rem;
+    background-color: color-mix(in oklab, var(--sk-prose-teal) 10%, white);
+    font-size: 0.9em;
+}

@@ -12,6 +12,7 @@ use App\Models\Module;
 use App\Services\BrainstormingConfigService;
 use Closure;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -35,6 +36,33 @@ use Illuminate\Support\Str;
  */
 class ModuleForm
 {
+    /**
+     * Short Markdown cheat sheet shown under the material editors.
+     */
+    private const MARKDOWN_HINT = 'Format: "# Judul" (hijau), "## Subjudul", "### Sub-bagian", **tebal** untuk poin utama, "- " untuk daftar, "> " untuk kutipan. Teks biasa tetap tampil rapi.';
+
+    /**
+     * Build a Markdown editor for curriculum material.
+     *
+     * Markdown (not RichEditor HTML) keeps old plain-text material valid and
+     * keeps the AI prompts that read these fields free of markup noise. The
+     * mentee view renders it with RichContentRenderer (raw HTML stripped).
+     *
+     * @param  string  $name  Column name.
+     * @return MarkdownEditor The configured editor.
+     */
+    private static function materialEditor(string $name): MarkdownEditor
+    {
+        return MarkdownEditor::make($name)
+            ->toolbarButtons([
+                ['heading', 'bold', 'italic', 'link'],
+                ['bulletList', 'orderedList', 'blockquote'],
+                ['undo', 'redo'],
+            ])
+            ->fileAttachments(false)
+            ->columnSpanFull();
+    }
+
     /**
      * Determine whether the selected module category is Template.
      *
@@ -187,22 +215,20 @@ class ModuleForm
                 Section::make('2. Kata pengantar')
                     ->description('Orientasi singkat sebelum mentee mengerjakan quick question dan latihan praktik. Kosongkan bila modul tidak memerlukannya.')
                     ->schema([
-                        Textarea::make('introduction')
+                        self::materialEditor('introduction')
                             ->label('Kata pengantar modul')
                             ->placeholder('Contoh: Sebelum berlatih, pahami dulu apa yang dinilai penyelenggara beasiswa pada bagian ini.')
-                            ->rows(4)
-                            ->columnSpanFull()
-                            ->helperText('Tampil dua kali di sisi mentee: di awal langkah Pahami (tepat sebelum inti materi) dan sebelum latihan praktik.'),
+                            ->minHeight('8rem')
+                            ->helperText('Tampil dua kali di sisi mentee: di awal langkah Pahami (tepat sebelum inti materi) dan sebelum latihan praktik. '.self::MARKDOWN_HINT),
                     ]),
 
                 Section::make('3. Materi langkah Pahami')
                     ->description('Bahan bacaan yang dibuka mentee pada langkah Pahami. Isi minimal salah satu bagian.')
                     ->schema([
-                        Textarea::make('summary_material')
+                        self::materialEditor('summary_material')
                             ->label('Ringkasan materi')
-                            ->rows(3)
-                            ->columnSpanFull()
-                            ->helperText('Ikhtisar singkat yang dibaca mentee paling awal.'),
+                            ->minHeight('7rem')
+                            ->helperText('Ikhtisar singkat yang dibaca mentee paling awal. '.self::MARKDOWN_HINT),
                         ListRepeater::make(
                             name: 'insights',
                             addItemLabel: 'Tambah poin penting',
@@ -223,12 +249,12 @@ class ModuleForm
                                     ->required()
                                     ->maxLength(255)
                                     ->columnSpanFull(),
-                                Textarea::make('body')
+                                self::materialEditor('body')
                                     ->label('Isi')
                                     ->placeholder('Tulis dengan sapaan "kamu" dan kalimat sederhana.')
                                     ->required()
-                                    ->rows(6)
-                                    ->columnSpanFull(),
+                                    ->minHeight('12rem')
+                                    ->helperText(self::MARKDOWN_HINT),
                             ])
                             ->itemLabel(fn (array $state): string => filled($state['subtitle'] ?? null)
                                 ? Str::limit((string) $state['subtitle'], 70)
@@ -237,10 +263,9 @@ class ModuleForm
                             ->defaultItems(0)
                             ->helperText('Tampil tepat setelah kata pengantar di langkah Pahami. Satu kolom atau lebih, masing-masing dengan subjudul. Tarik barisnya untuk mengubah urutan.')
                             ->columnSpanFull(),
-                        Textarea::make('inti_material')
+                        self::materialEditor('inti_material')
                             ->label('Inti materi lama (satu teks)')
-                            ->rows(4)
-                            ->columnSpanFull()
+                            ->minHeight('8rem')
                             ->visible(fn (?Module $record): bool => filled($record?->inti_material))
                             ->helperText('Hanya tampil ke mentee selama modul belum punya kolom inti materi di atas. Pindahkan isinya ke kolom baru, lalu kosongkan teks ini.'),
                         Toggle::make('has_video')

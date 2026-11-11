@@ -44,12 +44,21 @@
     "src": "_rubik-800-normal-Dq1miTTj.woff"
   },
   "resources/css/app.css": {
-    "file": "assets/app-BXiysoyi.css",
+    "file": "assets/app-CRacHaLf.css",
     "name": "app",
     "names": [
       "app.css"
     ],
     "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/css/prose.css": {
+    "file": "assets/prose-DMOXMoWB.css",
+    "name": "prose",
+    "names": [
+      "prose.css"
+    ],
+    "src": "resources/css/prose.css",
     "isEntry": true
   },
   "resources/js/app.js": {

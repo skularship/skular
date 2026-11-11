@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Modules\Pages;
 
 use App\Contracts\ModuleOutlineServiceInterface;
 use App\Contracts\ModuleReadinessServiceInterface;
+use App\Contracts\RichContentRendererInterface;
 use App\Data\ModuleReadinessCheckData;
 use App\Data\PracticeFieldData;
 use App\Enums\PracticeFieldType;
@@ -17,6 +18,7 @@ use Filament\Actions\Action;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
 use Filament\Resources\Pages\Page;
 use Filament\Schemas\Components\Callout;
+use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\UnorderedList;
@@ -377,8 +379,12 @@ class PreviewModule extends Page
 
     /**
      * Render stored long text the way the mentee view renders it.
+     *
+     * Uses the same RichContentRenderer and .sk-prose stylesheet (loaded in
+     * the panel head) as x-learning.rich-content, so headings, bold text and
+     * lists look identical to the mentee view.
      */
-    private function paragraph(?string $text): Text
+    private function paragraph(?string $text): Text|Html
     {
         if (! filled($text)) {
             return Text::make('Kata pengantar belum diisi — bagian ini tidak tampil untuk mentee.')
@@ -387,7 +393,9 @@ class PreviewModule extends Page
                 ->size('sm');
         }
 
-        return Text::make(new HtmlString(nl2br(e($text))));
+        $html = app(RichContentRendererInterface::class)->toHtml($text);
+
+        return Html::make(new HtmlString('<div class="sk-prose" data-test="preview-rich-content">'.$html.'</div>'));
     }
 
     /**

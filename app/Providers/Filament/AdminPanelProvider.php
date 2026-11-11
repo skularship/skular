@@ -13,12 +13,14 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 
@@ -49,6 +51,9 @@ class AdminPanelProvider extends PanelProvider
             // admin URLs (/admin/users/...) and 404'd. Same icon as the public
             // layouts (resources/views/partials/head.blade.php).
             ->favicon('/favicon.png')
+            // The module preview renders curriculum Markdown exactly like the
+            // mentee view, so it needs the same .sk-prose stylesheet.
+            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => Blade::render("@vite('resources/css/prose.css')"))
             ->colors([
                 // Skular amber-to-orange primary palette.
                 'primary' => [

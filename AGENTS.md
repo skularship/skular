@@ -44,6 +44,7 @@ Dokumentasi lengkap: `README.md` (setup, env, fitur, deploy) dan `docs/` (`archi
 - Copy UI Bahasa Indonesia; test meng-assert string Indonesia.
 - UI **light-only** (dijaga `LightModeTest`); jangan menambah pengaturan tema.
 - Ikon: `<x-icons.app-icon>` (render via `svg()`); jangan diganti `<x-dynamic-component>`.
+- Teks materi kurikulum (kata pengantar, ringkasan, Inti Materi) ditulis **Markdown** dan dirender lewat `<x-learning.rich-content>` (`RichContentRendererInterface`, gaya `.sk-prose` di `resources/css/prose.css`). HTML mentah dibuang; jangan echo teks materi dari database dengan `{!! !!}` di tempat lain.
 - Format: `vendor/bin/pint --format agent <path>`.
 - **Commit:** satu commit per perubahan logis, pesan dalam Bahasa Indonesia dengan prefix tipe (`feat(...)`, `fix(...)`, `docs(...)`, `build:`), badan menjelaskan *apa* dan *mengapa*. Stage file secara eksplisit; jangan `git add -A` bila ada perubahan orang lain di working tree.
 

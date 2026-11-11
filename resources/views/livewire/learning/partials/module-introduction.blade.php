@@ -29,9 +29,7 @@
             </div>
         </div>
 
-        <p class="text-sm leading-relaxed whitespace-pre-line text-zinc-700 dark:text-zinc-200">
-            {{ $module->introduction }}
-        </p>
+        <x-learning.rich-content :content="$module->introduction" :level="4" />
 
         <p class="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
             <x-icons.app-icon name="arrow-right" class="size-3.5 text-brand-orange" />

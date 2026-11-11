@@ -17,6 +17,7 @@ use App\Contracts\PracticeSubmissionServiceInterface;
 use App\Contracts\ProfilingServiceInterface;
 use App\Contracts\ProgressServiceInterface;
 use App\Contracts\ReadinessScoringServiceInterface;
+use App\Contracts\RichContentRendererInterface;
 use App\Contracts\ScholarshipApplicationServiceInterface;
 use App\Contracts\ScholarshipImageServiceInterface;
 use App\Contracts\ScholarshipMatchingServiceInterface;
@@ -38,6 +39,7 @@ use App\Services\PracticeSubmissionService;
 use App\Services\ProfilingService;
 use App\Services\ProgressService;
 use App\Services\ReadinessScoringService;
+use App\Services\RichContentRenderer;
 use App\Services\ScholarshipApplicationService;
 use App\Services\ScholarshipImageService;
 use App\Services\ScholarshipMatchingService;
@@ -171,6 +173,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ProfilingServiceInterface::class, ProfilingService::class);
         $this->app->bind(ProgressServiceInterface::class, ProgressService::class);
         $this->app->bind(ReadinessScoringServiceInterface::class, ReadinessScoringService::class);
+        // Scoped: one CommonMark environment and memo per request/job, reset afterwards.
+        $this->app->scoped(RichContentRendererInterface::class, RichContentRenderer::class);
         $this->app->bind(ScholarshipApplicationServiceInterface::class, ScholarshipApplicationService::class);
         $this->app->bind(ScholarshipImageServiceInterface::class, ScholarshipImageService::class);
         $this->app->bind(ScholarshipMatchingServiceInterface::class, ScholarshipMatchingService::class);
