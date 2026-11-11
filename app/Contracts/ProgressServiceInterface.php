@@ -3,6 +3,7 @@
 namespace App\Contracts;
 
 use App\Data\FaseProgressData;
+use App\Data\FocusedRoadmapData;
 use App\Data\LearningOverviewData;
 use App\Data\ModuleProgressData;
 use App\Data\ProgressSummaryData;
@@ -47,6 +48,18 @@ interface ProgressServiceInterface
      * Passing null resolves the scholarship currently in focus.
      */
     public function overview(User $user, ?Scholarship $scholarship = null): LearningOverviewData;
+
+    /**
+     * Reduce a full roadmap to what the mentee may see on the roadmap page.
+     *
+     * Finished fases and the active fase keep their modules; every later
+     * unfinished fase is reduced to its name. Pure: it reads no data and
+     * never changes unlock rules.
+     *
+     * @param  array<int, FaseProgressData>  $roadmap  Output of overview()->roadmap.
+     * @return FocusedRoadmapData The filtered roadmap.
+     */
+    public function focusRoadmap(array $roadmap): FocusedRoadmapData;
 
     /**
      * Get the roadmap entry that follows a module on the active path.

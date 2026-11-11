@@ -61,7 +61,8 @@ sequenceDiagram
     R->>SA: select(user, ids, primary)
     SA->>SA: lockForUpdate baris user, cek MAX_SELECTIONS = 5
     R-->>M: redirect /dashboard
-    M->>D: roadmap = modul Inti + Template beasiswa aktif
+    M->>D: ringkasan + kartu roadmap (fase aktif)
+    M->>D: /roadmap = modul Inti + Template beasiswa aktif,<br/>difokuskan oleh ProgressService::focusRoadmap()
 ```
 
 ## 4. Alur modul pembelajaran

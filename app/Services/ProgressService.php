@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Contracts\LearningPathServiceInterface;
 use App\Contracts\ProgressServiceInterface;
+use App\Data\FaseOutlineData;
 use App\Data\FaseProgressData;
+use App\Data\FocusedRoadmapData;
 use App\Data\LearningOverviewData;
 use App\Data\ModuleProgressData;
 use App\Data\ProgressSummaryData;
@@ -94,6 +96,54 @@ class ProgressService implements ProgressServiceInterface
         return new LearningOverviewData(
             summary: $this->buildSummary($rows),
             roadmap: $this->buildRoadmap($rows, $this->orderedFases()),
+        );
+    }
+
+    /**
+     * Reduce a full roadmap to what the mentee may see on the roadmap page.
+     *
+     * @param  array<int, FaseProgressData>  $roadmap  Output of overview()->roadmap.
+     * @return FocusedRoadmapData The filtered roadmap.
+     */
+    public function focusRoadmap(array $roadmap): FocusedRoadmapData
+    {
+        $completed = [];
+        $active = null;
+        $upcoming = null;
+        $locked = [];
+
+        foreach ($roadmap as $fase) {
+            // A finished fase stays fully visible wherever it sits: shared Inti
+            // fases finished on an earlier scholarship path can lie ahead of
+            // the active Template fase, and their modules are already open.
+            if ($fase->isCompleted()) {
+                $completed[] = $fase;
+
+                continue;
+            }
+
+            if ($active === null) {
+                $active = $fase;
+
+                continue;
+            }
+
+            // Everything else ahead is reduced to its name here, so module
+            // titles of a locked fase never reach a view or Livewire payload.
+            $outline = FaseOutlineData::fromProgress($fase);
+
+            if ($upcoming === null) {
+                $upcoming = $outline;
+            } else {
+                $locked[] = $outline;
+            }
+        }
+
+        return new FocusedRoadmapData(
+            completed: $completed,
+            active: $active,
+            upcoming: $upcoming,
+            locked: $locked,
         );
     }
 

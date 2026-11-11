@@ -1,4 +1,4 @@
-{{-- Mentee dashboard (App\Livewire\Dashboard): progress summary, AI result label (never the numeric score) and the roadmap per fase. --}}
+{{-- Mentee dashboard (App\Livewire\Dashboard): progress summary, AI result label (never the numeric score) and a compact roadmap card linking to /roadmap. --}}
 @php
     $first_name = \Illuminate\Support\Str::before($user->name, ' ');
 
@@ -288,23 +288,12 @@
                                     {{ __('Berikutnya: :name', ['name' => $next_application->scholarship?->scholarship_name ?? __('beasiswa berikutnya')]) }}
                                 </p>
                                 <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                    {{ __('Template khusus yang akan kamu pelajari:') }}
+                                    @if ($next_template_count === 0)
+                                        {{ __('Belum ada modul Template untuk beasiswa ini. Tim Skular sedang menyiapkannya.') }}
+                                    @else
+                                        {{ __(':count modul Template khusus menunggumu. Isinya terbuka saat jalurnya dimulai.', ['count' => $next_template_count]) }}
+                                    @endif
                                 </p>
-
-                                @if ($next_templates->isEmpty())
-                                    <p class="mt-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                                        {{ __('Belum ada modul Template untuk beasiswa ini. Admin sedang menyiapkannya.') }}
-                                    </p>
-                                @else
-                                    <ul class="mt-2 flex flex-col gap-1">
-                                        @foreach ($next_templates as $template)
-                                            <li class="flex items-start gap-2 text-xs text-zinc-600 dark:text-zinc-300">
-                                                <x-icons.app-icon name="document-text" class="mt-0.5 size-3.5 shrink-0 text-brand-teal dark:text-brand-teal-light" />
-                                                {{ $template->title }}
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                @endif
                             </div>
                         @else
                             <p class="mt-4 rounded-2xl bg-zinc-50 px-4 py-3 text-sm text-zinc-600 dark:bg-white/5 dark:text-zinc-300">
@@ -357,128 +346,47 @@
                     </x-ui.card>
                 @endif
 
-                {{-- F. Roadmap --}}
-                <div class="flex items-center justify-between gap-3">
-                    <h2 class="text-lg font-bold tracking-tight text-zinc-900 dark:text-white">{{ __('Roadmap belajar') }}</h2>
-                    <x-ui.pill variant="brand" icon="flag">{{ __(':percentage% selesai', ['percentage' => $summary->percentage]) }}</x-ui.pill>
-                </div>
-
-                <p class="-mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                    {{ __('Modul Inti dipakai bersama semua beasiswa, jadi sekali selesai akan tetap selesai di jalur berikutnya. Modul Template mengikuti beasiswa aktif.') }}
-                </p>
-
-                @if ($active_application && $summary->template_total_modules === 0)
-                    <p class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-medium text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
-                        {{ __('Belum ada modul Template untuk beasiswa ini. Kamu tetap bisa menyelesaikan Modul Inti; admin sedang menyiapkan materi khusus beasiswanya.') }}
-                    </p>
-                @endif
-
-                @forelse ($roadmap as $fase)
-                    <x-ui.card padding="none" class="overflow-hidden">
-                        <div class="flex flex-wrap items-center justify-between gap-3 bg-linear-to-r from-brand-teal/8 to-brand-amber/8 px-5 py-4 dark:from-brand-teal/15 dark:to-brand-amber/10">
-                            <div class="min-w-0">
-                                <p class="text-sm font-bold text-zinc-900 dark:text-white">{{ $fase->title }}</p>
-                                @if (filled($fase->subtitle))
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $fase->subtitle }}</p>
-                                @endif
-                            </div>
-
-                            <div class="flex min-w-[9rem] flex-col gap-1.5">
-                                <span class="text-xs font-semibold text-zinc-600 dark:text-zinc-300">
-                                    {{ __(':done/:total modul', ['done' => $fase->completed_modules, 'total' => $fase->total_modules]) }}
-                                </span>
-                                <x-ui.progress :value="$fase->percentage" :showValue="false" size="sm" />
-                            </div>
+                {{-- F. Roadmap summary; the full roadmap lives on /roadmap (App\Livewire\Roadmap). --}}
+                <x-ui.card class="flex flex-col gap-4" data-test="dashboard-roadmap">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <x-ui.icon-badge icon="map" tone="teal" />
+                            <h2 class="text-lg font-bold tracking-tight text-zinc-900">{{ __('Roadmap belajar') }}</h2>
                         </div>
+                        <x-ui.pill variant="brand" icon="flag">{{ __(':percentage% selesai', ['percentage' => $summary->percentage]) }}</x-ui.pill>
+                    </div>
 
-                        <ol class="flex flex-col p-5">
-                            @foreach ($fase->modules as $module)
-                                <li class="relative flex gap-4 pb-6 last:pb-0">
-                                    @if (! $loop->last)
-                                        <span @class([
-                                            'absolute top-10 bottom-0 left-[1.125rem] w-0.5 rounded-full',
-                                            'brand-gradient' => $module->isCompleted(),
-                                            'bg-zinc-200 dark:bg-zinc-700' => ! $module->isCompleted(),
-                                        ])></span>
-                                    @endif
+                    @if ($roadmap_focus->active)
+                        <div class="rounded-2xl bg-brand-teal/5 px-4 py-3">
+                            <p class="text-xs font-bold tracking-wide text-brand-teal uppercase">{{ __('Fase aktif') }}</p>
+                            <p class="mt-0.5 text-sm font-bold break-words text-zinc-900">{{ $roadmap_focus->active->title }}</p>
+                            <div class="mt-2 flex items-center gap-3">
+                                <x-ui.progress :value="$roadmap_focus->active->percentage" :showValue="false" size="sm" class="flex-1" />
+                                <span class="shrink-0 text-xs font-semibold text-zinc-600">
+                                    {{ __(':done/:total modul', ['done' => $roadmap_focus->active->completed_modules, 'total' => $roadmap_focus->active->total_modules]) }}
+                                </span>
+                            </div>
+                            @if ($roadmap_focus->upcoming)
+                                <p class="mt-2 inline-flex items-center gap-1 text-xs text-zinc-500">
+                                    <x-icons.app-icon name="lock-closed" class="size-3.5" />
+                                    {{ __('Berikutnya: :fase', ['fase' => $roadmap_focus->upcoming->title]) }}
+                                </p>
+                            @endif
+                        </div>
+                    @elseif ($roadmap_focus->isFinished())
+                        <p class="rounded-2xl bg-brand-mint-soft/70 px-4 py-3 text-sm font-medium text-zinc-700">
+                            {{ __('Semua fase di jalur ini sudah selesai. Kamu tetap bisa membuka ulang modulnya.') }}
+                        </p>
+                    @else
+                        <p class="rounded-2xl bg-zinc-50 px-4 py-3 text-sm text-zinc-600" data-test="roadmap-empty">
+                            {{ __('Roadmap belum tersedia. Pilih beasiswa atau tunggu tim Skular menambahkan modul.') }}
+                        </p>
+                    @endif
 
-                                    <span @class([
-                                        'relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full border-2 shadow-sm transition',
-                                        'brand-gradient border-transparent text-brand-ink' => $module->isCompleted(),
-                                        'border-brand-teal bg-white text-brand-teal ring-4 ring-brand-teal/15 dark:bg-zinc-800 dark:text-brand-teal-light' => $module->isInProgress(),
-                                        'border-brand-teal/60 bg-white text-brand-teal dark:bg-zinc-800 dark:text-brand-teal-light' => ! $module->isCompleted() && ! $module->isInProgress() && $module->isUnlocked(),
-                                        'border-zinc-200 bg-zinc-50 text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500' => $module->isLocked(),
-                                    ])>
-                                        <x-icons.app-icon :name="$module->statusIcon()" class="size-4" />
-                                    </span>
-
-                                    <div class="min-w-0 flex-1">
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <p @class([
-                                                'text-sm font-semibold',
-                                                'text-zinc-900 dark:text-white' => $module->isUnlocked(),
-                                                'text-zinc-400 dark:text-zinc-500' => $module->isLocked(),
-                                            ])>
-                                                @if ($module->isUnlocked())
-                                                    <a href="{{ route('modules.show', $module->id) }}" wire:navigate class="transition hover:text-brand-teal dark:hover:text-brand-teal-light">
-                                                        {{ $module->modul_order }}. {{ $module->title }}
-                                                    </a>
-                                                @else
-                                                    {{ $module->modul_order }}. {{ $module->title }}
-                                                @endif
-                                            </p>
-
-                                            <x-ui.pill variant="info">{{ $module->category->label() }}</x-ui.pill>
-
-                                            @if ($module->isShared())
-                                                <span class="inline-flex items-center gap-1 text-xs font-semibold text-brand-teal dark:text-brand-teal-light">
-                                                    <x-icons.app-icon name="share" class="size-3.5" />
-                                                    {{ __('Dipakai bersama') }}
-                                                </span>
-                                            @endif
-
-                                            @if ($module->duration)
-                                                <span class="inline-flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                                    <x-icons.app-icon name="clock" class="size-3.5" />
-                                                    {{ __(':minutes menit', ['minutes' => $module->duration]) }}
-                                                </span>
-                                            @endif
-                                        </div>
-
-                                        <div class="mt-1.5 flex flex-wrap items-center gap-2">
-                                            <x-ui.pill :variant="$module->isCompleted() ? 'success' : ($module->isInProgress() ? 'info' : 'neutral')" :icon="$module->statusIcon()">{{ $module->status->label() }}</x-ui.pill>
-
-                                            @if ($module->score !== null)
-                                                @php $module_score_label = \App\Enums\AiScoreLabel::fromScore($module->score); @endphp
-                                                <x-ui.pill :variant="$module_score_label->variant()" icon="star">{{ $module_score_label->label() }}</x-ui.pill>
-                                            @endif
-
-                                            @if ($module->isLocked())
-                                                <span class="inline-flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                                    <x-icons.app-icon name="lock-closed" class="size-3.5" />
-                                                    {{ __('Selesaikan modul sebelumnya untuk membuka') }}
-                                                </span>
-                                            @else
-                                                <a href="{{ route('modules.show', $module->id) }}" wire:navigate class="inline-flex items-center gap-1 text-xs font-bold text-brand-teal transition hover:underline dark:text-brand-teal-light">
-                                                    {{ $module->isCompleted() ? __('Ulangi modul') : ($module->isInProgress() ? __('Lanjutkan modul') : __('Mulai modul')) }}
-                                                    <x-icons.app-icon name="arrow-right" class="size-3" />
-                                                </a>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </li>
-                            @endforeach
-                        </ol>
-                    </x-ui.card>
-                @empty
-                    <x-ui.empty-state
-                        variant="activity"
-                        icon="map"
-                        :title="__('Roadmap belum tersedia')"
-                        :description="__('Pilih beasiswa atau tunggu admin menambahkan modul pembelajaran.')"
-                        data-test="roadmap-empty"
-                    />
-                @endforelse
+                    <x-actions.link-button :href="route('roadmap.show')" wire:navigate variant="outline" iconTrailing="arrow-right" class="justify-center sm:self-start" data-test="open-roadmap">
+                        {{ __('Buka roadmap lengkap') }}
+                    </x-actions.link-button>
+                </x-ui.card>
             </section>
         </div>
 

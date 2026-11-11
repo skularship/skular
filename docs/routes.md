@@ -13,7 +13,8 @@ Skular adalah aplikasi **Livewire server-rendered**, bukan API JSON. Aksi di hal
 | `/auth/google/redirect`, `/auth/google/callback` | Login/daftar dengan Google | Publik, throttle 30/menit |
 | `/profiling` | Wizard profiling 8 langkah (`?step=1..8`) | auth + verified |
 | `/profiling/recommendation` | Rekomendasi beasiswa, pilih ≤ 5 + 1 utama | auth + verified |
-| `/dashboard` | Ringkasan progres, beasiswa aktif, roadmap | auth + verified |
+| `/dashboard` | Ringkasan progres, beasiswa aktif, kartu ringkas roadmap (fase aktif) | auth + verified |
+| `/roadmap` | Roadmap Belajar: fase selesai, fase aktif + modulnya, fase berikutnya (nama saja), fase lain tertutup awan | auth + verified |
 | `/modules/{module}` | Module player (`?section=opening\|pahami\|quick\|praktik\|checkpoint`); draf → 404, modul terkunci → 403, checkpoint dialihkan ke praktik bila gate belum terpenuhi | auth + verified |
 | `/library` | Modul Perpustakaan (opsional) | auth + verified |
 | `/scholarships` | Katalog beasiswa (`?q`, `?jenjang`, `?cakupan`, `?lokasi`, `?ditutup`, `?urut`, `?page`) | auth + verified |
@@ -39,6 +40,7 @@ Skular adalah aplikasi **Livewire server-rendered**, bukan API JSON. Aksi di hal
 | GET | `/cv` | cv.show | `Livewire\Cv\Show (Livewire page)` | `auth`, `verified` |
 | GET | `/dashboard` | dashboard | `Livewire\Dashboard (Livewire page)` | `auth`, `verified` |
 | GET | `/faq` | faq.index | `Livewire\Faq\Index (Livewire page)` | — |
+| GET | `/roadmap` | roadmap.show | `Livewire\Roadmap (Livewire page)` | `auth`, `verified` |
 | GET | `/library` | library.index | `Livewire\Learning\Library (Livewire page)` | `auth`, `verified` |
 | GET | `/modules/{module}` | modules.show | `Livewire\Learning\ModulePlayer (Livewire page)` | `auth`, `verified` |
 | GET | `/profiling/recommendation` | profiling.recommendation | `Livewire\Scholarships\Recommendation (Livewire page)` | `auth`, `verified` |

@@ -74,7 +74,7 @@
             $bottom_links = [
                 ['route' => 'dashboard', 'label' => __('Beranda'), 'icon' => 'home', 'pattern' => 'dashboard'],
                 ['route' => 'scholarships.index', 'label' => __('Beasiswa'), 'icon' => 'magnifying-glass', 'pattern' => 'scholarships.index'],
-                ['route' => 'library.index', 'label' => __('Belajar'), 'icon' => 'book-open', 'pattern' => 'library.*'],
+                ['route' => 'roadmap.show', 'label' => __('Roadmap'), 'icon' => 'map', 'pattern' => 'roadmap.show'],
                 ['route' => 'cv.show', 'label' => __('CV'), 'icon' => 'document-text', 'pattern' => 'cv.show'],
                 ['route' => 'profiling', 'label' => __('Profil'), 'icon' => 'user-circle', 'pattern' => 'profiling'],
             ];

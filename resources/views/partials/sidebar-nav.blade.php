@@ -10,6 +10,7 @@
             'label' => __('Ruang Belajar'),
             'links' => [
                 ['route' => 'dashboard', 'label' => __('Beranda'), 'icon' => 'home', 'pattern' => 'dashboard'],
+                ['route' => 'roadmap.show', 'label' => __('Roadmap Belajar'), 'icon' => 'map', 'pattern' => 'roadmap.show'],
                 ['route' => 'library.index', 'label' => __('Perpustakaan'), 'icon' => 'book-open', 'pattern' => 'library.*'],
             ],
         ],

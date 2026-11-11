@@ -2,7 +2,7 @@
  * Skular mentee read-path load test (k6).
  *
  * This intentionally exercises only cheap, authenticated read paths:
- * login → dashboard → scholarship catalog → library. It never calls AI
+ * login → dashboard → roadmap → scholarship catalog → library. It never calls AI
  * providers, never submits practice forms and never touches production data.
  *
  * Usage (staging only):
@@ -34,6 +34,7 @@ export const options = {
   thresholds: {
     http_req_failed: ['rate<0.01'],
     'http_req_duration{page:dashboard}': ['p(95)<800'],
+    'http_req_duration{page:roadmap}': ['p(95)<800'],
     'http_req_duration{page:catalog}': ['p(95)<600'],
     'http_req_duration{page:library}': ['p(95)<600'],
   },
@@ -77,6 +78,12 @@ export default function () {
     check(dashboard, {
       'dashboard ok': (r) => r.status === 200,
       'dashboard has roadmap': (r) => r.body.includes('Roadmap belajar'),
+    });
+
+    const roadmap = http.get(`${BASE_URL}/roadmap`, { tags: { page: 'roadmap' } });
+    check(roadmap, {
+      'roadmap ok': (r) => r.status === 200,
+      'roadmap has title': (r) => r.body.includes('Roadmap Belajar'),
     });
 
     const catalog = http.get(`${BASE_URL}/scholarships`, { tags: { page: 'catalog' } });

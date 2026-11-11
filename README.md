@@ -147,7 +147,8 @@ public/build/              # Aset Vite hasil build (DI-COMMIT)
 | Rekomendasi & pemilihan beasiswa (maks 5; kartu 1:1 berisi gambar, nama, label kecocokan; alasan kecocokan di halaman detail) | `/profiling/recommendation` | `app/Livewire/Scholarships/Recommendation.php`, `app/Services/ScholarshipMatchingService.php`, `ScholarshipApplicationService.php`, `ScholarshipImageService.php`, `components/scholarship/card-image.blade.php` |
 | Katalog & detail beasiswa | `/scholarships`, `/scholarships/{scholarship}` | `app/Livewire/Scholarships/Index.php`, `Show.php` |
 | Beasiswa Saya (tracker, bukti, hasil) | `/scholarships/saya`, `/scholarships/{application}/proof` | `app/Livewire/Scholarships/Tracker.php`, `app/Http/Controllers/SubmissionProofController.php`, `app/Services/ScholarshipPathService.php` |
-| Dashboard & roadmap | `/dashboard` | `app/Livewire/Dashboard.php`, `app/Services/ProgressService.php`, `LearningPathService.php` |
+| Dashboard | `/dashboard` | `app/Livewire/Dashboard.php`, `app/Services/ProgressService.php`, `LearningPathService.php` |
+| Roadmap Belajar (fase aktif + modul; fase terkunci hanya nama, ditutup awan) | `/roadmap` | `app/Livewire/Roadmap.php`, `ProgressService::focusRoadmap()`, `app/Data/FocusedRoadmapData.php` |
 | Module player (Pembukaan → Pahami → Quick Question → Praktik → Checkpoint) | `/modules/{module}?section=...` | `app/Livewire/Learning/ModulePlayer.php`, `resources/views/livewire/learning/partials/*`, `app/Services/ModuleOutlineService.php` |
 | Pengantar + Inti Materi multi-kolom | (di langkah Pahami) | `app/Models/ModuleCoreSection.php`, `partials/pahami.blade.php` |
 | Quick Question (benar/salah, dikoreksi sistem) | (di langkah Quick) | `app/Models/QuickQuestion.php`, `partials/quick.blade.php` |

@@ -545,3 +545,48 @@
         transition: none;
     }
 }
+
+/* Roadmap: clouds drifting over the fases that are still locked. Pure CSS
+   transforms (GPU friendly); static clouds when the mentee prefers reduced motion. */
+.sk-cloud {
+    position: absolute;
+    height: auto;
+    color: white;
+    opacity: 0.9;
+    pointer-events: none;
+    filter: drop-shadow(0 6px 12px color-mix(in oklab, var(--color-brand-teal) 14%, transparent));
+}
+
+.sk-cloud--2 {
+    opacity: 0.75;
+}
+
+.sk-cloud--3 {
+    opacity: 0.6;
+}
+
+@keyframes skular-cloud-drift {
+    from {
+        transform: translate3d(-8%, 0, 0);
+    }
+
+    to {
+        transform: translate3d(8%, -4%, 0);
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .sk-cloud {
+        animation: skular-cloud-drift 14s ease-in-out infinite alternate;
+    }
+
+    .sk-cloud--2 {
+        animation-duration: 19s;
+        animation-delay: -6s;
+    }
+
+    .sk-cloud--3 {
+        animation-duration: 23s;
+        animation-delay: -11s;
+    }
+}

@@ -12,7 +12,6 @@ use App\Models\ScholarshipApplication;
 use App\Models\User;
 use App\Services\ScholarshipApplicationService;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Title;
@@ -30,7 +29,7 @@ use Livewire\Component;
 class Dashboard extends Component
 {
     /**
-     * Render the mentee dashboard with progress summary and roadmap (route dashboard).
+     * Render the mentee dashboard with progress summary and a roadmap summary card (route dashboard).
      *
      * @return View The livewire.dashboard view.
      */
@@ -72,14 +71,17 @@ class Dashboard extends Component
         return view('livewire.dashboard', [
             'user' => $user,
             'summary' => $summary,
-            'roadmap' => $overview->roadmap,
+            // Only the active fase and the next fase name reach the dashboard;
+            // the full roadmap lives on /roadmap with the same filtering.
+            'roadmap_focus' => $progress_service->focusRoadmap($overview->roadmap),
             'queue' => $queue,
             'learning_states' => $learning_states,
             'active_application' => $active,
             'next_application' => $next,
-            'next_templates' => $next instanceof ScholarshipApplication
-                ? $learning_path->templateModulesFor($next->scholarship)->take(3)
-                : new Collection,
+            // A count, not titles: modules of a scholarship that is still queued stay hidden.
+            'next_template_count' => $next instanceof ScholarshipApplication
+                ? $learning_path->templateModulesFor($next->scholarship)->count()
+                : 0,
             'path_completed' => $path_completed,
             'completed_paths' => $history,
             'completed_applications' => $queue

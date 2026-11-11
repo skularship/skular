@@ -10,6 +10,7 @@ use App\Livewire\Faq\Index as FaqIndex;
 use App\Livewire\Learning\Library;
 use App\Livewire\Learning\ModulePlayer;
 use App\Livewire\Profiling\Wizard;
+use App\Livewire\Roadmap;
 use App\Livewire\Scholarships\Index as ScholarshipsIndex;
 use App\Livewire\Scholarships\Recommendation;
 use App\Livewire\Scholarships\Show as ScholarshipShow;
@@ -37,6 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('profiling', Wizard::class)->name('profiling');
     Route::livewire('profiling/recommendation', Recommendation::class)->name('profiling.recommendation');
     Route::livewire('dashboard', Dashboard::class)->name('dashboard');
+    Route::livewire('roadmap', Roadmap::class)->name('roadmap.show');
     Route::livewire('modules/{module}', ModulePlayer::class)->name('modules.show');
     Route::livewire('library', Library::class)->name('library.index');
     Route::livewire('scholarships', ScholarshipsIndex::class)->name('scholarships.index');
