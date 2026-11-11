@@ -740,6 +740,30 @@ class ModulePlayer extends Component
     }
 
     /**
+     * Polling interval in seconds while an AI evaluation is running.
+     *
+     * Most evaluations finish within 10-30 seconds, so the page checks often
+     * at first and backs off for the rare slow one instead of re-rendering
+     * every few seconds for minutes.
+     */
+    private function evaluationPollSeconds(): int
+    {
+        $last_activity = $this->responses()
+            ->filter(fn (UserPracticeResponse $response): bool => $response->isEvaluating())
+            ->map(fn (UserPracticeResponse $response) => $response->updated_at ?? $response->submitted_at)
+            ->filter()
+            ->max();
+
+        $elapsed = $last_activity === null ? 0 : (int) $last_activity->diffInSeconds(now(), true);
+
+        return match (true) {
+            $elapsed < 30 => 3,
+            $elapsed < 90 => 5,
+            default => 10,
+        };
+    }
+
+    /**
      * Render the learning loop of one module (route modules.show).
      *
      * @return View The livewire.learning.module-player view.
@@ -756,6 +780,7 @@ class ModulePlayer extends Component
             'checkpoint_block' => $this->checkpointBlock(),
             'checkpoint_block_message' => $this->checkpointBlockMessage(),
             'evaluating' => $this->responses()->contains(fn (UserPracticeResponse $response): bool => $response->isEvaluating()),
+            'evaluation_poll_seconds' => $this->evaluationPollSeconds(),
             'practice_pending' => $this->practicePending,
             // Resolving the next module walks the whole learning path; only the
             // checkpoint section shows it, so other sections skip that work.

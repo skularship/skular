@@ -182,3 +182,24 @@ test('re-assessing while an evaluation still holds the lock only says it is bein
     Queue::assertNothingPushed();
     expect($response->fresh()->ai_status)->toBe(AiFeedbackStatus::Failed);
 });
+
+test('polling backs off while a slow assessment keeps running and shows a wait estimate', function () {
+    gateResponse($this, AiFeedbackStatus::Processing);
+
+    Livewire::actingAs($this->mentee)
+        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'praktik'])
+        ->assertSeeHtml('wire:poll.3s')
+        ->assertSee('Biasanya selesai dalam 10–30 detik');
+
+    $this->travel(60)->seconds();
+
+    Livewire::actingAs($this->mentee)
+        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'praktik'])
+        ->assertSeeHtml('wire:poll.5s');
+
+    $this->travel(40)->seconds();
+
+    Livewire::actingAs($this->mentee)
+        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'praktik'])
+        ->assertSeeHtml('wire:poll.10s');
+});

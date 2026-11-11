@@ -203,6 +203,7 @@
                     @else
                         <div class="flex flex-col gap-2" role="status" aria-live="polite">
                             <p class="text-sm font-semibold text-brand-teal">{{ __('Jawabanmu sedang dinilai AI. Halaman ini diperbarui otomatis.') }}</p>
+                            <p class="text-sm text-zinc-600" data-test="feedback-pending-estimate">{{ __('Biasanya selesai dalam 10–30 detik. Kamu boleh lanjut membaca, hasilnya muncul sendiri di sini.') }}</p>
                             <x-loading.ai loading="ai.feedback" :active="true" skeleton :skeleton-lines="2" data-test="feedback-pending" />
                         </div>
                     @endif
