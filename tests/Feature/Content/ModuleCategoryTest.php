@@ -115,3 +115,36 @@ test('the module form stores a template module with its scholarship', function (
         ->and($module->category)->toBe(ModuleCategory::Template)
         ->and($module->scholarship_id)->toBe($scholarship->id);
 });
+
+test('the module form stores an optional youtube link and rejects other links', function () {
+    $admin = categoryAdmin();
+    $fase = Fase::factory()->create();
+
+    $base = [
+        'fase_id' => $fase->id,
+        'modul_order' => 1,
+        'category' => ModuleCategory::Inti->value,
+        'type' => 'reading',
+    ];
+
+    Livewire::actingAs($admin)
+        ->test(CreateModule::class)
+        ->fillForm($base + ['title' => 'Modul Video Salah', 'link_video' => 'https://example.com/video'])
+        ->call('create')
+        ->assertHasFormErrors(['link_video']);
+
+    Livewire::actingAs($admin)
+        ->test(CreateModule::class)
+        ->fillForm($base + ['title' => 'Modul Video YouTube', 'link_video' => 'https://youtu.be/dQw4w9WgXcQ'])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    Livewire::actingAs($admin)
+        ->test(CreateModule::class)
+        ->fillForm($base + ['title' => 'Modul Tanpa Video', 'modul_order' => 2])
+        ->call('create')
+        ->assertHasNoFormErrors();
+
+    expect(Module::query()->where('title', 'Modul Video YouTube')->value('link_video'))->toBe('https://youtu.be/dQw4w9WgXcQ')
+        ->and(Module::query()->where('title', 'Modul Tanpa Video')->value('link_video'))->toBeNull();
+});

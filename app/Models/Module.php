@@ -261,11 +261,108 @@ class Module extends Model
     }
 
     /**
-     * Determine whether the module has a video to play.
+     * Determine whether the module has a video the player can embed.
      */
     public function hasVideo(): bool
     {
-        return filled($this->link_video);
+        return $this->videoEmbedUrl() !== null;
+    }
+
+    /**
+     * Get the iframe-ready URL of the module video.
+     *
+     * Admins may paste any YouTube link (watch, youtu.be, shorts, live or
+     * embed); YouTube refuses to load a watch page inside an iframe, so every
+     * form is rewritten to the privacy-enhanced embed player. Another valid
+     * http(s) link is kept as-is for embeds from other hosts.
+     *
+     * @return string|null Null when the link is empty or unusable.
+     */
+    public function videoEmbedUrl(): ?string
+    {
+        $url = trim((string) $this->link_video);
+
+        if ($url === '') {
+            return null;
+        }
+
+        $youtube_id = self::youtubeVideoId($url);
+
+        if ($youtube_id !== null) {
+            return 'https://www.youtube-nocookie.com/embed/'.$youtube_id.'?rel=0';
+        }
+
+        if (self::isYoutubeHost(parse_url($url, PHP_URL_HOST))) {
+            return null;
+        }
+
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+
+        return filter_var($url, FILTER_VALIDATE_URL) !== false && in_array($scheme, ['http', 'https'], true)
+            ? $url
+            : null;
+    }
+
+    /**
+     * Extract the 11-character video id from a YouTube link.
+     *
+     * Accepts youtube.com/watch?v=, youtu.be/, /embed/, /shorts/, /live/ and
+     * /v/ links on youtube.com, m.youtube.com and youtube-nocookie.com.
+     *
+     * @param  string|null  $url  Link pasted by the admin.
+     * @return string|null Null when the link is not a recognisable YouTube video.
+     */
+    public static function youtubeVideoId(?string $url): ?string
+    {
+        $url = trim((string) $url);
+
+        if ($url !== '' && ! preg_match('#^https?://#i', $url)) {
+            $url = 'https://'.$url;
+        }
+
+        $host = parse_url($url, PHP_URL_HOST);
+
+        if (! self::isYoutubeHost($host)) {
+            return null;
+        }
+
+        $host = strtolower((string) $host);
+        $path = (string) parse_url($url, PHP_URL_PATH);
+        $candidate = null;
+
+        if ($host === 'youtu.be' || $host === 'www.youtu.be') {
+            $candidate = explode('/', trim($path, '/'))[0];
+        } elseif (preg_match('#^/(?:embed|shorts|live|v)/([^/?]+)#', $path, $matches) === 1) {
+            $candidate = $matches[1];
+        } elseif (rtrim($path, '/') === '/watch') {
+            parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+            $candidate = is_string($query['v'] ?? null) ? $query['v'] : null;
+        }
+
+        return is_string($candidate) && preg_match('/^[A-Za-z0-9_-]{11}$/', $candidate) === 1
+            ? $candidate
+            : null;
+    }
+
+    /**
+     * Determine whether a host belongs to YouTube.
+     */
+    private static function isYoutubeHost(mixed $host): bool
+    {
+        if (! is_string($host)) {
+            return false;
+        }
+
+        return in_array(strtolower($host), [
+            'youtube.com',
+            'www.youtube.com',
+            'm.youtube.com',
+            'music.youtube.com',
+            'youtube-nocookie.com',
+            'www.youtube-nocookie.com',
+            'youtu.be',
+            'www.youtu.be',
+        ], true);
     }
 
     /**

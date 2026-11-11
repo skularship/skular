@@ -36,9 +36,9 @@ Setiap kegagalan dicatat `Log::warning` dengan `reason`, kelas exception, dan pe
 **Alur:**
 1. `submit()` menyimpan jawaban dulu (transaksi, `firstOrCreate` + `lockForUpdate`, validasi `PracticeFieldRules`), set `ai_status = processing`, lalu dispatch job **after commit**. Jawaban tidak pernah hilang walau AI gagal.
 2. Job `EvaluatePracticeFeedback` (`tries = 1`, `timeout = 60`, unik per jawaban) memanggil `evaluateSubmission()`; jawaban yang sudah `completed` dilewati (tidak ditagih dua kali).
-3. Hasil disimpan ke `ai_feedback`, `ai_score` (dinormalisasi 0–100), `ai_status = completed`; gagal → `failed` + `ai_error`.
+3. Kegagalan sementara (timeout, rate limit, provider tak bisa dihubungi, penilaian kosong) dicoba ulang otomatis di dalam job: total `PracticeSubmissionService::QUEUED_EVALUATION_ATTEMPTS` (2) panggilan dengan jeda 3 detik, jadi mentee tidak perlu menekan *Nilai ulang* untuk gangguan sesaat. Error konfigurasi (`AiFailureReason::Configuration`) tidak dicoba ulang. Hasil disimpan ke `ai_feedback`, `ai_score` (dinormalisasi 0–100), `ai_status = completed`; gagal di percobaan terakhir → `failed` + `ai_error`.
 4. Job yang mati/timeout → `failed()` mengubah `processing` menjadi `failed`. Jawaban yang tetap `processing` > 180 detik dianggap macet (`UserPracticeResponse::isStalled()`) dan bisa dinilai ulang.
-5. `retryFeedback()` (hanya untuk `failed`/macet) menilai ulang secara sinkron.
+5. `retryFeedback()` (hanya untuk `failed`/macet) menilai ulang secara sinkron dengan satu panggilan (agar request web tetap di bawah batas waktu PHP).
 6. Mentee melihat **label** (`AiScoreLabel`: ≥85 Sangat baik, 70–84 Baik, 50–69 Cukup, <50 Perlu diperbaiki) + teks feedback; skor angka hanya untuk admin. Rata-rata skor disimpan ke `checkpoints.score` saat modul diselesaikan.
 7. **Gate checkpoint:** langkah akhir terbuka hanya bila semua latihan aktif `completed` (lihat `architecture.md`). Ditegakkan di `ModulePlayer` dan lagi di `ProgressService::completeModule()`.
 

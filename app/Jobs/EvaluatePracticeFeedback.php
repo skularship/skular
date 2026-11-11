@@ -28,9 +28,10 @@ final class EvaluatePracticeFeedback implements ShouldBeUnique, ShouldQueue
     use Queueable;
 
     /**
-     * Never retry automatically: a failed evaluation is surfaced to the
-     * mentee, who retries explicitly instead of the provider being billed
-     * again without the mentee's knowledge.
+     * The queue never replays the job. A passing provider hiccup is retried
+     * once inside the evaluation itself (PracticeSubmissionService::
+     * QUEUED_EVALUATION_ATTEMPTS); anything that still fails is surfaced to
+     * the mentee, who retries explicitly with "Nilai ulang".
      */
     public int $tries = 1;
 

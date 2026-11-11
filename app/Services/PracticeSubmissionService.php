@@ -18,6 +18,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Sleep;
 
 /**
  * Validates and stores practice answers, then evaluates them with AI in the
@@ -27,6 +28,29 @@ use Illuminate\Support\Facades\Validator;
 class PracticeSubmissionService implements PracticeSubmissionServiceInterface
 {
     use PracticeFieldRules;
+
+    /**
+     * Provider calls the queued evaluation makes before showing a failure.
+     *
+     * The first call after a submission is the one most likely to hit a
+     * passing timeout or rate limit; one silent retry spares the mentee from
+     * pressing "Nilai ulang" for a hiccup. Two 25-second agent calls plus the
+     * pause stay below the job's 60-second timeout.
+     */
+    public const QUEUED_EVALUATION_ATTEMPTS = 2;
+
+    /**
+     * Pause in seconds between two queued evaluation attempts.
+     */
+    public const RETRY_PAUSE_SECONDS = 3;
+
+    /**
+     * Lifetime in seconds of the per-submission evaluation lock.
+     *
+     * Covers every queued attempt so a manual retry cannot start a parallel
+     * provider call while the job is still retrying.
+     */
+    private const EVALUATION_LOCK_SECONDS = 75;
 
     /**
      * @param  AiFeedbackServiceInterface  $ai_feedback_service  Grades a submission with the AI evaluator.
@@ -115,7 +139,7 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
             return;
         }
 
-        $this->requestFeedback($response, $practice_form);
+        $this->requestFeedback($response, $practice_form, self::QUEUED_EVALUATION_ATTEMPTS);
     }
 
     /**
@@ -138,13 +162,18 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
 
     /**
      * Ask the AI evaluator for structured feedback and persist the outcome.
+     *
+     * A transient failure (timeout, rate limit, empty evaluation) is retried
+     * up to $max_attempts calls in total; a configuration error fails at once.
+     * Only the final outcome is stored, so the mentee sees "failed" only when
+     * every attempt failed.
      */
-    private function requestFeedback(UserPracticeResponse $response, PracticeForm $practice_form): UserPracticeResponse
+    private function requestFeedback(UserPracticeResponse $response, PracticeForm $practice_form, int $max_attempts = 1): UserPracticeResponse
     {
         // A duplicated click or two parallel requests must not pay the provider
         // twice for the same submission. The second caller keeps the stored
         // answers and leaves the evaluation to the request holding the lock.
-        $lock = Cache::lock('ai-feedback:'.$response->getKey(), 30);
+        $lock = Cache::lock('ai-feedback:'.$response->getKey(), self::EVALUATION_LOCK_SECONDS);
 
         if (! $lock->get()) {
             return $response;
@@ -153,26 +182,38 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
         try {
             $module = $this->moduleOf($practice_form);
 
-            try {
-                $feedback = $this->ai_feedback_service->generate(
-                    $module,
-                    $practice_form,
-                    $response->answers,
-                );
+            for ($attempt = 1; ; $attempt++) {
+                try {
+                    $feedback = $this->ai_feedback_service->generate(
+                        $module,
+                        $practice_form,
+                        $response->answers,
+                    );
 
-                $response->fill([
-                    'ai_feedback' => $feedback->toArray(),
-                    'ai_score' => $feedback->normalizedScore(),
-                    'ai_status' => AiFeedbackStatus::Completed,
-                    'ai_error' => null,
-                ]);
-            } catch (AiFeedbackException $exception) {
-                report($exception);
+                    $response->fill([
+                        'ai_feedback' => $feedback->toArray(),
+                        'ai_score' => $feedback->normalizedScore(),
+                        'ai_status' => AiFeedbackStatus::Completed,
+                        'ai_error' => null,
+                    ]);
 
-                $response->fill([
-                    'ai_status' => AiFeedbackStatus::Failed,
-                    'ai_error' => $exception->getMessage(),
-                ]);
+                    break;
+                } catch (AiFeedbackException $exception) {
+                    if ($attempt < $max_attempts && $exception->isTransient()) {
+                        Sleep::for(self::RETRY_PAUSE_SECONDS)->seconds();
+
+                        continue;
+                    }
+
+                    report($exception);
+
+                    $response->fill([
+                        'ai_status' => AiFeedbackStatus::Failed,
+                        'ai_error' => $exception->getMessage(),
+                    ]);
+
+                    break;
+                }
             }
 
             $response->save();

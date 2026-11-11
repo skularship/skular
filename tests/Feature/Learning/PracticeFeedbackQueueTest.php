@@ -4,13 +4,17 @@ use App\Ai\Agents\PracticeFeedbackAgent;
 use App\Contracts\AiFeedbackServiceInterface;
 use App\Contracts\PracticeSubmissionServiceInterface;
 use App\Data\AiFeedbackData;
+use App\Enums\AiFailureReason;
 use App\Enums\AiFeedbackStatus;
+use App\Exceptions\AiFeedbackException;
 use App\Jobs\EvaluatePracticeFeedback;
 use App\Models\Module;
 use App\Models\PracticeForm;
 use App\Models\User;
 use App\Models\UserPracticeResponse;
+use App\Services\PracticeSubmissionService;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Sleep;
 
 /**
  * A controllable AI fake that can pretend the provider is down.
@@ -138,4 +142,98 @@ test('the queued job stores point and explanation items and stays idempotent', f
         ]);
 
     PracticeFeedbackAgent::assertPrompted(fn (): bool => true);
+});
+
+test('a passing provider hiccup is retried by the queued evaluation before failing', function () {
+    Sleep::fake();
+
+    $fake = new class implements AiFeedbackServiceInterface
+    {
+        public int $calls = 0;
+
+        public function generate(Module $module, PracticeForm $practice_form, array $answers): AiFeedbackData
+        {
+            $this->calls++;
+
+            if ($this->calls === 1) {
+                throw new AiFeedbackException('Penilaian AI butuh waktu lebih lama dari biasanya.', reason: AiFailureReason::Timeout);
+            }
+
+            return new AiFeedbackData(score: 80, strengths: [], improvements: [], feedback: 'Sudah baik.', next_steps: []);
+        }
+    };
+
+    app()->instance(AiFeedbackServiceInterface::class, $fake);
+
+    $user = User::factory()->profiled()->create();
+    $form = PracticeForm::factory()->create(['module_id' => Module::factory()]);
+
+    // The synchronous test queue runs the job at dispatch time.
+    $response = app(PracticeSubmissionServiceInterface::class)->submit($user, $form, ['jawaban' => 'Jawaban pertama.']);
+    $response->refresh();
+
+    expect($fake->calls)->toBe(PracticeSubmissionService::QUEUED_EVALUATION_ATTEMPTS)
+        ->and($response->ai_status)->toBe(AiFeedbackStatus::Completed)
+        ->and($response->ai_error)->toBeNull()
+        ->and($response->ai_feedback['feedback'])->toBe('Sudah baik.');
+
+    Sleep::assertSleptTimes(1);
+});
+
+test('the queued evaluation stops retrying and shows the failure after its last attempt', function () {
+    Sleep::fake();
+
+    $fake = new class implements AiFeedbackServiceInterface
+    {
+        public int $calls = 0;
+
+        public function generate(Module $module, PracticeForm $practice_form, array $answers): AiFeedbackData
+        {
+            $this->calls++;
+
+            throw new AiFeedbackException('Layanan AI tidak dapat dihubungi.', reason: AiFailureReason::Unavailable);
+        }
+    };
+
+    app()->instance(AiFeedbackServiceInterface::class, $fake);
+
+    $user = User::factory()->profiled()->create();
+    $form = PracticeForm::factory()->create(['module_id' => Module::factory()]);
+
+    $response = app(PracticeSubmissionServiceInterface::class)->submit($user, $form, ['jawaban' => 'Jawaban tetap aman.']);
+    $response->refresh();
+
+    expect($fake->calls)->toBe(PracticeSubmissionService::QUEUED_EVALUATION_ATTEMPTS)
+        ->and($response->ai_status)->toBe(AiFeedbackStatus::Failed)
+        ->and($response->ai_error)->toBe('Layanan AI tidak dapat dihubungi.')
+        ->and($response->answers['jawaban'])->toBe('Jawaban tetap aman.')
+        ->and($response->canRetryEvaluation())->toBeTrue();
+});
+
+test('a configuration error is not retried because it fails the same way every time', function () {
+    Sleep::fake();
+
+    $fake = new class implements AiFeedbackServiceInterface
+    {
+        public int $calls = 0;
+
+        public function generate(Module $module, PracticeForm $practice_form, array $answers): AiFeedbackData
+        {
+            $this->calls++;
+
+            throw new AiFeedbackException('Layanan AI belum dikonfigurasi.', reason: AiFailureReason::Configuration);
+        }
+    };
+
+    app()->instance(AiFeedbackServiceInterface::class, $fake);
+
+    $user = User::factory()->profiled()->create();
+    $form = PracticeForm::factory()->create(['module_id' => Module::factory()]);
+
+    $response = app(PracticeSubmissionServiceInterface::class)->submit($user, $form, ['jawaban' => 'Jawaban.']);
+
+    expect($fake->calls)->toBe(1)
+        ->and($response->fresh()->ai_status)->toBe(AiFeedbackStatus::Failed);
+
+    Sleep::assertNeverSlept();
 });

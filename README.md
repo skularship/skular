@@ -181,7 +181,7 @@ Detail lengkap: [`AGENTS.md`](AGENTS.md) dan [`docs/architecture.md`](docs/archi
 ### Alur kerja penyusun kurikulum (admin)
 
 1. Buat modul (selalu tersimpan sebagai **Draf**).
-2. Isi informasi dasar, kata pengantar, materi Pahami (ringkasan, poin penting, **kolom Inti Materi**, video; kata pengantar, ringkasan, dan isi kolom memakai editor Markdown dengan panduan format singkat, cek hasilnya di *Pratinjau*), pertanyaan brainstorming, **saran pertanyaan AI Mentor** (jawaban tim opsional), dan rubrik AI.
+2. Isi informasi dasar, kata pengantar, materi Pahami (ringkasan, poin penting, **kolom Inti Materi**, link video YouTube opsional — link tonton/youtu.be/shorts otomatis diubah jadi pemutar, modul tanpa link menampilkan "Tidak ada materi video"; kata pengantar, ringkasan, dan isi kolom memakai editor Markdown dengan panduan format singkat, cek hasilnya di *Pratinjau*), pertanyaan brainstorming, **saran pertanyaan AI Mentor** (jawaban tim opsional), dan rubrik AI.
 3. Tambah Quick Question dan Latihan praktik dari tabel di halaman modul.
 4. Buka **Pratinjau**, perbaiki item merah di checklist kelengkapan, lalu **Terbitkan**.
 

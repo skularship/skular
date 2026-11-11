@@ -141,6 +141,17 @@
             >
                 {{ $next_step === 'praktik' ? __('Lanjut ke Praktik') : __('Lanjut') }}
             </x-actions.button>
+
+            {{-- The section-wide loader sits at the top of the player, out of
+                 view once the mentee has scrolled to this button, so the
+                 transition is announced right where they clicked. --}}
+            <x-loading.inline
+                :loading="$next_loading"
+                target="nextSection"
+                :delay="false"
+                class="w-full justify-end"
+                data-test="quick-next-loading"
+            />
         @endif
     </x-ui.card>
 

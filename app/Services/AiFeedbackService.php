@@ -57,7 +57,7 @@ class AiFeedbackService implements AiFeedbackServiceInterface
                 AiFailureReason::RateLimited => 'Penilaian AI sedang ramai. Jawabanmu tetap tersimpan, coba nilai ulang sekitar satu menit lagi ya.',
                 AiFailureReason::Timeout => 'Penilaian AI butuh waktu lebih lama dari biasanya. Jawabanmu tetap tersimpan, coba lagi ya.',
                 AiFailureReason::Unavailable => 'Layanan AI tidak dapat dihubungi. Jawabanmu tetap tersimpan, coba lagi nanti.',
-            }, 0, $exception);
+            }, 0, $exception, $reason);
         }
 
         $payload = $this->structuredPayload($response);

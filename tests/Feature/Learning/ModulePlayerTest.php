@@ -297,6 +297,7 @@ test('quick answers transition to practice with a loading state and keep their p
         ->call('checkQuickAnswers')
         ->assertNotDispatched('module-section-changed')
         ->assertSee('Lagi nyiapin halaman praktik', false)
+        ->assertSeeHtml('data-test="quick-next-loading"')
         ->call('nextSection')
         ->assertSet('section', 'praktik')
         ->assertSet('quick_checked', true)
@@ -387,4 +388,50 @@ test('pahami shows the empty state when stored insights hold no usable text', fu
         ->assertOk()
         ->assertDontSee('Insight penting')
         ->assertSee('Materi belum tersedia');
+});
+
+test('any common youtube link is turned into an embeddable player url', function (string $link) {
+    $module = Module::factory()->make(['link_video' => $link]);
+
+    expect($module->hasVideo())->toBeTrue()
+        ->and($module->videoEmbedUrl())->toBe('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0');
+})->with([
+    'watch' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42s',
+    'short link' => 'https://youtu.be/dQw4w9WgXcQ?si=abc',
+    'shorts' => 'https://youtube.com/shorts/dQw4w9WgXcQ',
+    'embed' => 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    'mobile' => 'https://m.youtube.com/watch?v=dQw4w9WgXcQ',
+    'without scheme' => 'www.youtube.com/watch?v=dQw4w9WgXcQ',
+]);
+
+test('a missing or unusable video link has no player', function (?string $link) {
+    $module = Module::factory()->make(['link_video' => $link]);
+
+    expect($module->hasVideo())->toBeFalse()
+        ->and($module->videoEmbedUrl())->toBeNull();
+})->with([
+    'empty' => null,
+    'blank' => '   ',
+    'youtube channel' => 'https://www.youtube.com/@skular',
+    'not a url' => 'bukan link',
+]);
+
+test('the pahami step embeds the module video from a youtube watch link', function () {
+    $this->module->update(['link_video' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ']);
+
+    Livewire::actingAs($this->mentee)
+        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'pahami'])
+        ->assertSeeHtml('data-test="module-video"')
+        ->assertSeeHtml('src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0"')
+        ->assertDontSee('Tidak ada materi video');
+});
+
+test('the pahami step says so when the module has no video', function () {
+    $this->module->update(['link_video' => null]);
+
+    Livewire::actingAs($this->mentee)
+        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'pahami'])
+        ->assertSee('Tidak ada materi video')
+        ->assertSeeHtml('data-test="module-video-empty"')
+        ->assertDontSeeHtml('<iframe');
 });

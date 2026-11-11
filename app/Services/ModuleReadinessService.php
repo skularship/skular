@@ -98,7 +98,7 @@ class ModuleReadinessService implements ModuleReadinessServiceInterface
             $checks[] = new ModuleReadinessCheckData(
                 key: 'video',
                 label: 'Link video valid',
-                hint: 'Isi link video (embed) yang bisa dibuka mentee.',
+                hint: 'Isi link video YouTube yang bisa diputar mentee.',
                 passed: $this->hasValidVideoLink($module),
                 required: $module->type === ModuleType::Video,
             );
@@ -180,11 +180,9 @@ class ModuleReadinessService implements ModuleReadinessServiceInterface
      */
     private function hasValidVideoLink(Module $module): bool
     {
-        if (! filled($module->link_video)) {
-            return false;
-        }
-
-        return filter_var($module->link_video, FILTER_VALIDATE_URL) !== false;
+        // Same check as the Pahami player, so "ready" means the mentee really
+        // sees a working embed (a watch page or broken link is not embeddable).
+        return $module->hasVideo();
     }
 
     /**

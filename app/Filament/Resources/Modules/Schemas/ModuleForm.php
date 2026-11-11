@@ -268,18 +268,19 @@ class ModuleForm
                             ->minHeight('8rem')
                             ->visible(fn (?Module $record): bool => filled($record?->inti_material))
                             ->helperText('Hanya tampil ke mentee selama modul belum punya kolom inti materi di atas. Pindahkan isinya ke kolom baru, lalu kosongkan teks ini.'),
-                        Toggle::make('has_video')
-                            ->label('Modul ini punya video')
-                            ->dehydrated(false)
-                            ->live()
-                            ->default(fn (?Module $record): bool => filled($record?->link_video))
-                            ->helperText('Aktifkan untuk menampilkan pemutar video di langkah Pahami.'),
                         TextInput::make('link_video')
-                            ->label('Link embed video')
-                            ->placeholder('https://www.youtube.com/embed/xxxxxxx')
+                            ->label('Link video YouTube (opsional)')
+                            ->placeholder('https://www.youtube.com/watch?v=xxxxxxxxxxx')
                             ->url()
-                            ->visible(fn (Get $get): bool => (bool) $get('has_video'))
-                            ->helperText('Gunakan tautan embed, bukan tautan halaman tonton.'),
+                            ->nullable()
+                            ->maxLength(255)
+                            ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {
+                                if (filled($value) && Module::youtubeVideoId(is_string($value) ? $value : null) === null) {
+                                    $fail('Gunakan link video YouTube, misalnya https://www.youtube.com/watch?v=xxxxxxxxxxx atau https://youtu.be/xxxxxxxxxxx.');
+                                }
+                            })
+                            ->helperText('Tempel link YouTube apa saja (tonton, youtu.be, shorts, atau embed); sistem mengubahnya jadi pemutar di langkah Pahami. Kosongkan bila modul tidak punya video, mentee akan melihat info "Tidak ada materi video".')
+                            ->columnSpanFull(),
                     ])
                     ->columns(2),
 

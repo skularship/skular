@@ -14,19 +14,30 @@
 @endphp
 
 <div class="sk-rise flex flex-col gap-6">
+    {{-- The video slot is always present: the admin fills an optional YouTube
+         link, and a module without one says so instead of leaving a gap. --}}
     @if ($module->hasVideo())
-        <x-ui.card padding="none" class="overflow-hidden">
+        <x-ui.card padding="none" class="overflow-hidden" data-test="module-video">
             <div class="relative aspect-video w-full bg-zinc-900">
                 <iframe
                     class="absolute inset-0 h-full w-full"
-                    src="{{ $module->link_video }}"
+                    src="{{ $module->videoEmbedUrl() }}"
                     title="{{ __('Video materi — :title', ['title' => $module->title]) }}"
                     loading="lazy"
                     allowfullscreen
-                    allow="accelerometer; encrypted-media; picture-in-picture; fullscreen"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                 ></iframe>
             </div>
         </x-ui.card>
+    @else
+        <div
+            class="flex items-center gap-3 rounded-3xl border border-dashed border-zinc-300 bg-zinc-50 px-5 py-4 text-sm font-medium text-zinc-500"
+            data-test="module-video-empty"
+        >
+            <x-icons.app-icon name="video-camera-slash" class="size-5 shrink-0 text-zinc-400" />
+            {{ __('Tidak ada materi video') }}
+        </div>
     @endif
 
     <div class="flex flex-col gap-4" data-test="pahami-header">
