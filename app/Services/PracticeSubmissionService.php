@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Concerns\PracticeFieldRules;
 use App\Contracts\AiFeedbackServiceInterface;
 use App\Contracts\PracticeSubmissionServiceInterface;
+use App\Data\AiFeedbackData;
 use App\Data\PracticeFieldData;
 use App\Enums\AiFeedbackStatus;
 use App\Enums\PracticeFieldType;
@@ -16,7 +17,9 @@ use App\Models\User;
 use App\Models\UserPracticeResponse;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Sleep;
 
@@ -139,7 +142,14 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
             return;
         }
 
-        $this->requestFeedback($response, $practice_form, self::QUEUED_EVALUATION_ATTEMPTS);
+        // How long the job waited for a worker: a large value points at a
+        // missing or overloaded queue worker rather than at the provider.
+        Log::info('ai.feedback.job_started', [
+            'ai_response_id' => $response->id,
+            'queue_wait_ms' => $response->updated_at === null ? null : (int) $response->updated_at->diffInMilliseconds(now()),
+        ]);
+
+        $this->requestFeedback($response, $practice_form, self::QUEUED_EVALUATION_ATTEMPTS, 'queue');
     }
 
     /**
@@ -157,7 +167,7 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
         $response->ai_error = null;
         $response->save();
 
-        return $this->requestFeedback($response, $practice_form);
+        return $this->requestFeedback($response, $practice_form, 1, 'retry');
     }
 
     /**
@@ -167,8 +177,10 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
      * up to $max_attempts calls in total; a configuration error fails at once.
      * Only the final outcome is stored, so the mentee sees "failed" only when
      * every attempt failed.
+     *
+     * @param  'queue'|'retry'  $trigger  Which path started the evaluation; written to the ai.feedback.attempt log.
      */
-    private function requestFeedback(UserPracticeResponse $response, PracticeForm $practice_form, int $max_attempts = 1): UserPracticeResponse
+    private function requestFeedback(UserPracticeResponse $response, PracticeForm $practice_form, int $max_attempts, string $trigger): UserPracticeResponse
     {
         // A duplicated click or two parallel requests must not pay the provider
         // twice for the same submission. The second caller keeps the stored
@@ -184,10 +196,9 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
 
             for ($attempt = 1; ; $attempt++) {
                 try {
-                    $feedback = $this->ai_feedback_service->generate(
-                        $module,
-                        $practice_form,
-                        $response->answers,
+                    $feedback = Context::scope(
+                        fn (): AiFeedbackData => $this->ai_feedback_service->generate($module, $practice_form, $response->answers),
+                        ['ai_response_id' => $response->id, 'ai_attempt' => $attempt, 'ai_trigger' => $trigger],
                     );
 
                     $response->fill([

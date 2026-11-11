@@ -13,6 +13,7 @@ use App\Models\PracticeForm;
 use App\Models\User;
 use App\Models\UserPracticeResponse;
 use App\Services\PracticeSubmissionService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Sleep;
 
@@ -236,4 +237,32 @@ test('a configuration error is not retried because it fails the same way every t
         ->and($response->fresh()->ai_status)->toBe(AiFeedbackStatus::Failed);
 
     Sleep::assertNeverSlept();
+});
+
+test('every provider call writes one metadata-only attempt log line', function () {
+    Log::spy();
+
+    $user = User::factory()->profiled()->create();
+    $form = PracticeForm::factory()->create(['module_id' => Module::factory()]);
+
+    PracticeFeedbackAgent::fake([[
+        'score' => 70,
+        'strengths' => [['point' => 'Tujuan jelas', 'explanation' => 'Tujuan studimu spesifik.']],
+        'improvements' => [],
+        'feedback' => 'Arahnya sudah tepat.',
+        'next_steps' => [],
+    ]])->preventStrayPrompts();
+
+    $response = app(PracticeSubmissionServiceInterface::class)->submit($user, $form, ['jawaban' => 'Cerita pribadi yang rahasia.']);
+
+    Log::shouldHaveReceived('info')->withArgs(
+        fn (string $message, array $context = []): bool => $message === 'ai.feedback.attempt'
+            && $context['ai_response_id'] === $response->id
+            && $context['ai_attempt'] === 1
+            && $context['ai_trigger'] === 'queue'
+            && $context['outcome'] === 'completed'
+            && is_int($context['duration_ms'])
+            && $context['prompt_chars'] > 0
+            && ! str_contains((string) json_encode($context), 'rahasia'),
+    )->once();
 });

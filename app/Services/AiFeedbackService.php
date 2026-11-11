@@ -12,6 +12,7 @@ use App\Enums\AiFailureReason;
 use App\Exceptions\AiFeedbackException;
 use App\Models\Module;
 use App\Models\PracticeForm;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -35,14 +36,17 @@ class AiFeedbackService implements AiFeedbackServiceInterface
     public function generate(Module $module, PracticeForm $practice_form, array $answers): AiFeedbackData
     {
         $agent = new PracticeFeedbackAgent($module, $practice_form, $answers);
+        $prompt = $agent->buildPrompt();
         $started_at = microtime(true);
 
         try {
             AiConfiguration::ensureTextModelConfigured();
 
-            $response = $agent->prompt($agent->buildPrompt());
+            $response = $agent->prompt($prompt);
         } catch (Throwable $exception) {
             $reason = AiFailureReason::fromThrowable($exception);
+
+            $this->logAttempt($module, $practice_form, $prompt, $started_at, 'failed', $reason, $exception);
 
             Log::warning('AI Feedback request failed', [
                 'module_id' => $module->id,
@@ -64,6 +68,8 @@ class AiFeedbackService implements AiFeedbackServiceInterface
         $feedback = (string) ($payload['feedback'] ?? '');
 
         if (trim($feedback) === '') {
+            $this->logAttempt($module, $practice_form, $prompt, $started_at, 'empty');
+
             Log::warning('AI Feedback returned an empty evaluation', [
                 'module_id' => $module->id,
                 'practice_form_id' => $practice_form->id,
@@ -72,14 +78,7 @@ class AiFeedbackService implements AiFeedbackServiceInterface
             throw new AiFeedbackException('AI belum memberi penilaian yang lengkap. Jawabanmu tetap tersimpan, coba nilai ulang ya.');
         }
 
-        Log::debug('ai.request', [
-            'feature' => 'feedback',
-            'module_id' => $module->id,
-            'practice_form_id' => $practice_form->id,
-            'provider' => AiConfiguration::provider(),
-            'model' => AiConfiguration::textModel(),
-            'duration_ms' => (int) round((microtime(true) - $started_at) * 1000),
-        ]);
+        $this->logAttempt($module, $practice_form, $prompt, $started_at, 'completed');
 
         $score = $payload['score'] ?? null;
 
@@ -92,5 +91,38 @@ class AiFeedbackService implements AiFeedbackServiceInterface
             feedback: trim($feedback),
             next_steps: FeedbackPointData::listFrom($payload['next_steps'] ?? null),
         );
+    }
+
+    /**
+     * Write one structured `ai.feedback.attempt` line per provider call.
+     *
+     * Carries only metadata (sizes, timings, classification), never the
+     * mentee answer or the prompt text. The response id, attempt number and
+     * trigger come from the Context scope opened by PracticeSubmissionService.
+     *
+     * @param  'completed'|'empty'|'failed'  $outcome
+     */
+    private function logAttempt(
+        Module $module,
+        PracticeForm $practice_form,
+        string $prompt,
+        float $started_at,
+        string $outcome,
+        ?AiFailureReason $reason = null,
+        ?Throwable $exception = null,
+    ): void {
+        Log::info('ai.feedback.attempt', [
+            ...Context::only(['ai_response_id', 'ai_attempt', 'ai_trigger']),
+            'module_id' => $module->id,
+            'practice_form_id' => $practice_form->id,
+            'model' => config('ai.providers.'.config('ai.default').'.models.text.default'),
+            'outcome' => $outcome,
+            'reason' => $reason?->value,
+            'exception' => $exception === null ? null : $exception::class,
+            'previous_exception' => $exception?->getPrevious() === null ? null : $exception->getPrevious()::class,
+            'duration_ms' => (int) round((microtime(true) - $started_at) * 1000),
+            'prompt_chars' => mb_strlen($prompt),
+            'empty_response' => $outcome === 'empty',
+        ]);
     }
 }
