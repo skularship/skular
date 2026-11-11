@@ -164,8 +164,8 @@ return [
                     'default' => 'deepseek/deepseek-v4.1-flash',
                 ],
                 'embeddings' => [
-                    'default' => 'nvidia/nemotron-3-embed-1b:free'
-                ]
+                    'default' => 'nvidia/nemotron-3-embed-1b:free',
+                ],
             ],
         ],
 
