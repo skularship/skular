@@ -38,13 +38,26 @@ final class EvaluatePracticeFeedback implements ShouldBeUnique, ShouldQueue
     /**
      * A stuck evaluation process must not block a queue slot indefinitely.
      *
-     * Must stay below the queue connection's `retry_after` (90s for the
-     * database queue in config/queue.php); otherwise a still-running job is
-     * reserved again by another worker and fails with "max attempts exceeded"
-     * while the first run is still writing the feedback. The agent call itself
-     * is capped at 25s by #[Timeout] on PracticeFeedbackAgent.
+     * Covers every queued attempt: 2 agent calls of
+     * PracticeFeedbackAgent::TIMEOUT_SECONDS (40s) plus the longest pause
+     * (8s) is 88s. Must stay below the queue connection's `retry_after`
+     * (150s for the database queue in config/queue.php); otherwise a
+     * still-running job is reserved again by another worker and fails with
+     * "max attempts exceeded" while the first run is still writing feedback.
+     * Enforced only when the worker has the pcntl extension.
      */
-    public int $timeout = 60;
+    public int $timeout = 100;
+
+    /**
+     * Seconds the unique lock may outlive a worker that died mid-job.
+     *
+     * A worker killed without running failed() never releases the lock;
+     * without this TTL the database cache kept it for a day and silently
+     * dropped every later dispatch for the same submission. Kept at or below
+     * UserPracticeResponse::STALLED_AFTER_SECONDS, so the evaluation the
+     * mentee starts from "Nilai ulang" after a stall is always accepted.
+     */
+    public int $uniqueFor = 120;
 
     /**
      * One evaluation per stored response keeps duplicated clicks cheap.

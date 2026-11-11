@@ -7,6 +7,7 @@ use App\Contracts\AiFeedbackServiceInterface;
 use App\Contracts\PracticeSubmissionServiceInterface;
 use App\Data\AiFeedbackData;
 use App\Data\PracticeFieldData;
+use App\Enums\AiFailureReason;
 use App\Enums\AiFeedbackStatus;
 use App\Enums\PracticeFieldType;
 use App\Exceptions\AiFeedbackException;
@@ -37,23 +38,38 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
      *
      * The first call after a submission is the one most likely to hit a
      * passing timeout or rate limit; one silent retry spares the mentee from
-     * pressing "Nilai ulang" for a hiccup. Two 25-second agent calls plus the
-     * pause stay below the job's 60-second timeout.
+     * pressing "Nilai ulang" for a hiccup. Two agent calls of
+     * PracticeFeedbackAgent::TIMEOUT_SECONDS plus the longest pause stay
+     * below EvaluatePracticeFeedback::$timeout.
      */
     public const QUEUED_EVALUATION_ATTEMPTS = 2;
 
     /**
-     * Pause in seconds between two queued evaluation attempts.
+     * Pause range in milliseconds before retrying a transient failure.
+     *
+     * The random jitter keeps evaluations that failed together from hitting
+     * the provider again at the same moment.
+     *
+     * @var array{int, int}
      */
-    public const RETRY_PAUSE_SECONDS = 3;
+    public const RETRY_PAUSE_MS = [1500, 3500];
+
+    /**
+     * Longer pause range in milliseconds after a rate limit or overloaded provider.
+     *
+     * @var array{int, int}
+     */
+    public const RATE_LIMITED_PAUSE_MS = [5000, 8000];
 
     /**
      * Lifetime in seconds of the per-submission evaluation lock.
      *
-     * Covers every queued attempt so a manual retry cannot start a parallel
-     * provider call while the job is still retrying.
+     * At least the job timeout, so a manual retry cannot start a parallel
+     * provider call while the job is still retrying, and at most
+     * UserPracticeResponse::STALLED_AFTER_SECONDS, so a lock left by a dead
+     * worker has expired by the time the mentee is offered "Nilai ulang".
      */
-    private const EVALUATION_LOCK_SECONDS = 75;
+    public const EVALUATION_LOCK_SECONDS = 110;
 
     /**
      * @param  AiFeedbackServiceInterface  $ai_feedback_service  Grades a submission with the AI evaluator.
@@ -195,6 +211,8 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
             $module = $this->moduleOf($practice_form);
 
             for ($attempt = 1; ; $attempt++) {
+                $this->touchHeartbeat($response);
+
                 try {
                     $feedback = Context::scope(
                         fn (): AiFeedbackData => $this->ai_feedback_service->generate($module, $practice_form, $response->answers),
@@ -211,7 +229,7 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
                     break;
                 } catch (AiFeedbackException $exception) {
                     if ($attempt < $max_attempts && $exception->isTransient()) {
-                        Sleep::for(self::RETRY_PAUSE_SECONDS)->seconds();
+                        Sleep::for($this->retryPauseMilliseconds($exception))->milliseconds();
 
                         continue;
                     }
@@ -233,6 +251,36 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
         }
 
         return $response;
+    }
+
+    /**
+     * Pick a jittered pause before the next attempt; rate limits wait longer.
+     */
+    private function retryPauseMilliseconds(AiFeedbackException $exception): int
+    {
+        [$min, $max] = $exception->reason === AiFailureReason::RateLimited
+            ? self::RATE_LIMITED_PAUSE_MS
+            : self::RETRY_PAUSE_MS;
+
+        return random_int($min, $max);
+    }
+
+    /**
+     * Mark a running evaluation as alive by touching updated_at.
+     *
+     * UserPracticeResponse::isStalled() measures from updated_at, so a
+     * heartbeat at every attempt is what allows a short stall window without
+     * flagging a slow but healthy evaluation. Only the timestamp is written;
+     * the answers are never touched.
+     */
+    private function touchHeartbeat(UserPracticeResponse $response): void
+    {
+        $now = now();
+
+        UserPracticeResponse::query()->whereKey($response->getKey())->update(['updated_at' => $now]);
+
+        $response->updated_at = $now->toImmutable();
+        $response->syncOriginalAttribute('updated_at');
     }
 
     /**

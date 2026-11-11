@@ -63,12 +63,15 @@ class UserPracticeResponse extends Model
     }
 
     /**
-     * Seconds after which an unfinished evaluation is treated as stalled.
+     * Seconds without a heartbeat after which an unfinished evaluation is stalled.
      *
-     * The queued job is capped at 60 seconds, so an evaluation still marked
-     * as running after three minutes lost its worker and will never finish.
+     * The queued evaluation touches updated_at when it starts and before every
+     * provider attempt (at most 48 seconds apart), so two minutes without a
+     * touch means the job was never picked up or lost its worker. Must stay at
+     * or above the job's uniqueFor and the evaluation lock TTL, so the retry
+     * offered at that point can always start a new evaluation.
      */
-    public const STALLED_AFTER_SECONDS = 180;
+    public const STALLED_AFTER_SECONDS = 120;
 
     /**
      * Determine whether the AI evaluation is still expected to finish.

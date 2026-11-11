@@ -15,10 +15,20 @@ use Laravel\Ai\Promptable;
 /**
  * Learning evaluator that grades a practice submission against the module rubric.
  */
-#[Timeout(25)]
+#[Timeout(self::TIMEOUT_SECONDS)]
 class PracticeFeedbackAgent implements Agent, HasStructuredOutput
 {
     use Promptable;
+
+    /**
+     * Seconds one provider call may take before it is aborted.
+     *
+     * Successful evaluations take about 5-20 seconds (median about 11s), so
+     * 40 seconds absorbs a slow route without failing the attempt. Part of
+     * the evaluation time budget checked by PracticeFeedbackReliabilityTest:
+     * TIMEOUT_SECONDS x attempts + longest pause < job timeout < retry_after.
+     */
+    public const TIMEOUT_SECONDS = 40;
 
     /**
      * Maximum number of characters accepted from a single answer.

@@ -2,15 +2,22 @@
 
 use App\Ai\Agents\PracticeFeedbackAgent;
 use App\Contracts\AiFeedbackServiceInterface;
+use App\Contracts\PracticeSubmissionServiceInterface;
+use App\Data\AiFeedbackData;
 use App\Enums\AiFailureReason;
+use App\Enums\AiFeedbackStatus;
 use App\Exceptions\AiFeedbackException;
+use App\Jobs\EvaluatePracticeFeedback;
 use App\Models\Module;
 use App\Models\PracticeForm;
 use App\Models\User;
+use App\Models\UserPracticeResponse;
+use App\Services\PracticeSubmissionService;
 use GuzzleHttp\Psr7\Response as GuzzleResponse;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response as ClientResponse;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Sleep;
 use Laravel\Ai\Exceptions\ProviderConnectionException;
 
@@ -26,6 +33,39 @@ beforeEach(function () {
     $this->module = Module::factory()->create();
     $this->form = PracticeForm::factory()->create(['module_id' => $this->module->id]);
 });
+
+/**
+ * An AI fake that records every answer it grades and echoes it in the summary.
+ */
+function reliabilityAiFake(): object
+{
+    return new class implements AiFeedbackServiceInterface
+    {
+        /** @var array<int, string> */
+        public array $graded = [];
+
+        public ?Closure $while_grading = null;
+
+        public function generate(Module $module, PracticeForm $practice_form, array $answers): AiFeedbackData
+        {
+            $this->graded[] = (string) ($answers['jawaban'] ?? '');
+
+            if ($this->while_grading !== null) {
+                $callback = $this->while_grading;
+                $this->while_grading = null;
+                $callback();
+            }
+
+            return new AiFeedbackData(
+                score: 80,
+                strengths: [['point' => 'Runtut', 'explanation' => 'Alurnya jelas.']],
+                improvements: [],
+                feedback: 'Untuk: '.($answers['jawaban'] ?? ''),
+                next_steps: [],
+            );
+        }
+    };
+}
 
 test('a provider timeout wrapped by the sdk is classified as a timeout', function () {
     // This is the exact chain the OpenRouter gateway throws when #[Timeout] elapses.
@@ -89,4 +129,47 @@ test('a model answer without a readable score is rejected instead of graded as z
         expect($exception->reason)->toBe(AiFailureReason::InvalidResponse)
             ->and($exception->isTransient())->toBeTrue();
     }
+});
+
+test('the evaluation time budget stays consistent across agent, job, queue, lock and stall window', function () {
+    $agent_timeout = (new ReflectionClass(PracticeFeedbackAgent::class))
+        ->getAttributes(Laravel\Ai\Attributes\Timeout::class)[0]->newInstance()->value;
+    $job = new EvaluatePracticeFeedback(1, 1, 1);
+    $longest_pause_seconds = PracticeSubmissionService::RATE_LIMITED_PAUSE_MS[1] / 1000;
+    $retry_after = config('queue.connections.database.retry_after');
+
+    expect($agent_timeout)->toBe(PracticeFeedbackAgent::TIMEOUT_SECONDS)
+        // Every queued attempt fits inside one job run...
+        ->and($agent_timeout * PracticeSubmissionService::QUEUED_EVALUATION_ATTEMPTS + $longest_pause_seconds)->toBeLessThan($job->timeout)
+        // ...which is never reserved twice by the database queue...
+        ->and($job->timeout)->toBeLessThan($retry_after)
+        // ...and the provider lock outlives the whole run.
+        ->and(PracticeSubmissionService::EVALUATION_LOCK_SECONDS)->toBeGreaterThanOrEqual($job->timeout)
+        ->and($job->uniqueFor)->toBeGreaterThanOrEqual(PracticeSubmissionService::EVALUATION_LOCK_SECONDS)
+        // Once "Nilai ulang" appears, no lock from a dead worker can block it.
+        ->and(UserPracticeResponse::STALLED_AFTER_SECONDS)->toBeGreaterThanOrEqual($job->uniqueFor);
+});
+
+test('a slow but healthy evaluation keeps its heartbeat and is never flagged as stalled', function () {
+    $fake = reliabilityAiFake();
+    app()->instance(AiFeedbackServiceInterface::class, $fake);
+
+    Queue::fake();
+    $response = app(PracticeSubmissionServiceInterface::class)->submit($this->mentee, $this->form, ['jawaban' => 'Jawaban.']);
+
+    // The job is picked up late, close to the stall window...
+    $this->travel(UserPracticeResponse::STALLED_AFTER_SECONDS - 10)->seconds();
+
+    $observed = null;
+    $fake->while_grading = function () use ($response, &$observed) {
+        // ...and the provider is slow too: far past the window since the
+        // submission, but the heartbeat written when the attempt started keeps it alive.
+        $this->travel(UserPracticeResponse::STALLED_AFTER_SECONDS - 10)->seconds();
+        $observed = $response->fresh()->isStalled();
+    };
+
+    app(PracticeSubmissionServiceInterface::class)->evaluateSubmission($response->id, $this->form->id, $response->attempts);
+
+    expect($observed)->toBeFalse()
+        ->and($response->fresh()->ai_status)->toBe(AiFeedbackStatus::Completed);
 });
