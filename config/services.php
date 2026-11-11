@@ -12,6 +12,11 @@ return [
     |
     */
 
+    // "Bantuan" page: WhatsApp help line (digits only, country code first, used for wa.me links).
+    'support' => [
+        'whatsapp' => env('SUPPORT_WHATSAPP_NUMBER', '6289604883024'),
+    ],
+
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),

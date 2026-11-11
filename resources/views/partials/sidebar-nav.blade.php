@@ -27,6 +27,7 @@
             'links' => [
                 ['route' => 'profiling', 'label' => __('Profil & Profiling'), 'icon' => 'identification', 'pattern' => 'profiling'],
                 ['route' => 'cv.show', 'label' => __('CV Saya'), 'icon' => 'document-text', 'pattern' => 'cv.show'],
+                ['route' => 'support.index', 'label' => __('Bantuan'), 'icon' => 'lifebuoy', 'pattern' => 'support.index'],
             ],
         ],
     ];

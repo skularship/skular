@@ -57,6 +57,7 @@ class RoleSeeder extends Seeder
             'Scholarship' => self::MANAGE,
             'ScholarshipApplication' => self::MANAGE,
             'ScholarshipInfoReport' => self::MANAGE,
+            'SupportTicket' => self::MANAGE,
             'Faq' => self::MANAGE,
             'FaqCategory' => self::MANAGE,
             'UserPracticeResponse' => self::READ,
@@ -76,6 +77,8 @@ class RoleSeeder extends Seeder
             'ScholarshipApplication' => self::READ,
             // Staff may review reports (change status) but never delete them.
             'ScholarshipInfoReport' => self::REVIEW,
+            // Staff may handle tickets (change status) but never delete them.
+            'SupportTicket' => self::REVIEW,
             'UserPracticeResponse' => self::READ,
             'Checkpoint' => self::READ,
             'ModuleFeedback' => self::READ,

@@ -15,6 +15,7 @@ use App\Livewire\Scholarships\Index as ScholarshipsIndex;
 use App\Livewire\Scholarships\Recommendation;
 use App\Livewire\Scholarships\Show as ScholarshipShow;
 use App\Livewire\Scholarships\Tracker;
+use App\Livewire\Support\Help;
 use App\Livewire\Twibbon\Generator;
 use Illuminate\Support\Facades\Route;
 
@@ -46,6 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('scholarships/{application}/twibbon', Generator::class)->name('twibbon.show');
     Route::livewire('scholarships/{scholarship}', ScholarshipShow::class)->name('scholarships.show');
     Route::livewire('cv', CvShow::class)->name('cv.show');
+    Route::livewire('bantuan', Help::class)->name('support.index');
     Route::get('scholarships/{application}/proof', [SubmissionProofController::class, 'show'])->name('applications.proof');
 });
 

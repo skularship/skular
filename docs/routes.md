@@ -41,6 +41,7 @@ Skular adalah aplikasi **Livewire server-rendered**, bukan API JSON. Aksi di hal
 | GET | `/dashboard` | dashboard | `Livewire\Dashboard (Livewire page)` | `auth`, `verified` |
 | GET | `/faq` | faq.index | `Livewire\Faq\Index (Livewire page)` | — |
 | GET | `/roadmap` | roadmap.show | `Livewire\Roadmap (Livewire page)` | `auth`, `verified` |
+| GET | `/bantuan` | support.index | `Livewire\Support\Help (Livewire page)` | `auth`, `verified` |
 | GET | `/library` | library.index | `Livewire\Learning\Library (Livewire page)` | `auth`, `verified` |
 | GET | `/modules/{module}` | modules.show | `Livewire\Learning\ModulePlayer (Livewire page)` | `auth`, `verified` |
 | GET | `/profiling/recommendation` | profiling.recommendation | `Livewire\Scholarships\Recommendation (Livewire page)` | `auth`, `verified` |
@@ -130,5 +131,6 @@ Semua route di bawah `/admin` memakai middleware panel Filament (`SetUpPanel:adm
 | `twibbon-templates` | `/admin/twibbon-templates`<br>`/admin/twibbon-templates/create`<br>`/admin/twibbon-templates/{record}/edit` |
 | `two-factor-authentication` | `/admin/two-factor-authentication` |
 | `scholarship-info-reports` | `/admin/scholarship-info-reports` |
+| `support-tickets` | `/admin/support-tickets` |
 | `user-practice-responses` | `/admin/user-practice-responses` |
 | `users` | `/admin/users`<br>`/admin/users/create`<br>`/admin/users/{record}/edit` |

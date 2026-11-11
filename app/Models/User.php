@@ -53,6 +53,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read Cluster|null $cluster
  * @property-read Collection<int, ScholarshipApplication> $scholarshipApplications
  * @property-read Collection<int, ScholarshipInfoReport> $scholarshipInfoReports
+ * @property-read Collection<int, SupportTicket> $supportTickets
  * @property-read Collection<int, Scholarship> $scholarships
  * @property-read ScholarshipApplication|null $primaryApplication
  * @property-read Collection<int, Checkpoint> $checkpoints
@@ -166,6 +167,16 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
     public function scholarshipInfoReports(): HasMany
     {
         return $this->hasMany(ScholarshipInfoReport::class);
+    }
+
+    /**
+     * Get the help requests and bug reports the mentee sent from "Bantuan".
+     *
+     * @return HasMany<SupportTicket, $this>
+     */
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class);
     }
 
     /**
