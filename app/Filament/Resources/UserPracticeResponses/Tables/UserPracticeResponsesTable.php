@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\UserPracticeResponses\Tables;
 
+use App\Data\FeedbackPointData;
 use App\Enums\AiFeedbackStatus;
 use App\Models\UserPracticeResponse;
 use Filament\Actions\ViewAction;
@@ -136,6 +137,18 @@ class UserPracticeResponsesTable
         $lines = [];
 
         foreach ($feedback as $key => $value) {
+            // Lists hold {point, explanation} items, or plain strings in older rows.
+            if (in_array($key, ['strengths', 'improvements', 'next_steps'], true)) {
+                $items = array_map(
+                    fn (FeedbackPointData $item): string => '• '.(filled($item->point) ? $item->point.(filled($item->explanation) ? ' — ' : '') : '').$item->explanation,
+                    FeedbackPointData::listFrom($value),
+                );
+
+                $lines[] = $labels[$key].":\n".($items === [] ? '—' : implode("\n", $items));
+
+                continue;
+            }
+
             $lines[] = ($labels[$key] ?? $key).': '.self::stringify($value);
         }
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Ai\Agents\PracticeFeedbackAgent;
 use App\Contracts\AiFeedbackServiceInterface;
 use App\Contracts\PracticeSubmissionServiceInterface;
 use App\Data\AiFeedbackData;
@@ -107,4 +108,34 @@ test('a missing submission row is ignored by the job', function () {
     $service = app(PracticeSubmissionServiceInterface::class);
 
     expect(fn () => $service->evaluateSubmission(999999, 999999))->not->toThrow(Throwable::class);
+});
+
+test('the queued job stores point and explanation items and stays idempotent', function () {
+    PracticeFeedbackAgent::fake([[
+        'score' => 78,
+        'strengths' => [['point' => 'Tujuan jelas', 'explanation' => 'Kamu menyebut tujuan studi dengan spesifik.']],
+        'improvements' => [['point' => 'Bukti kurang', 'explanation' => 'Tambahkan satu pengalaman pendukung.']],
+        'feedback' => 'Arahnya sudah tepat.',
+        'next_steps' => [['point' => 'Tambah data', 'explanation' => 'Sertakan angka dari kegiatanmu.']],
+    ]])->preventStrayPrompts();
+
+    $user = User::factory()->profiled()->create();
+    $form = PracticeForm::factory()->create(['module_id' => Module::factory()]);
+
+    $service = app(PracticeSubmissionServiceInterface::class);
+    $response = $service->submit($user, $form, ['jawaban' => 'Jawaban pribadi saya.']);
+
+    // A replay must not reach the (fake) provider again; preventStrayPrompts would throw.
+    (new EvaluatePracticeFeedback($response->id, $form->id))->handle($service);
+
+    $response->refresh();
+
+    expect($response->ai_status)->toBe(AiFeedbackStatus::Completed)
+        ->and($response->answers['jawaban'])->toBe('Jawaban pribadi saya.')
+        ->and($response->ai_feedback['strengths'][0])->toBe([
+            'point' => 'Tujuan jelas',
+            'explanation' => 'Kamu menyebut tujuan studi dengan spesifik.',
+        ]);
+
+    PracticeFeedbackAgent::assertPrompted(fn (): bool => true);
 });

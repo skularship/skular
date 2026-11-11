@@ -119,10 +119,16 @@
                 @if ($response instanceof \App\Models\UserPracticeResponse && $response->ai_status->value !== 'pending')
                     @if ($response->hasFeedback())
                         @php
+                            // Rows hold either the {point, explanation} shape or the legacy
+                            // plain strings; FeedbackPointData reads both without rewriting data.
                             $feedback = is_array($response->ai_feedback) ? $response->ai_feedback : [];
-                            $strengths = array_values(array_filter((array) ($feedback['strengths'] ?? [])));
-                            $improvements = array_values(array_filter((array) ($feedback['improvements'] ?? [])));
-                            $next_steps = array_values(array_filter((array) ($feedback['next_steps'] ?? [])));
+                            $strengths = \App\Data\FeedbackPointData::listFrom($feedback['strengths'] ?? []);
+                            $improvements = \App\Data\FeedbackPointData::listFrom($feedback['improvements'] ?? []);
+                            $next_steps = \App\Data\FeedbackPointData::listFrom($feedback['next_steps'] ?? []);
+                            $summary_paragraphs = array_values(array_filter(
+                                preg_split('/\R{2,}/u', trim(is_string($feedback['feedback'] ?? null) ? $feedback['feedback'] : '')) ?: [],
+                                fn (string $paragraph): bool => trim($paragraph) !== '',
+                            ));
                         @endphp
 
                         <section class="flex flex-col gap-5 rounded-3xl border border-brand-teal/20 bg-brand-teal/5 p-5 dark:border-brand-teal-light/20 dark:bg-brand-teal/10" data-test="ai-feedback">
@@ -147,60 +153,26 @@
                                 <x-ui.pill variant="info" icon="sparkles">{{ __('Dari evaluasi AI') }}</x-ui.pill>
                             </div>
 
-                            <p class="text-sm leading-relaxed whitespace-pre-line text-zinc-700 dark:text-zinc-200">
-                                {{ $feedback['feedback'] ?? '' }}
-                            </p>
+                            @if ($summary_paragraphs !== [])
+                                <div class="flex max-w-prose flex-col gap-3 text-[0.9375rem] leading-relaxed text-zinc-700" data-test="ai-feedback-summary">
+                                    @foreach ($summary_paragraphs as $paragraph)
+                                        <p class="whitespace-pre-line">{{ trim($paragraph) }}</p>
+                                    @endforeach
+                                </div>
+                            @endif
 
-                            <div class="grid gap-4 lg:grid-cols-3">
+                            {{-- Stacked full-width cards: a bold point plus its explanation needs more width than three columns give. --}}
+                            <div class="flex flex-col gap-4">
                                 @if ($strengths !== [])
-                                    <div class="flex flex-col gap-2 rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 dark:border-emerald-500/25 dark:bg-emerald-950/40">
-                                        <p class="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700 dark:text-emerald-300">
-                                            <x-icons.app-icon name="check-circle" class="size-4" />
-                                            {{ __('Kekuatanmu') }}
-                                        </p>
-                                        <ul class="flex flex-col gap-2">
-                                            @foreach ($strengths as $item)
-                                                <li class="flex items-start gap-2 text-sm text-zinc-700 dark:text-zinc-200">
-                                                    <x-icons.app-icon name="check" class="mt-0.5 size-3.5 shrink-0 text-emerald-500" />
-                                                    <span>{{ $item }}</span>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
+                                    @include('livewire.learning.partials.feedback-points', ['items' => $strengths, 'title' => __('Kekuatanmu'), 'icon' => 'check-circle', 'marker' => 'check', 'tone' => 'emerald', 'test' => 'ai-feedback-strengths'])
                                 @endif
 
                                 @if ($improvements !== [])
-                                    <div class="flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50/80 p-4 dark:border-amber-500/25 dark:bg-amber-950/40">
-                                        <p class="inline-flex items-center gap-1.5 text-sm font-bold text-amber-700 dark:text-amber-300">
-                                            <x-icons.app-icon name="arrow-path" class="size-4" />
-                                            {{ __('Yang perlu diperbaiki') }}
-                                        </p>
-                                        <ul class="flex flex-col gap-2">
-                                            @foreach ($improvements as $item)
-                                                <li class="flex items-start gap-2 text-sm text-zinc-700 dark:text-zinc-200">
-                                                    <x-icons.app-icon name="arrow-right" class="mt-0.5 size-3.5 shrink-0 text-amber-500" />
-                                                    <span>{{ $item }}</span>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
+                                    @include('livewire.learning.partials.feedback-points', ['items' => $improvements, 'title' => __('Yang perlu diperbaiki'), 'icon' => 'arrow-path', 'marker' => 'arrow-right', 'tone' => 'amber', 'test' => 'ai-feedback-improvements'])
                                 @endif
 
                                 @if ($next_steps !== [])
-                                    <div class="flex flex-col gap-2 rounded-2xl border border-brand-teal/25 bg-white/80 p-4 dark:border-brand-teal-light/20 dark:bg-zinc-900/50">
-                                        <p class="inline-flex items-center gap-1.5 text-sm font-bold text-brand-teal dark:text-brand-teal-light">
-                                            <x-icons.app-icon name="flag" class="size-4" />
-                                            {{ __('Langkah berikutnya') }}
-                                        </p>
-                                        <ul class="flex flex-col gap-2">
-                                            @foreach ($next_steps as $item)
-                                                <li class="flex items-start gap-2 text-sm text-zinc-700 dark:text-zinc-200">
-                                                    <x-icons.app-icon name="arrow-right" class="mt-0.5 size-3.5 shrink-0 text-brand-orange" />
-                                                    <span>{{ $item }}</span>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
+                                    @include('livewire.learning.partials.feedback-points', ['items' => $next_steps, 'title' => __('Langkah berikutnya'), 'icon' => 'flag', 'marker' => 'arrow-right', 'tone' => 'teal', 'test' => 'ai-feedback-next-steps'])
                                 @endif
                             </div>
                         </section>

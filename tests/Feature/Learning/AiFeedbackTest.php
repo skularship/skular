@@ -38,10 +38,16 @@ function feedbackPayload(int $score = 82): array
 {
     return [
         'score' => $score,
-        'strengths' => ['Struktur STAR terlihat jelas.'],
-        'improvements' => ['Tambahkan angka dampak.'],
+        'strengths' => [
+            ['point' => 'Struktur STAR jelas', 'explanation' => 'Situasi, tugas, aksi, dan hasil muncul berurutan.'],
+        ],
+        'improvements' => [
+            ['point' => 'Dampak belum terukur', 'explanation' => 'Tambahkan angka supaya hasilnya meyakinkan.'],
+        ],
         'feedback' => 'Jawabanmu sudah kuat dan runtut.',
-        'next_steps' => ['Tulis satu paragraf dampak terukur.'],
+        'next_steps' => [
+            ['point' => 'Tulis paragraf dampak', 'explanation' => 'Satu paragraf berisi hasil terukur dari aksimu.'],
+        ],
     ];
 }
 
@@ -63,10 +69,55 @@ test('structured feedback is mapped onto the feedback dto', function () {
     $feedback = $this->service->generate($this->module, $this->form, ['jawaban' => 'Jawaban saya.']);
 
     expect($feedback->score)->toBe(82)
-        ->and($feedback->strengths)->toBe(['Struktur STAR terlihat jelas.'])
-        ->and($feedback->improvements)->toBe(['Tambahkan angka dampak.'])
+        ->and($feedback->strengths[0]->point)->toBe('Struktur STAR jelas')
+        ->and($feedback->strengths[0]->explanation)->toBe('Situasi, tugas, aksi, dan hasil muncul berurutan.')
+        ->and($feedback->improvements[0]->point)->toBe('Dampak belum terukur')
         ->and($feedback->feedback)->toBe('Jawabanmu sudah kuat dan runtut.')
-        ->and($feedback->next_steps)->toBe(['Tulis satu paragraf dampak terukur.']);
+        ->and($feedback->next_steps[0]->explanation)->toBe('Satu paragraf berisi hasil terukur dari aksimu.')
+        ->and($feedback->toArray()['strengths'][0])->toBe([
+            'point' => 'Struktur STAR jelas',
+            'explanation' => 'Situasi, tugas, aksi, dan hasil muncul berurutan.',
+        ]);
+});
+
+test('a model answering with legacy plain strings is still accepted as explanations', function () {
+    PracticeFeedbackAgent::fake([[
+        'score' => 70,
+        'strengths' => ['Struktur STAR terlihat jelas.'],
+        'improvements' => ['Tambahkan angka dampak.'],
+        'feedback' => 'Sudah cukup baik.',
+        'next_steps' => ['Tulis satu paragraf dampak terukur.'],
+    ]])->preventStrayPrompts();
+
+    $feedback = $this->service->generate($this->module, $this->form, ['jawaban' => 'Jawaban saya.']);
+
+    expect($feedback->strengths[0]->point)->toBeNull()
+        ->and($feedback->strengths[0]->explanation)->toBe('Struktur STAR terlihat jelas.')
+        ->and($feedback->next_steps)->toHaveCount(1);
+});
+
+test('malformed feedback items are dropped and markdown is stripped from points', function () {
+    PracticeFeedbackAgent::fake([[
+        'score' => 75,
+        'strengths' => [
+            ['point' => '**Pembuka kuat**:', 'explanation' => 'Kalimat pertama langsung menarik.'],
+            ['point' => '', 'explanation' => ''],
+            42,
+            null,
+            ['unexpected' => 'shape'],
+        ],
+        'improvements' => 'bukan daftar',
+        'feedback' => 'Bagus.',
+        'next_steps' => array_fill(0, 6, ['point' => 'Langkah', 'explanation' => 'Lakukan ini.']),
+    ]])->preventStrayPrompts();
+
+    $feedback = $this->service->generate($this->module, $this->form, ['jawaban' => 'Jawaban saya.']);
+
+    expect($feedback->strengths)->toHaveCount(2)
+        ->and($feedback->strengths[0]->point)->toBe('Pembuka kuat')
+        ->and($feedback->strengths[1]->explanation)->toBe('42')
+        ->and($feedback->improvements)->toBe([])
+        ->and($feedback->next_steps)->toHaveCount(4);
 });
 
 test('an out-of-range score is clamped by the dto', function (int $score, int $normalized) {

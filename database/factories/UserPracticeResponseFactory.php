@@ -47,6 +47,30 @@ class UserPracticeResponseFactory extends Factory
             'ai_score' => $score,
             'ai_feedback' => [
                 'score' => $score,
+                'strengths' => [
+                    ['point' => 'Alur jawaban runtut', 'explanation' => 'Setiap paragraf menyambung ke paragraf berikutnya.'],
+                ],
+                'improvements' => [
+                    ['point' => 'Contoh masih umum', 'explanation' => 'Tambahkan satu contoh konkret dari pengalamanmu.'],
+                ],
+                'feedback' => 'Jawabanmu sudah baik dan sesuai dengan tujuan modul.',
+                'next_steps' => [
+                    ['point' => 'Perkuat penutup', 'explanation' => 'Tutup dengan rencana yang jelas setelah lulus.'],
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * Indicate that feedback was stored in the legacy plain-string shape (before November 2026).
+     */
+    public function withLegacyFeedback(int $score = 85): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'ai_status' => AiFeedbackStatus::Completed,
+            'ai_score' => $score,
+            'ai_feedback' => [
+                'score' => $score,
                 'strengths' => ['Struktur jawaban sudah runtut.'],
                 'improvements' => ['Tambahkan contoh konkret.'],
                 'feedback' => 'Jawabanmu sudah baik dan sesuai dengan tujuan modul.',

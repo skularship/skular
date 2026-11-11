@@ -7,6 +7,7 @@ use App\Ai\AiConfiguration;
 use App\Concerns\ExtractsStructuredResponse;
 use App\Contracts\AiFeedbackServiceInterface;
 use App\Data\AiFeedbackData;
+use App\Data\FeedbackPointData;
 use App\Enums\AiFailureReason;
 use App\Exceptions\AiFeedbackException;
 use App\Models\Module;
@@ -84,32 +85,12 @@ class AiFeedbackService implements AiFeedbackServiceInterface
 
         return new AiFeedbackData(
             score: is_numeric($score) ? (int) $score : 0,
-            strengths: $this->stringList($payload['strengths'] ?? []),
-            improvements: $this->stringList($payload['improvements'] ?? []),
-            feedback: $feedback,
-            next_steps: $this->stringList($payload['next_steps'] ?? []),
+            // Malformed items are dropped instead of failing the evaluation;
+            // a model that still answers with plain strings is accepted too.
+            strengths: FeedbackPointData::listFrom($payload['strengths'] ?? null),
+            improvements: FeedbackPointData::listFrom($payload['improvements'] ?? null),
+            feedback: trim($feedback),
+            next_steps: FeedbackPointData::listFrom($payload['next_steps'] ?? null),
         );
-    }
-
-    /**
-     * Normalise an arbitrary AI value into a list of non-empty strings.
-     *
-     * @return array<int, string>
-     */
-    private function stringList(mixed $value): array
-    {
-        if (! is_array($value)) {
-            return [];
-        }
-
-        $items = [];
-
-        foreach ($value as $item) {
-            if (is_scalar($item) && trim((string) $item) !== '') {
-                $items[] = trim((string) $item);
-            }
-        }
-
-        return $items;
     }
 }
