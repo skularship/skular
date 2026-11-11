@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HealthCheckController;
-use App\Http\Controllers\QueueHealthController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SubmissionProofController;
 use App\Livewire\Cv\Show as CvShow;
@@ -24,7 +23,6 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'welcome')->name('home');
 
 Route::get('health', HealthCheckController::class)->name('health');
-Route::get('health/queue', QueueHealthController::class)->name('health.queue');
 
 // Only pages reachable without authenticating are listed. Scholarship and
 // module pages sit behind auth + verified, so crawlers would only see a login

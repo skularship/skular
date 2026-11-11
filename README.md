@@ -164,7 +164,7 @@ public/build/              # Aset Vite hasil build (DI-COMMIT)
 | Pengaturan akun (profil, keamanan, passkey, 2FA) | `/settings/profile`, `/settings/security` | `app/Livewire/Settings/*` |
 | Panel admin (kurikulum, beasiswa, pemantauan mentee, pengguna) | `/admin/*` | `app/Filament/**`, `app/Policies/*` |
 | Pratinjau modul untuk admin (read-only) | `/admin/modules/{record}/preview` | `app/Filament/Resources/Modules/Pages/PreviewModule.php` |
-| SEO, sitemap, health check | `/sitemap.xml`, `/up`, `/health`, `/health/queue` | `app/Http/Controllers/SitemapController.php`, `HealthCheckController.php`, `QueueHealthController.php`, `config/seo.php` |
+| SEO, sitemap, health check | `/sitemap.xml`, `/up`, `/health` | `app/Http/Controllers/SitemapController.php`, `HealthCheckController.php`, `config/seo.php` |
 
 ### Aturan bisnis ringkas
 
@@ -191,11 +191,10 @@ Menu admin dikelompokkan: Kurikulum, Materi & Latihan, Beasiswa, Pemantauan Ment
 ## 7. Perintah Penting
 
 ```bash
-composer dev              # php artisan serve + queue:listen + vite (paralel)
+composer dev              # php artisan serve + vite (paralel)
 npm run dev               # Vite dev server saja (vp dev)
 npm run build             # build aset production (vp build) — hasilnya di-commit
 php artisan migrate       # jalankan migration
-php artisan queue:work    # worker queue (WAJIB untuk penilaian AI praktik dan Nilai ulang)
 
 composer test             # config:clear + Pint (test) + PHPStan + seluruh test — gerbang sebelum merge
 composer ci:check         # rantai yang sama dengan CI
@@ -236,7 +235,6 @@ php artisan migrate --force
 php artisan optimize                           # cache config, route, event, view
 php artisan view:cache                         # wajib: hindari kompilasi view di request pertama
 php artisan filament:optimize
-php artisan queue:restart                      # worker memuat kode baru
 php artisan up
 ```
 
@@ -246,11 +244,11 @@ php artisan up
 |---|---|
 | PHP | 8.3+ dengan OPcache aktif; reload PHP-FPM setiap deploy bila `validate_timestamps=0` |
 | Database | MySQL 8+ atau PostgreSQL 15+ (bukan SQLite) |
-| Queue worker | **Tidak wajib** untuk penilaian AI praktik: penilaian pertama dan *Nilai ulang* berjalan sinkron di request web. Saat ini tidak ada job lain di codebase |
+| Queue worker | **Tidak wajib** untuk penilaian AI praktik: penilaian pertama dan *Nilai ulang* berjalan sinkron di request web. Saat ini tidak ada job lain di codebase. Job `EvaluatePracticeFeedback` lama yang masih tersisa di tabel `jobs` tidak bisa dijalankan lagi (kelasnya dihapus) dan akan masuk `failed_jobs` bila ada worker; jawaban terkait tampil macet lalu mendapat tombol *Nilai ulang* setelah 75 detik |
 | Timeout request | Penilaian praktik menahan request Livewire paling lama ±49 detik (22 dtk × 2 percobaan + jeda 5 dtk). Batas request di depan PHP harus **≥ 60 detik** (`PracticeSubmissionService::REQUEST_TIME_LIMIT_SECONDS`): nginx `fastcgi_read_timeout`/`proxy_read_timeout` (default 60), PHP-FPM `request_terminate_timeout` (0 atau ≥ 60), Apache/LiteSpeed (default 300), Cloudflare (100). Evaluasi menaikkan `max_execution_time` ke 60 bila lebih kecil. Bila batas server lebih pendek, turunkan dulu anggaran di kode (lihat `docs/ai-features.md`) |
 | Storage | Persisten & privat: bukti pendaftaran di disk `local`; twibbon dan gambar kartu beasiswa (`scholarships/`, WebP ≤512 px hasil resize GD) di disk `public` (`php artisan storage:link`). GD dengan dukungan WebP disarankan; tanpa WebP gambar disimpan sebagai JPEG |
 | HTTPS | Wajib; isi `TRUSTED_PROXIES` bila di belakang load balancer |
-| Health check | `GET /up` (liveness), `GET /health` (database + cache, 503 bila gagal), `GET /health/queue` (503 bila ada job menunggu > 120 detik = worker tidak jalan; pasang di uptime monitor, jangan di load balancer) |
+| Health check | `GET /up` (liveness), `GET /health` (database + cache, 503 bila gagal). Probe `/health/queue` sudah dihapus karena penilaian praktik tidak lagi lewat queue |
 | Uji beban | `tests/Load/skular-smoke.js` (k6), jalankan ke staging |
 
 > CI didefinisikan di `.github/workflows/tests.yml`, tetapi folder `/.github` saat ini tercantum di `.gitignore`, sehingga workflow tidak ikut ter-push. Lihat laporan dokumentasi.

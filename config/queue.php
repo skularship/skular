@@ -40,8 +40,6 @@ return [
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
-            // Above EvaluatePracticeFeedback::$timeout (100s) so a running AI
-            // evaluation is never reserved a second time.
             'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 150),
             'after_commit' => false,
         ],
@@ -121,20 +119,6 @@ return [
     | Supported drivers: "database-uuids", "dynamodb", "file", "null"
     |
     */
-
-    /*
-    |--------------------------------------------------------------------------
-    | AI Practice Evaluation Queue
-    |--------------------------------------------------------------------------
-    |
-    | Queue name for EvaluatePracticeFeedback. Empty keeps the connection's
-    | default queue. Set it (for example "ai") only after every worker also
-    | listens to it: php artisan queue:work --queue=ai,default. A queue no
-    | worker listens to is never processed.
-    |
-    */
-
-    'ai_feedback_queue' => env('AI_FEEDBACK_QUEUE'),
 
     'failed' => [
         'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),

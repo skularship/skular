@@ -78,7 +78,7 @@ Contoh nyata: kuota AI Mentor = migration `create_module_mentor_usages_table` �
 | Policy/role | `app/Policies`, `RoleSeeder`, `config/filament-shield.php` | Admin mendapat akses berlebih. `shield:generate` dapat menimpa docblock policy |
 | Pembayaran/coin | — | Belum ada di codebase |
 
-**Lingkungan:** `.env` lokal bisa saja menunjuk ke database bersama/production (pernah ditemukan `DB_HOST` remote). Periksa `DB_*` sebelum `migrate`, `db:seed`, `tinker` yang menulis, atau menjalankan server lokal (cache/session `database` ikut menulis). **Jangan jalankan `composer dev`/`queue:listen` dengan `.env` yang menunjuk DB produksi:** worker lokal akan mengambil job penilaian AI milik mentee dari tabel `jobs` bersama dan menjalankannya dengan kode/env laptop. Uji migration pada salinan SQLite. Test selalu memakai SQLite `:memory:` (`phpunit.xml`).
+**Lingkungan:** `.env` lokal bisa saja menunjuk ke database bersama/production (pernah ditemukan `DB_HOST` remote). Periksa `DB_*` sebelum `migrate`, `db:seed`, `tinker` yang menulis, atau menjalankan server lokal (cache/session `database` ikut menulis). Jangan menjalankan `queue:listen`/`queue:work` lokal dengan `.env` yang menunjuk DB produksi: worker lokal akan mengambil job apa pun dari tabel `jobs` bersama (saat ini tidak ada job; penilaian praktik sinkron). Uji migration pada salinan SQLite. Test selalu memakai SQLite `:memory:` (`phpunit.xml`).
 
 ## 6. Checklist sebelum commit
 
@@ -93,7 +93,7 @@ Contoh nyata: kuota AI Mentor = migration `create_module_mentor_usages_table` �
 
 ## 7. Perintah & catatan teknis
 
-- `composer setup` — bootstrap penuh; `composer dev` — serve + `queue:listen` + vite. Queue `database`: penilaian AI praktik butuh worker.
+- `composer setup` — bootstrap penuh; `composer dev` — serve + vite. Tidak ada job queue: penilaian AI praktik berjalan sinkron di request Livewire (worker tidak dibutuhkan; batas request web server harus ≥ 60 detik, lihat README bagian deploy). Infrastruktur queue `database` (tabel `jobs`, `failed_jobs`) dibiarkan untuk job di masa depan.
 - `composer test` = `config:clear` → `pint --parallel --test` → `phpstan analyse` → `artisan test`. CI menjalankan `composer ci:check` (rantai yang sama).
 - Satu test: `vendor/bin/pest tests/Feature/... --filter=...`.
 - `tests/Pest.php` sudah memasang `TestCase` + `RefreshDatabase` untuk `tests/Feature`; jangan menambahkannya lagi per file. `tests/Load/skular-smoke.js` adalah skrip k6, bukan Pest.
