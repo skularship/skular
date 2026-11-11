@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Keep the readiness endpoint reachable while the app is in
         // maintenance mode; the liveness route (/up) is excluded by Laravel.
-        $middleware->preventRequestsDuringMaintenance(['health']);
+        $middleware->preventRequestsDuringMaintenance(['health', 'health/queue']);
 
         // Behind a load balancer or reverse proxy, Laravel must trust the
         // proxy headers to detect HTTPS, generate secure URLs and set secure

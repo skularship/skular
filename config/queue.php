@@ -122,6 +122,20 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | AI Practice Evaluation Queue
+    |--------------------------------------------------------------------------
+    |
+    | Queue name for EvaluatePracticeFeedback. Empty keeps the connection's
+    | default queue. Set it (for example "ai") only after every worker also
+    | listens to it: php artisan queue:work --queue=ai,default. A queue no
+    | worker listens to is never processed.
+    |
+    */
+
+    'ai_feedback_queue' => env('AI_FEEDBACK_QUEUE'),
+
     'failed' => [
         'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),
         'database' => env('DB_CONNECTION', 'sqlite'),

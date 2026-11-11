@@ -91,6 +91,12 @@ final class EvaluatePracticeFeedback implements ShouldBeUnique, ShouldQueue
     ) {
         $this->attempt = $attempt;
         $this->afterCommit = true;
+
+        $queue = config('queue.ai_feedback_queue');
+
+        if (is_string($queue) && $queue !== '') {
+            $this->onQueue($queue);
+        }
     }
 
     /**
