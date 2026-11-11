@@ -17,7 +17,7 @@ return [
     'default_for_images' => 'gemini',
     'default_for_audio' => 'openai',
     'default_for_transcription' => 'openai',
-    'default_for_embeddings' => 'openai',
+    'default_for_embeddings' => 'openrouter',
     'default_for_reranking' => 'cohere',
     'default_for_classification' => 'typesafe',
 
@@ -163,6 +163,9 @@ return [
                 'text' => [
                     'default' => 'deepseek/deepseek-v4.1-flash',
                 ],
+                'embeddings' => [
+                    'default' => 'nvidia/nemotron-3-embed-1b:free'
+                ]
             ],
         ],
 

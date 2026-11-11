@@ -11,7 +11,7 @@
 @vite('resources/js/passkeys.js')
 @endassets
 
-<div
+{{-- <div
     x-data="{
         supported: false,
         loading: false,
@@ -74,4 +74,4 @@
             </div>
         </div>
     </template>
-</div>
+</div> --}}
