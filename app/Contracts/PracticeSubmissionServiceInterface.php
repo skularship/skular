@@ -24,12 +24,23 @@ interface PracticeSubmissionServiceInterface
     /**
      * Evaluate a stored submission from the background job.
      *
-     * Skips a submission that already carries completed feedback.
+     * Skips a submission that is no longer waiting for an evaluation, and a
+     * job dispatched for an older submission than the stored one.
+     *
+     * @param  int|null  $attempt  The `attempts` value the job was dispatched for; null for legacy jobs.
      */
-    public function evaluateSubmission(int $response_id, int $practice_form_id): void;
+    public function evaluateSubmission(int $response_id, int $practice_form_id, ?int $attempt = null): void;
 
     /**
-     * Request AI feedback again for a stored submission.
+     * Queue a new AI evaluation for a stored submission ("Nilai ulang").
+     *
+     * Returns the response unchanged when it cannot be retried or another
+     * evaluation is still running.
      */
     public function retryAiFeedback(UserPracticeResponse $response): UserPracticeResponse;
+
+    /**
+     * Determine whether an evaluation of this submission is running right now.
+     */
+    public function isEvaluationRunning(UserPracticeResponse $response): bool;
 }

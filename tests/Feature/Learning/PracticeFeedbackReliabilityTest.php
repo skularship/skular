@@ -14,9 +14,12 @@ use App\Models\User;
 use App\Models\UserPracticeResponse;
 use App\Services\PracticeSubmissionService;
 use GuzzleHttp\Psr7\Response as GuzzleResponse;
+use Illuminate\Bus\UniqueLock;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response as ClientResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Sleep;
 use Laravel\Ai\Exceptions\ProviderConnectionException;
@@ -98,6 +101,92 @@ test('provider http errors that repeat on every retry are configuration problems
     'request timeout' => [408, AiFailureReason::Timeout],
     'server error' => [500, AiFailureReason::Unavailable],
 ]);
+
+test('a unique job lock left by a dead worker never outlives the stall window', function () {
+    $fake = reliabilityAiFake();
+    app()->instance(AiFeedbackServiceInterface::class, $fake);
+
+    $response = UserPracticeResponse::factory()->create([
+        'user_id' => $this->mentee->id,
+        'module_id' => $this->module->id,
+        'practice_form_id' => $this->form->id,
+        'ai_status' => AiFeedbackStatus::Processing,
+        'attempts' => 1,
+    ]);
+
+    // A worker that died mid-job never runs failed(), so its unique lock stays behind.
+    (new UniqueLock(app(CacheRepository::class)))->acquire(new EvaluatePracticeFeedback($response->id, $this->form->id, 1));
+
+    // Once the mentee is offered "Nilai ulang", a new evaluation must be accepted.
+    $this->travel(UserPracticeResponse::STALLED_AFTER_SECONDS + 1)->seconds();
+
+    app(PracticeSubmissionServiceInterface::class)->retryAiFeedback($response->fresh());
+
+    expect($fake->graded)->toHaveCount(1)
+        ->and($response->fresh()->ai_status)->toBe(AiFeedbackStatus::Completed);
+});
+
+test('a resubmission after a worker died mid-job is still evaluated', function () {
+    $fake = reliabilityAiFake();
+    app()->instance(AiFeedbackServiceInterface::class, $fake);
+
+    $response = UserPracticeResponse::factory()->create([
+        'user_id' => $this->mentee->id,
+        'module_id' => $this->module->id,
+        'practice_form_id' => $this->form->id,
+        'answers' => ['jawaban' => 'Versi pertama.'],
+        'ai_status' => AiFeedbackStatus::Processing,
+        'attempts' => 1,
+    ]);
+
+    // The queued job for the first answer was taken by a worker that then died:
+    // its unique lock was acquired at dispatch and is never released.
+    (new UniqueLock(app(CacheRepository::class)))->acquire(new EvaluatePracticeFeedback($response->id, $this->form->id, 1));
+
+    app(PracticeSubmissionServiceInterface::class)->submit($this->mentee, $this->form, ['jawaban' => 'Versi kedua.']);
+
+    expect($fake->graded)->toBe(['Versi kedua.'])
+        ->and($response->fresh()->ai_status)->toBe(AiFeedbackStatus::Completed);
+});
+
+test('a retry while another evaluation holds the lock leaves the stored state untouched', function () {
+    $fake = reliabilityAiFake();
+    app()->instance(AiFeedbackServiceInterface::class, $fake);
+
+    $response = UserPracticeResponse::factory()->create([
+        'user_id' => $this->mentee->id,
+        'module_id' => $this->module->id,
+        'practice_form_id' => $this->form->id,
+        'ai_status' => AiFeedbackStatus::Failed,
+        'ai_error' => 'Layanan AI tidak dapat dihubungi.',
+    ]);
+
+    Cache::lock('ai-feedback:'.$response->id, 60)->get();
+
+    app(PracticeSubmissionServiceInterface::class)->retryAiFeedback($response->fresh());
+
+    // No provider call was made, so the response must not claim one is running.
+    expect($fake->graded)->toBe([])
+        ->and($response->fresh()->ai_status)->toBe(AiFeedbackStatus::Failed);
+});
+
+test('a resubmission during a running evaluation is graded on the newest answers', function () {
+    $fake = reliabilityAiFake();
+    app()->instance(AiFeedbackServiceInterface::class, $fake);
+
+    $service = app(PracticeSubmissionServiceInterface::class);
+
+    // The mentee edits and sends again while the first answer is being graded.
+    $fake->while_grading = fn () => $service->submit($this->mentee, $this->form, ['jawaban' => 'Versi kedua.']);
+
+    $response = $service->submit($this->mentee, $this->form, ['jawaban' => 'Versi pertama.']);
+    $response->refresh();
+
+    expect($response->answers['jawaban'])->toBe('Versi kedua.')
+        ->and($response->attempts)->toBe(2)
+        ->and($response->ai_status)->toBe(AiFeedbackStatus::Completed)
+        ->and($response->ai_feedback['feedback'])->toBe('Untuk: Versi kedua.');
+});
 
 test('a model answer without a summary but with points is still accepted', function () {
     PracticeFeedbackAgent::fake([[

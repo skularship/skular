@@ -60,22 +60,36 @@ final class EvaluatePracticeFeedback implements ShouldBeUnique, ShouldQueue
     public int $uniqueFor = 120;
 
     /**
-     * One evaluation per stored response keeps duplicated clicks cheap.
+     * The `attempts` value of the submission this job grades.
+     *
+     * Not promoted nor readonly on purpose: jobs serialised before this
+     * property existed unserialise with null instead of an uninitialised
+     * property, and are then graded on whatever answers are stored.
+     */
+    public ?int $attempt = null;
+
+    /**
+     * One evaluation per stored answer version keeps duplicated clicks cheap,
+     * while a resubmission (a new version) still gets its own job.
      */
     public function uniqueId(): string
     {
-        return (string) $this->response_id;
+        return $this->response_id.':'.($this->attempt ?? 0);
     }
 
     /**
      * Create a new evaluation job instance.
      *
      * The job runs only after the submission transaction has committed.
+     *
+     * @param  int|null  $attempt  The response's `attempts` value at dispatch time.
      */
     public function __construct(
         public readonly int $response_id,
         public readonly int $practice_form_id,
+        ?int $attempt = null,
     ) {
+        $this->attempt = $attempt;
         $this->afterCommit = true;
     }
 
@@ -84,7 +98,7 @@ final class EvaluatePracticeFeedback implements ShouldBeUnique, ShouldQueue
      */
     public function handle(PracticeSubmissionServiceInterface $submission_service): void
     {
-        $submission_service->evaluateSubmission($this->response_id, $this->practice_form_id);
+        $submission_service->evaluateSubmission($this->response_id, $this->practice_form_id, $this->attempt);
     }
 
     /**
@@ -96,8 +110,9 @@ final class EvaluatePracticeFeedback implements ShouldBeUnique, ShouldQueue
     public function failed(?Throwable $exception): void
     {
         Log::warning('AI Feedback job failed', [
-            'response_id' => $this->response_id,
+            'ai_response_id' => $this->response_id,
             'practice_form_id' => $this->practice_form_id,
+            'attempt' => $this->attempt,
             'exception' => $exception === null ? null : $exception::class,
             'message' => $exception?->getMessage(),
         ]);
@@ -105,6 +120,8 @@ final class EvaluatePracticeFeedback implements ShouldBeUnique, ShouldQueue
         UserPracticeResponse::query()
             ->whereKey($this->response_id)
             ->whereIn('ai_status', [AiFeedbackStatus::Pending->value, AiFeedbackStatus::Processing->value])
+            // A crash while grading old answers must not fail a newer submission.
+            ->when($this->attempt !== null, fn ($query) => $query->where('attempts', $this->attempt))
             ->update([
                 'ai_status' => AiFeedbackStatus::Failed->value,
                 'ai_error' => 'Penilaian AI terhenti sebelum selesai. Jawabanmu tetap tersimpan, coba nilai ulang ya.',

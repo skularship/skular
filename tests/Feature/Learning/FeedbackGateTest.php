@@ -4,12 +4,15 @@ use App\Contracts\AiFeedbackServiceInterface;
 use App\Data\AiFeedbackData;
 use App\Enums\AiFeedbackStatus;
 use App\Enums\AiScoreLabel;
+use App\Jobs\EvaluatePracticeFeedback;
 use App\Livewire\Learning\ModulePlayer;
 use App\Models\Fase;
 use App\Models\Module;
 use App\Models\PracticeForm;
 use App\Models\User;
 use App\Models\UserPracticeResponse;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -146,3 +149,36 @@ test('scores map onto four labels', function (int $score, AiScoreLabel $label) {
     [49, AiScoreLabel::PerluDiperbaiki],
     [0, AiScoreLabel::PerluDiperbaiki],
 ]);
+
+test('re-assessing queues the same job as the first evaluation instead of waiting for the ai in the request', function () {
+    Queue::fake();
+    $response = gateResponse($this, AiFeedbackStatus::Failed);
+
+    Livewire::actingAs($this->mentee)
+        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'praktik'])
+        ->call('retryFeedback', $this->form->id)
+        ->assertDispatched('toast', variant: 'info', text: 'Penilaian ulang dimulai. Hasilnya muncul otomatis di halaman ini.')
+        ->assertSeeHtml('data-test="evaluation-poll"')
+        ->assertSeeHtml('data-test="feedback-pending"');
+
+    Queue::assertPushed(EvaluatePracticeFeedback::class, fn (EvaluatePracticeFeedback $job): bool => $job->response_id === $response->id
+        && $job->attempt === 1);
+
+    expect($response->fresh()->ai_status)->toBe(AiFeedbackStatus::Processing)
+        ->and($response->fresh()->answers['jawaban'])->toBe('Jawaban saya sendiri.');
+});
+
+test('re-assessing while an evaluation still holds the lock only says it is being assessed', function () {
+    Queue::fake();
+    $response = gateResponse($this, AiFeedbackStatus::Failed);
+    Cache::lock('ai-feedback:'.$response->id, 60)->get();
+
+    Livewire::actingAs($this->mentee)
+        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'praktik'])
+        ->call('retryFeedback', $this->form->id)
+        ->assertDispatched('toast', variant: 'info', text: 'Jawabanmu sedang dinilai AI. Hasilnya muncul otomatis di halaman ini.')
+        ->assertNotDispatched('toast', variant: 'warning');
+
+    Queue::assertNothingPushed();
+    expect($response->fresh()->ai_status)->toBe(AiFeedbackStatus::Failed);
+});

@@ -26,7 +26,8 @@ use Illuminate\Support\Sleep;
 
 /**
  * Validates and stores practice answers, then evaluates them with AI in the
- * queue (EvaluatePracticeFeedback). One row per mentee per practice form; a
+ * queue (EvaluatePracticeFeedback). The first evaluation and "Nilai ulang"
+ * share that one queued path. One row per mentee per practice form; a
  * resubmission updates that row and increments attempts.
  */
 class PracticeSubmissionService implements PracticeSubmissionServiceInterface
@@ -70,6 +71,12 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
      * worker has expired by the time the mentee is offered "Nilai ulang".
      */
     public const EVALUATION_LOCK_SECONDS = 110;
+
+    /**
+     * How many times one evaluation re-grades answers that were replaced while
+     * the provider was answering, before leaving them to their own job.
+     */
+    private const SUPERSEDED_REEVALUATIONS = 1;
 
     /**
      * @param  AiFeedbackServiceInterface  $ai_feedback_service  Grades a submission with the AI evaluator.
@@ -132,7 +139,7 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
             return $response;
         });
 
-        EvaluatePracticeFeedback::dispatch($response->getKey(), $practice_form->id);
+        EvaluatePracticeFeedback::dispatch($response->getKey(), $practice_form->id, $response->attempts);
 
         return $response;
     }
@@ -140,10 +147,14 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
     /**
      * Evaluate a stored submission from the background job.
      *
-     * A submission that already has feedback is skipped, so a replayed job can
-     * never overwrite a completed evaluation nor bill the provider twice.
+     * Skipped when the submission is no longer waiting for an evaluation
+     * (completed or failed), so a replayed job can never overwrite feedback
+     * nor bill the provider twice, and when $attempt belongs to an older
+     * submission, whose newer answers have their own job.
+     *
+     * @param  int|null  $attempt  The `attempts` value the job was dispatched for; null for jobs queued before this field existed.
      */
-    public function evaluateSubmission(int $response_id, int $practice_form_id): void
+    public function evaluateSubmission(int $response_id, int $practice_form_id, ?int $attempt = null): void
     {
         /** @var UserPracticeResponse|null $response */
         $response = UserPracticeResponse::query()->find($response_id);
@@ -154,7 +165,11 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
             return;
         }
 
-        if ($response->ai_status === AiFeedbackStatus::Completed) {
+        if (! $this->isAwaitingEvaluation($response)) {
+            return;
+        }
+
+        if ($attempt !== null && $response->attempts !== $attempt) {
             return;
         }
 
@@ -169,39 +184,62 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
     }
 
     /**
-     * Request AI feedback again for a stored submission.
+     * Queue a new AI evaluation for a stored submission ("Nilai ulang").
      *
-     * This stays synchronous: the mentee pressed an explicit retry button and
-     * expects the outcome, and the shared provider lock below still prevents
-     * duplicated provider calls.
+     * Uses the same queued job and attempt budget as the first evaluation, so
+     * the web request never waits for the provider and both clicks behave the
+     * same. Nothing changes when the evaluation cannot be retried or another
+     * process still holds the evaluation lock: the response is returned as
+     * stored, so it never claims an evaluation that no process will finish.
      */
     public function retryAiFeedback(UserPracticeResponse $response): UserPracticeResponse
     {
-        $practice_form = $response->practiceForm()->firstOrFail();
+        if (! $response->canRetryEvaluation() || $this->isEvaluationRunning($response)) {
+            return $response;
+        }
 
         $response->ai_status = AiFeedbackStatus::Processing;
         $response->ai_error = null;
+        // Saving moves updated_at, which restarts the stall window.
         $response->save();
 
-        return $this->requestFeedback($response, $practice_form, 1, 'retry');
+        EvaluatePracticeFeedback::dispatch($response->getKey(), $response->practice_form_id, $response->attempts);
+
+        return $response->refresh();
+    }
+
+    /**
+     * Determine whether a process currently holds the evaluation lock of a submission.
+     */
+    public function isEvaluationRunning(UserPracticeResponse $response): bool
+    {
+        $lock = Cache::lock(self::lockKey($response), self::EVALUATION_LOCK_SECONDS);
+
+        if (! $lock->get()) {
+            return true;
+        }
+
+        $lock->release();
+
+        return false;
     }
 
     /**
      * Ask the AI evaluator for structured feedback and persist the outcome.
      *
-     * A transient failure (timeout, rate limit, empty evaluation) is retried
-     * up to $max_attempts calls in total; a configuration error fails at once.
+     * A transient failure (timeout, rate limit, unusable answer) is retried up
+     * to $max_attempts calls in total; a configuration error fails at once.
      * Only the final outcome is stored, so the mentee sees "failed" only when
      * every attempt failed.
      *
-     * @param  'queue'|'retry'  $trigger  Which path started the evaluation; written to the ai.feedback.attempt log.
+     * @param  'queue'  $trigger  Which path started the evaluation; written to the ai.feedback.attempt log.
      */
     private function requestFeedback(UserPracticeResponse $response, PracticeForm $practice_form, int $max_attempts, string $trigger): UserPracticeResponse
     {
-        // A duplicated click or two parallel requests must not pay the provider
-        // twice for the same submission. The second caller keeps the stored
-        // answers and leaves the evaluation to the request holding the lock.
-        $lock = Cache::lock('ai-feedback:'.$response->getKey(), self::EVALUATION_LOCK_SECONDS);
+        // A duplicated job must not pay the provider twice for the same
+        // submission. The process holding the lock stores the outcome itself,
+        // so the second caller changes nothing and leaves the state as it is.
+        $lock = Cache::lock(self::lockKey($response), self::EVALUATION_LOCK_SECONDS);
 
         if (! $lock->get()) {
             return $response;
@@ -210,47 +248,115 @@ class PracticeSubmissionService implements PracticeSubmissionServiceInterface
         try {
             $module = $this->moduleOf($practice_form);
 
-            for ($attempt = 1; ; $attempt++) {
-                $this->touchHeartbeat($response);
+            for ($round = 0; $round <= self::SUPERSEDED_REEVALUATIONS; $round++) {
+                $outcome = $this->evaluateWithRetries($response, $module, $practice_form, $max_attempts, $trigger);
 
-                try {
-                    $feedback = Context::scope(
-                        fn (): AiFeedbackData => $this->ai_feedback_service->generate($module, $practice_form, $response->answers),
-                        ['ai_response_id' => $response->id, 'ai_attempt' => $attempt, 'ai_trigger' => $trigger],
-                    );
+                $stored = $this->storeOutcome($response, $outcome);
 
-                    $response->fill([
-                        'ai_feedback' => $feedback->toArray(),
-                        'ai_score' => $feedback->normalizedScore(),
-                        'ai_status' => AiFeedbackStatus::Completed,
-                        'ai_error' => null,
-                    ]);
+                if ($stored !== null) {
+                    return $stored;
+                }
 
-                    break;
-                } catch (AiFeedbackException $exception) {
-                    if ($attempt < $max_attempts && $exception->isTransient()) {
-                        Sleep::for($this->retryPauseMilliseconds($exception))->milliseconds();
+                // The mentee resubmitted while the provider was answering, so
+                // the outcome belongs to answers that no longer exist. The
+                // newer answers are graded here, still inside the lock: their
+                // own job may already have found the lock taken and stopped.
+                $response->refresh();
 
-                        continue;
-                    }
-
-                    report($exception);
-
-                    $response->fill([
-                        'ai_status' => AiFeedbackStatus::Failed,
-                        'ai_error' => $exception->getMessage(),
-                    ]);
-
-                    break;
+                if (! $this->isAwaitingEvaluation($response)) {
+                    return $response;
                 }
             }
 
-            $response->save();
+            return $response;
         } finally {
             $lock->release();
         }
+    }
 
-        return $response;
+    /**
+     * Call the evaluator until it succeeds, fails permanently, or the attempts run out.
+     *
+     * @param  'queue'  $trigger
+     * @return array{ai_feedback?: array<string, mixed>, ai_score?: int, ai_status: AiFeedbackStatus, ai_error: string|null}
+     */
+    private function evaluateWithRetries(UserPracticeResponse $response, Module $module, PracticeForm $practice_form, int $max_attempts, string $trigger): array
+    {
+        for ($attempt = 1; ; $attempt++) {
+            $this->touchHeartbeat($response);
+
+            try {
+                $feedback = Context::scope(
+                    fn (): AiFeedbackData => $this->ai_feedback_service->generate($module, $practice_form, $response->answers),
+                    ['ai_response_id' => $response->id, 'ai_attempt' => $attempt, 'ai_trigger' => $trigger],
+                );
+
+                return [
+                    'ai_feedback' => $feedback->toArray(),
+                    'ai_score' => $feedback->normalizedScore(),
+                    'ai_status' => AiFeedbackStatus::Completed,
+                    'ai_error' => null,
+                ];
+            } catch (AiFeedbackException $exception) {
+                if ($attempt < $max_attempts && $exception->isTransient()) {
+                    Sleep::for($this->retryPauseMilliseconds($exception))->milliseconds();
+
+                    continue;
+                }
+
+                report($exception);
+
+                return [
+                    'ai_status' => AiFeedbackStatus::Failed,
+                    'ai_error' => $exception->getMessage(),
+                ];
+            }
+        }
+    }
+
+    /**
+     * Store an evaluation outcome unless a newer submission replaced the graded answers.
+     *
+     * The row is locked and its `attempts` compared with the graded version,
+     * so feedback for old answers can never be shown as the result of new ones.
+     * Only the ai_* columns are written; the answers are never touched.
+     *
+     * @param  array<string, mixed>  $outcome
+     * @return UserPracticeResponse|null The stored response, or null when the graded answers were superseded.
+     */
+    private function storeOutcome(UserPracticeResponse $response, array $outcome): ?UserPracticeResponse
+    {
+        return DB::transaction(function () use ($response, $outcome): ?UserPracticeResponse {
+            $current = UserPracticeResponse::query()->whereKey($response->getKey())->lockForUpdate()->first();
+
+            if ($current === null) {
+                return $response;
+            }
+
+            if ($current->attempts !== $response->attempts) {
+                return null;
+            }
+
+            $current->fill($outcome)->save();
+
+            return $current;
+        });
+    }
+
+    /**
+     * Determine whether a submission still waits for an evaluation outcome.
+     */
+    private function isAwaitingEvaluation(UserPracticeResponse $response): bool
+    {
+        return in_array($response->ai_status, [AiFeedbackStatus::Pending, AiFeedbackStatus::Processing], true);
+    }
+
+    /**
+     * Cache key of the per-submission evaluation lock.
+     */
+    private static function lockKey(UserPracticeResponse $response): string
+    {
+        return 'ai-feedback:'.$response->getKey();
     }
 
     /**

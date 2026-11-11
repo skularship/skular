@@ -329,7 +329,10 @@ class ModulePlayer extends Component
     }
 
     /**
-     * Ask the AI evaluator again after a failed feedback request.
+     * Queue a new AI evaluation after a failed or stalled one ("Nilai ulang").
+     *
+     * Runs through the same queued job as the first evaluation, so this
+     * request never waits for the provider; the page polls for the outcome.
      */
     public function retryFeedback(int $form_id): void
     {
@@ -339,22 +342,28 @@ class ModulePlayer extends Component
             return;
         }
 
+        $submission_service = app(PracticeSubmissionServiceInterface::class);
+
+        if ($submission_service->isEvaluationRunning($response)) {
+            $this->dispatch('toast', variant: 'info', text: __('Jawabanmu sedang dinilai AI. Hasilnya muncul otomatis di halaman ini.'));
+
+            return;
+        }
+
         if ($this->aiRateLimited()) {
             $this->dispatch('toast', variant: 'warning', text: __('Terlalu banyak permintaan AI. Tunggu sebentar lalu coba lagi.'));
 
             return;
         }
 
-        $response = app(PracticeSubmissionServiceInterface::class)->retryAiFeedback($response);
+        $response = $submission_service->retryAiFeedback($response);
         $this->responses_cache = null;
 
-        $this->dispatch(
-            'toast',
-            variant: $response->ai_status === AiFeedbackStatus::Completed ? 'success' : 'warning',
-            text: $response->ai_status === AiFeedbackStatus::Completed
-                ? __('Feedback AI berhasil diperbarui.')
-                : __('Feedback AI masih belum tersedia. Coba lagi beberapa saat lagi.'),
-        );
+        match ($response->ai_status) {
+            AiFeedbackStatus::Completed => $this->dispatch('toast', variant: 'success', text: __('Feedback AI berhasil diperbarui.')),
+            AiFeedbackStatus::Failed => $this->dispatch('toast', variant: 'warning', text: __('Feedback AI masih belum tersedia. Coba lagi beberapa saat lagi.')),
+            default => $this->dispatch('toast', variant: 'info', text: __('Penilaian ulang dimulai. Hasilnya muncul otomatis di halaman ini.')),
+        };
     }
 
     /**
