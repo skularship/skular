@@ -56,41 +56,61 @@ class AiFeedbackService implements AiFeedbackServiceInterface
                 'message' => $exception->getMessage(),
             ]);
 
-            throw new AiFeedbackException(match ($reason) {
-                AiFailureReason::Configuration => 'Layanan AI belum dikonfigurasi dengan lengkap. Jawabanmu tetap tersimpan, silakan hubungi admin ya.',
-                AiFailureReason::RateLimited => 'Penilaian AI sedang ramai. Jawabanmu tetap tersimpan, coba nilai ulang sekitar satu menit lagi ya.',
-                AiFailureReason::Timeout => 'Penilaian AI butuh waktu lebih lama dari biasanya. Jawabanmu tetap tersimpan, coba lagi ya.',
-                AiFailureReason::Unavailable => 'Layanan AI tidak dapat dihubungi. Jawabanmu tetap tersimpan, coba lagi nanti.',
-            }, 0, $exception, $reason);
+            throw new AiFeedbackException(self::messageFor($reason), 0, $exception, $reason);
         }
 
         $payload = $this->structuredPayload($response);
-        $feedback = (string) ($payload['feedback'] ?? '');
+        $score = $payload['score'] ?? null;
+        $feedback = is_scalar($payload['feedback'] ?? null) ? trim((string) $payload['feedback']) : '';
+        $strengths = FeedbackPointData::listFrom($payload['strengths'] ?? null);
+        $improvements = FeedbackPointData::listFrom($payload['improvements'] ?? null);
+        $next_steps = FeedbackPointData::listFrom($payload['next_steps'] ?? null);
 
-        if (trim($feedback) === '') {
-            $this->logAttempt($module, $practice_form, $prompt, $started_at, 'empty');
+        // A partial answer is still useful to the mentee: a missing summary or
+        // missing points are left out of the page. Only an answer without any
+        // text, or without a score to derive the label from, is rejected.
+        $has_text = $feedback !== '' || $strengths !== [] || $improvements !== [] || $next_steps !== [];
 
-            Log::warning('AI Feedback returned an empty evaluation', [
+        if (! is_numeric($score) || ! $has_text) {
+            $this->logAttempt($module, $practice_form, $prompt, $started_at, 'invalid', AiFailureReason::InvalidResponse);
+
+            Log::warning('AI Feedback returned an unusable evaluation', [
                 'module_id' => $module->id,
                 'practice_form_id' => $practice_form->id,
+                'has_score' => is_numeric($score),
+                'has_text' => $has_text,
             ]);
 
-            throw new AiFeedbackException('AI belum memberi penilaian yang lengkap. Jawabanmu tetap tersimpan, coba nilai ulang ya.');
+            throw new AiFeedbackException(self::messageFor(AiFailureReason::InvalidResponse), reason: AiFailureReason::InvalidResponse);
         }
 
         $this->logAttempt($module, $practice_form, $prompt, $started_at, 'completed');
 
-        $score = $payload['score'] ?? null;
-
         return new AiFeedbackData(
-            score: is_numeric($score) ? (int) $score : 0,
+            score: (int) round((float) $score),
             // Malformed items are dropped instead of failing the evaluation;
             // a model that still answers with plain strings is accepted too.
-            strengths: FeedbackPointData::listFrom($payload['strengths'] ?? null),
-            improvements: FeedbackPointData::listFrom($payload['improvements'] ?? null),
-            feedback: trim($feedback),
-            next_steps: FeedbackPointData::listFrom($payload['next_steps'] ?? null),
+            strengths: $strengths,
+            improvements: $improvements,
+            feedback: $feedback,
+            next_steps: $next_steps,
         );
+    }
+
+    /**
+     * Get the friendly Indonesian message shown to the mentee for a failure.
+     *
+     * Every message says the answer is safe and what to do next.
+     */
+    public static function messageFor(AiFailureReason $reason): string
+    {
+        return match ($reason) {
+            AiFailureReason::Configuration => 'Layanan AI belum dikonfigurasi dengan lengkap. Jawabanmu tetap tersimpan, silakan hubungi admin ya.',
+            AiFailureReason::RateLimited => 'Penilaian AI sedang ramai. Jawabanmu tetap tersimpan, coba nilai ulang sekitar satu menit lagi ya.',
+            AiFailureReason::Timeout => 'Penilaian AI butuh waktu lebih lama dari biasanya. Jawabanmu tetap tersimpan, coba nilai ulang ya.',
+            AiFailureReason::Unavailable => 'Layanan AI tidak dapat dihubungi. Jawabanmu tetap tersimpan, coba nilai ulang beberapa saat lagi.',
+            AiFailureReason::InvalidResponse => 'AI belum memberi penilaian yang lengkap. Jawabanmu tetap tersimpan, coba nilai ulang ya.',
+        };
     }
 
     /**
@@ -100,7 +120,7 @@ class AiFeedbackService implements AiFeedbackServiceInterface
      * mentee answer or the prompt text. The response id, attempt number and
      * trigger come from the Context scope opened by PracticeSubmissionService.
      *
-     * @param  'completed'|'empty'|'failed'  $outcome
+     * @param  'completed'|'invalid'|'failed'  $outcome  'invalid' = the provider answered without a usable evaluation.
      */
     private function logAttempt(
         Module $module,
@@ -122,7 +142,7 @@ class AiFeedbackService implements AiFeedbackServiceInterface
             'previous_exception' => $exception?->getPrevious() === null ? null : $exception->getPrevious()::class,
             'duration_ms' => (int) round((microtime(true) - $started_at) * 1000),
             'prompt_chars' => mb_strlen($prompt),
-            'empty_response' => $outcome === 'empty',
+            'invalid_response' => $outcome === 'invalid',
         ]);
     }
 }

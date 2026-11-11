@@ -154,7 +154,7 @@ class ModuleBrainstormingService implements ModuleBrainstormingServiceInterface
             AiFailureReason::Configuration => 'Layanan AI belum dikonfigurasi dengan lengkap. Silakan hubungi admin ya.',
             AiFailureReason::RateLimited => 'AI sedang ramai dipakai. Jawaban brainstormingmu tetap aman, coba lagi sekitar satu menit lagi ya.',
             AiFailureReason::Timeout => 'AI butuh waktu lebih lama dari biasanya. Jawaban brainstormingmu tetap aman, coba lagi ya.',
-            AiFailureReason::Unavailable => 'AI belum berhasil menyusun kerangka. Jawaban brainstormingmu tetap aman, coba lagi ya.',
+            AiFailureReason::Unavailable, AiFailureReason::InvalidResponse => 'AI belum berhasil menyusun kerangka. Jawaban brainstormingmu tetap aman, coba lagi ya.',
         };
     }
 

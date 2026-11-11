@@ -10,13 +10,13 @@ use Throwable;
  * Thrown when AI feedback generation fails so callers can fall back gracefully.
  *
  * Carries the classified provider failure so the queued evaluation can tell a
- * passing hiccup (timeout, rate limit, empty answer) from a setup problem.
+ * passing hiccup (timeout, rate limit, unusable answer) from a setup problem.
  */
 class AiFeedbackException extends RuntimeException
 {
     /**
      * @param  string  $message  Friendly Indonesian message shown to the mentee.
-     * @param  AiFailureReason|null  $reason  Classified provider failure; null when the provider answered without a usable evaluation.
+     * @param  AiFailureReason|null  $reason  Classified failure (InvalidResponse when the provider answered without a usable evaluation); null is treated as transient.
      */
     public function __construct(
         string $message = '',

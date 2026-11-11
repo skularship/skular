@@ -104,7 +104,7 @@ class ModuleMentorService implements ModuleMentorServiceInterface
                 AiFailureReason::Configuration => 'Layanan AI belum dikonfigurasi dengan lengkap. Silakan hubungi admin ya.',
                 AiFailureReason::RateLimited => 'AI Mentor sedang menerima banyak pertanyaan. Tunggu sekitar satu menit, lalu coba lagi ya.',
                 AiFailureReason::Timeout => 'AI Mentor butuh waktu lebih lama dari biasanya. Pertanyaanmu aman, coba kirim lagi ya.',
-                AiFailureReason::Unavailable => 'AI Mentor sedang tidak bisa dihubungi. Coba lagi sebentar lagi ya.',
+                AiFailureReason::Unavailable, AiFailureReason::InvalidResponse => 'AI Mentor sedang tidak bisa dihubungi. Coba lagi sebentar lagi ya.',
             }, 0, $exception);
         }
 
