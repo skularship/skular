@@ -145,6 +145,44 @@
         </div>
     </section>
 
+    {{-- Match label and reasons for the signed-in mentee (moved off the recommendation card). Label only, never the score. --}}
+    @if ($match)
+        @php
+            $tier_variant = match ($match->tier->getColor()) {
+                'success' => 'success',
+                'warning' => 'warning',
+                default => 'info',
+            };
+        @endphp
+
+        <x-ui.card class="flex flex-col gap-4" data-test="match-reasons">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <x-ui.icon-badge icon="sparkles" tone="teal" />
+                    <h2 class="text-lg font-bold text-zinc-900">{{ __('Kecocokan dengan profilmu') }}</h2>
+                </div>
+
+                <x-ui.pill :variant="$tier_variant" icon="sparkles">{{ $match->tier->label() }}</x-ui.pill>
+            </div>
+
+            <ul class="grid gap-2 sm:grid-cols-2">
+                @foreach ($match->reasons as $reason)
+                    <li class="flex items-start gap-2 rounded-2xl bg-zinc-50 px-4 py-3 text-sm">
+                        <x-icons.app-icon
+                            :name="$reason->satisfied ? 'check-circle' : 'exclamation-triangle'"
+                            class="mt-0.5 size-4 shrink-0 {{ $reason->satisfied ? 'text-emerald-500' : 'text-amber-500' }}"
+                        />
+
+                        <div>
+                            <span class="text-zinc-500">{{ $reason->label }}:</span>
+                            <span class="text-zinc-700">{{ $reason->detail }}</span>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        </x-ui.card>
+    @endif
+
     @if ($scholarship->hasKeyBenefits())
         <x-ui.card variant="amber" class="flex flex-col gap-4" data-test="key-benefits">
             <div class="flex items-center gap-3">

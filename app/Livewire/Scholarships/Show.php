@@ -3,6 +3,8 @@
 namespace App\Livewire\Scholarships;
 
 use App\Contracts\ScholarshipApplicationServiceInterface;
+use App\Contracts\ScholarshipMatchingServiceInterface;
+use App\Data\UserProfileData;
 use App\Enums\ScholarshipStatus;
 use App\Models\Scholarship;
 use App\Models\ScholarshipApplication;
@@ -85,12 +87,21 @@ class Show extends Component
      *
      * @return View The livewire.scholarships.show view.
      */
-    public function render(ScholarshipApplicationServiceInterface $application_service): View
-    {
+    public function render(
+        ScholarshipApplicationServiceInterface $application_service,
+        ScholarshipMatchingServiceInterface $matching_service,
+    ): View {
         /** @var User $user */
         $user = Auth::user();
 
+        // The match label and reasons moved here from the recommendation card;
+        // they only make sense once the mentee finished profiling.
+        $match = $user->hasCompletedProfile()
+            ? $matching_service->matchOne(UserProfileData::fromUser($user->loadMissing('cluster')), $this->scholarship)
+            : null;
+
         return view('livewire.scholarships.show', [
+            'match' => $match,
             'application' => $this->application($user),
             'at_limit' => $application_service->hasReachedLimit($user),
             'remaining_slots' => $application_service->remainingSlots($user),

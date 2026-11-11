@@ -106,15 +106,32 @@ class Recommendation extends Component
     }
 
     /**
-     * Mark a scholarship as the primary choice.
+     * Mark a scholarship as the primary choice, selecting it when needed.
+     *
+     * Refuses to add a sixth scholarship; the cap is enforced again by the
+     * service when the selection is stored.
+     *
+     * @param  int  $scholarship_id  Scholarship to mark as primary.
      */
     public function makePrimary(int $scholarship_id): void
     {
-        $this->primary = $scholarship_id;
+        // Checkbox values arrive from the browser as strings.
+        $selected = array_map('intval', $this->selected);
 
-        if (! in_array($scholarship_id, $this->selected, true)) {
-            $this->selected[] = $scholarship_id;
+        if (! in_array($scholarship_id, $selected, true)) {
+            if (count(array_unique($selected)) >= ScholarshipApplicationService::MAX_SELECTIONS) {
+                $this->addError('selected', __('Kamu sudah memilih :count beasiswa. Hapus salah satu pilihan sebelum menjadikan beasiswa lain sebagai utama.', [
+                    'count' => ScholarshipApplicationService::MAX_SELECTIONS,
+                ]));
+
+                return;
+            }
+
+            $selected[] = $scholarship_id;
         }
+
+        $this->selected = array_values($selected);
+        $this->primary = $scholarship_id;
     }
 
     /**
@@ -139,6 +156,7 @@ class Recommendation extends Component
     {
         return view('livewire.scholarships.recommendation', [
             'matches' => $this->matches,
+            'max_selections' => ScholarshipApplicationService::MAX_SELECTIONS,
         ]);
     }
 

@@ -110,7 +110,7 @@ test('finishing the wizard shows matching scholarships on the recommendation pag
         ->assertOk()
         ->assertSee('Beasiswa Domestik Pasca Wizard')
         ->assertDontSee('Beasiswa Internasional Pasca Wizard')
-        ->assertSee('Lihat Detail');
+        ->assertSee('Lihat detail');
 });
 
 test('every single choice question renders one radio group bound to frontend state', function () {

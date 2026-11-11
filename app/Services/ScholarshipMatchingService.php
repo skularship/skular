@@ -82,6 +82,42 @@ class ScholarshipMatchingService implements ScholarshipMatchingServiceInterface
     }
 
     /**
+     * Evaluate one scholarship for the mentee, as shown on its detail page.
+     *
+     * @param  UserProfileData  $profile_data  The mentee profile.
+     * @param  Scholarship  $scholarship  The scholarship being viewed.
+     * @return ScholarshipMatchData|null Tier and reasons, or null when the scholarship is not a candidate.
+     */
+    public function matchOne(UserProfileData $profile_data, Scholarship $scholarship): ?ScholarshipMatchData
+    {
+        if (! $this->isCandidate($profile_data, $scholarship)) {
+            return null;
+        }
+
+        return $this->evaluate($profile_data, $scholarship);
+    }
+
+    /**
+     * Apply the hard filters of match() to an already loaded scholarship.
+     */
+    private function isCandidate(UserProfileData $profile_data, Scholarship $scholarship): bool
+    {
+        if ($scholarship->status !== ScholarshipStatus::Active) {
+            return false;
+        }
+
+        if (! in_array($scholarship->level->value, $profile_data->level->matchingLevelValues(), true)) {
+            return false;
+        }
+
+        // Mirrors the query in match(): only a study-destination scope can rule
+        // a scholarship out, and only when it differs from the preference.
+        return $scholarship->scope === null
+            || ! $scholarship->scope->isStudyDestination()
+            || $scholarship->scope === $profile_data->desired_location;
+    }
+
+    /**
      * Score a single scholarship against the mentee profile.
      */
     private function evaluate(UserProfileData $profile_data, Scholarship $scholarship): ScholarshipMatchData

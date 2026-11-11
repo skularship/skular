@@ -144,7 +144,7 @@ public/build/              # Aset Vite hasil build (DI-COMMIT)
 | Login Google | `/auth/google/redirect`, `/auth/google/callback` | `app/Http/Controllers/Auth/GoogleAuthController.php`, `app/Services/GoogleAuthService.php` |
 | Passkey | `/passkeys/*`, `/user/passkeys*` (Fortify) | `resources/js/passkeys.js`, `components/auth/passkey-*.blade.php` |
 | Profiling 8 langkah | `/profiling` | `app/Livewire/Profiling/Wizard.php`, `app/Services/ProfilingService.php`, `app/Concerns/ProfilingRules.php` |
-| Rekomendasi & pemilihan beasiswa (maks 5) | `/profiling/recommendation` | `app/Livewire/Scholarships/Recommendation.php`, `app/Services/ScholarshipMatchingService.php`, `ScholarshipApplicationService.php` |
+| Rekomendasi & pemilihan beasiswa (maks 5; kartu 1:1 berisi gambar, nama, label kecocokan; alasan kecocokan di halaman detail) | `/profiling/recommendation` | `app/Livewire/Scholarships/Recommendation.php`, `app/Services/ScholarshipMatchingService.php`, `ScholarshipApplicationService.php`, `ScholarshipImageService.php`, `components/scholarship/card-image.blade.php` |
 | Katalog & detail beasiswa | `/scholarships`, `/scholarships/{scholarship}` | `app/Livewire/Scholarships/Index.php`, `Show.php` |
 | Beasiswa Saya (tracker, bukti, hasil) | `/scholarships/saya`, `/scholarships/{application}/proof` | `app/Livewire/Scholarships/Tracker.php`, `app/Http/Controllers/SubmissionProofController.php`, `app/Services/ScholarshipPathService.php` |
 | Dashboard & roadmap | `/dashboard` | `app/Livewire/Dashboard.php`, `app/Services/ProgressService.php`, `LearningPathService.php` |
@@ -244,7 +244,7 @@ php artisan up
 | PHP | 8.3+ dengan OPcache aktif; reload PHP-FPM setiap deploy bila `validate_timestamps=0` |
 | Database | MySQL 8+ atau PostgreSQL 15+ (bukan SQLite) |
 | Queue worker | Wajib selalu hidup (Supervisor/systemd): `php artisan queue:work --tries=1 --timeout=60`. `timeout` job 60 detik harus lebih kecil dari `retry_after` 90 detik di `config/queue.php` |
-| Storage | Persisten & privat: bukti pendaftaran di disk `local`; twibbon di disk `public` (`php artisan storage:link`) |
+| Storage | Persisten & privat: bukti pendaftaran di disk `local`; twibbon dan gambar kartu beasiswa (`scholarships/`, WebP ≤512 px hasil resize GD) di disk `public` (`php artisan storage:link`). GD dengan dukungan WebP disarankan; tanpa WebP gambar disimpan sebagai JPEG |
 | HTTPS | Wajib; isi `TRUSTED_PROXIES` bila di belakang load balancer |
 | Health check | `GET /up` (liveness) dan `GET /health` (database + cache, 503 bila gagal) |
 | Uji beban | `tests/Load/skular-smoke.js` (k6), jalankan ke staging |
