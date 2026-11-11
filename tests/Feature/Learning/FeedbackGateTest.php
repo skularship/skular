@@ -176,6 +176,18 @@ test('submitting a practice answer shows the ai label in the same request withou
     expect($this->mentee->practiceResponses()->sole()->ai_status)->toBe(AiFeedbackStatus::Completed);
 });
 
+test('the submit and retry buttons announce the in-request grading wait', function () {
+    gateResponse($this, AiFeedbackStatus::Failed);
+
+    Livewire::actingAs($this->mentee)
+        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'praktik'])
+        ->assertSeeHtml('wire:target="submitPractice('.$this->form->id.')"')
+        ->assertSeeHtml('data-test="practice-loading"')
+        ->assertSeeHtml('wire:target="retryFeedback('.$this->form->id.')"')
+        ->assertSeeHtml('data-test="retry-loading"')
+        ->assertSee('AI sedang menilai jawabanmu, biasanya 10–30 detik.');
+});
+
 test('re-assessing that fails again keeps the answer and the retry button without polling', function () {
     Sleep::fake();
     $response = gateResponse($this, AiFeedbackStatus::Failed);

@@ -52,7 +52,9 @@ return [
         'ai.mentor' => 'Minskul lagi mikir nih…',
         'ai.feedback' => 'Lagi nge-review jawabanmu…',
         'ai.feedback_submit' => 'Lagi nilai jawabanmu…',
-        'ai.feedback_retry' => 'Lagi nyoba menghubungi AI lagi…',
+        'ai.feedback_retry' => 'Lagi nilai ulang jawabanmu…',
+        // Practice evaluation runs inside the request: the mentee waits on the page.
+        'ai.feedback_grading' => 'AI sedang menilai jawabanmu, biasanya 10–30 detik.',
 
         // Auth
         'auth.submit' => 'Bentar ya, lagi diproses…',
@@ -72,5 +74,6 @@ return [
         'ai.mentor' => 'Jawabanmu tetap aman selama Minskul menyiapkan balasan.',
         'ai.feedback' => 'Jawabanmu sudah tersimpan. Feedback muncul begitu AI selesai menilai.',
         'ai.feedback_retry' => 'Proses ini tidak mengubah jawaban yang sudah kamu kirim.',
+        'ai.feedback_grading' => 'Tetap di halaman ini ya. Jawabanmu disimpan dulu, jadi tetap aman.',
     ],
 ];

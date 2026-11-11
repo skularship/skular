@@ -130,12 +130,12 @@
         data-test="module-section-loading"
     />
 
-    {{-- Present only while an AI evaluation is running: removing the element
-         stops the polling as soon as every answer has been assessed. The
-         interval backs off (3s, 5s, 10s); the key swaps the element so the
-         new interval takes effect. --}}
+    {{-- Fallback polling: submit and "Nilai ulang" grade inside their own
+         request, so this is present only while another request (another tab)
+         still grades an answer. Removing the element stops the polling as
+         soon as the outcome is stored or the evaluation is flagged as stalled. --}}
     @if ($evaluating)
-        <div wire:poll.{{ $evaluation_poll_seconds }}s wire:key="evaluation-poll-{{ $evaluation_poll_seconds }}" aria-hidden="true" data-test="evaluation-poll"></div>
+        <div wire:poll.{{ $evaluation_poll_seconds }}s aria-hidden="true" data-test="evaluation-poll"></div>
     @endif
 
     <main class="flex flex-col gap-6">

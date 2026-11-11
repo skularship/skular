@@ -1,4 +1,4 @@
-{{-- Praktik step: practice forms (dynamic fields), AI result label and feedback, re-assessment button, brainstorming, AI Mentor chat, and the gated "Lanjut ke checkpoint" button. --}}
+{{-- Praktik step: practice forms (dynamic fields), in-request grading status (submit and "Nilai ulang" wait for the AI), AI result label and feedback, re-assessment button, brainstorming, AI Mentor chat, and the gated "Lanjut ke checkpoint" button. --}}
 @php
     $submitted_forms = $forms->filter(fn ($form) => $responses->has($form->id))->count();
 @endphp
@@ -103,16 +103,15 @@
                             </x-actions.button>
                         </div>
 
-                        <p
-                            class="sr-only"
-                            role="status"
-                            aria-live="polite"
-                            wire:loading
-                            wire:target="submitPractice({{ $form->id }})"
+                        {{-- The AI grades inside this request, so the mentee sees how long to wait while the button stays disabled. --}}
+                        <x-loading.inline
+                            loading="ai.feedback_grading"
+                            :detail="__(config('loading.detail')['ai.feedback_grading'])"
+                            target="submitPractice({{ $form->id }})"
+                            :delay="false"
+                            class="justify-end text-sm"
                             data-test="practice-loading"
-                        >
-                            {{ __('Lagi nyimpen jawabanmu, lalu AI menilainya…') }}
-                        </p>
+                        />
                     </form>
                 @endif
 
@@ -198,6 +197,15 @@
                                 >
                                     {{ __('Nilai ulang') }}
                                 </x-actions.button>
+
+                                <x-loading.inline
+                                    loading="ai.feedback_grading"
+                                    :detail="__(config('loading.detail')['ai.feedback_retry'])"
+                                    target="retryFeedback({{ $form->id }})"
+                                    :delay="false"
+                                    class="mt-2 text-sm"
+                                    data-test="retry-loading"
+                                />
                             </div>
                         </x-feedback.callout>
                     @else
