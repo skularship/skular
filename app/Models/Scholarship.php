@@ -49,6 +49,7 @@ use Illuminate\Support\Facades\Storage;
  * @property-read Collection<int, ScholarshipApplication> $applications
  * @property-read Collection<int, Module> $templateModules
  * @property-read Collection<int, User> $applicants
+ * @property-read Collection<int, ScholarshipInfoReport> $infoReports
  */
 #[Fillable([
     'scholarship_name',
@@ -289,7 +290,19 @@ class Scholarship extends Model
      */
     public function hasMenteeHistory(): bool
     {
-        return $this->applications()->exists();
+        // Info reports count as history too: their FK restricts deletion,
+        // so refusing here keeps the admin from hitting a database error.
+        return $this->applications()->exists() || $this->infoReports()->exists();
+    }
+
+    /**
+     * Get the mentee reports of inaccurate information about this scholarship.
+     *
+     * @return HasMany<ScholarshipInfoReport, $this>
+     */
+    public function infoReports(): HasMany
+    {
+        return $this->hasMany(ScholarshipInfoReport::class);
     }
 
     /**

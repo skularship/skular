@@ -52,6 +52,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $updated_at
  * @property-read Cluster|null $cluster
  * @property-read Collection<int, ScholarshipApplication> $scholarshipApplications
+ * @property-read Collection<int, ScholarshipInfoReport> $scholarshipInfoReports
  * @property-read Collection<int, Scholarship> $scholarships
  * @property-read ScholarshipApplication|null $primaryApplication
  * @property-read Collection<int, Checkpoint> $checkpoints
@@ -155,6 +156,16 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
     public function scholarshipApplications(): HasMany
     {
         return $this->hasMany(ScholarshipApplication::class);
+    }
+
+    /**
+     * Get the "Informasi Tidak Akurat?" reports the mentee sent.
+     *
+     * @return HasMany<ScholarshipInfoReport, $this>
+     */
+    public function scholarshipInfoReports(): HasMany
+    {
+        return $this->hasMany(ScholarshipInfoReport::class);
     }
 
     /**

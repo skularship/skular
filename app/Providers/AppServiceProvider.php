@@ -21,6 +21,7 @@ use App\Contracts\ScholarshipApplicationServiceInterface;
 use App\Contracts\ScholarshipImageServiceInterface;
 use App\Contracts\ScholarshipMatchingServiceInterface;
 use App\Contracts\ScholarshipPathServiceInterface;
+use App\Contracts\ScholarshipReportServiceInterface;
 use App\Contracts\TwibbonServiceInterface;
 use App\Services\AiFeedbackService;
 use App\Services\BrainstormingSessionService;
@@ -41,6 +42,7 @@ use App\Services\ScholarshipApplicationService;
 use App\Services\ScholarshipImageService;
 use App\Services\ScholarshipMatchingService;
 use App\Services\ScholarshipPathService;
+use App\Services\ScholarshipReportService;
 use App\Services\TwibbonService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Events\QueryExecuted;
@@ -173,6 +175,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ScholarshipImageServiceInterface::class, ScholarshipImageService::class);
         $this->app->bind(ScholarshipMatchingServiceInterface::class, ScholarshipMatchingService::class);
         $this->app->bind(ScholarshipPathServiceInterface::class, ScholarshipPathService::class);
+        $this->app->bind(ScholarshipReportServiceInterface::class, ScholarshipReportService::class);
         $this->app->bind(TwibbonServiceInterface::class, TwibbonService::class);
     }
 

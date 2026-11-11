@@ -4,7 +4,9 @@ namespace App\Livewire\Scholarships;
 
 use App\Contracts\ScholarshipApplicationServiceInterface;
 use App\Contracts\ScholarshipMatchingServiceInterface;
+use App\Contracts\ScholarshipReportServiceInterface;
 use App\Data\UserProfileData;
+use App\Enums\ReportedField;
 use App\Enums\ScholarshipStatus;
 use App\Models\Scholarship;
 use App\Models\ScholarshipApplication;
@@ -12,16 +14,76 @@ use App\Models\User;
 use App\Services\ScholarshipApplicationService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
- * Public-to-mentees detail page for a single scholarship.
+ * Public-to-mentees detail page for a single scholarship: data, match
+ * reasons, adding it to the selection, and the "Informasi Tidak Akurat?"
+ * report form.
  */
 #[Title('Detail Beasiswa')]
 class Show extends Component
 {
     public Scholarship $scholarship;
+
+    /**
+     * Whether the "Informasi Tidak Akurat?" modal is open.
+     */
+    public bool $show_report_modal = false;
+
+    /**
+     * Reported part of the page (ReportedField value).
+     */
+    public string $report_field = '';
+
+    /**
+     * What the mentee believes is correct.
+     */
+    public string $report_suggested_value = '';
+
+    /**
+     * Optional evidence link, stored for admins only.
+     */
+    public string $report_source_url = '';
+
+    /**
+     * Optional extra note.
+     */
+    public string $report_note = '';
+
+    /**
+     * Send an "Informasi Tidak Akurat?" report for this scholarship.
+     *
+     * Validation, sanitising and the anti-spam limits all live in the
+     * service, so a crafted request cannot skip them.
+     */
+    public function submitReport(ScholarshipReportServiceInterface $report_service): void
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        try {
+            $report_service->submit($user, $this->scholarship, [
+                'field' => $this->report_field,
+                'suggested_value' => $this->report_suggested_value,
+                'source_url' => $this->report_source_url,
+                'note' => $this->report_note,
+            ]);
+        } catch (ValidationException $exception) {
+            foreach ($exception->errors() as $key => $messages) {
+                $this->addError($key === 'report' ? 'report' : 'report_'.$key, $messages[0]);
+            }
+
+            return;
+        }
+
+        $this->reset('report_field', 'report_suggested_value', 'report_source_url', 'report_note', 'show_report_modal');
+        $this->resetErrorBag();
+
+        $this->dispatch('toast', variant: 'success', text: __('Terima kasih, laporanmu kami cek.'));
+    }
 
     /**
      * Show one scholarship; draft and archived scholarships return 404.
@@ -102,6 +164,7 @@ class Show extends Component
 
         return view('livewire.scholarships.show', [
             'match' => $match,
+            'report_fields' => ReportedField::options(),
             'application' => $this->application($user),
             'at_limit' => $application_service->hasReachedLimit($user),
             'remaining_slots' => $application_service->remainingSlots($user),

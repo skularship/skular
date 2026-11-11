@@ -258,4 +258,96 @@
             <p class="text-sm leading-relaxed whitespace-pre-line text-zinc-600 dark:text-zinc-300">{{ $scholarship->note }}</p>
         </x-ui.card>
     @endif
+
+    {{-- "Informasi Tidak Akurat?": mentees flag wrong data; admins review it in Filament (ScholarshipInfoReports). --}}
+    <div class="flex flex-col gap-3 rounded-3xl border border-dashed border-brand-teal/25 bg-white/70 px-5 py-4 sm:flex-row sm:items-center sm:justify-between" data-test="report-info">
+        <div class="flex items-start gap-3">
+            <x-icons.app-icon name="flag" class="mt-0.5 size-5 text-brand-orange" />
+            <div>
+                <p class="text-sm font-semibold text-zinc-900">{{ __('Ada info yang tidak sesuai?') }}</p>
+                <p class="text-xs text-zinc-500">{{ __('Bantu kami menjaga data beasiswa tetap akurat. Laporanmu akan dicek tim Skular.') }}</p>
+            </div>
+        </div>
+
+        <x-actions.button type="button" variant="outline" icon="flag" wire:click="$set('show_report_modal', true)" class="shrink-0" data-test="open-report">
+            {{ __('Informasi Tidak Akurat?') }}
+        </x-actions.button>
+    </div>
+
+    <x-overlay.modal name="report-info" model="show_report_modal" class="max-w-lg" focusable>
+        <form wire:submit="submitReport" class="flex flex-col gap-4" data-test="report-form">
+            <div class="pe-8">
+                <h2 class="text-lg font-bold text-zinc-900">{{ __('Laporkan informasi tidak akurat') }}</h2>
+                <p class="mt-1 text-sm text-zinc-600">
+                    {{ __('Ceritakan bagian mana yang menurutmu salah di halaman :name. Tim Skular akan mengeceknya sebelum mengubah data.', ['name' => $scholarship->scholarship_name]) }}
+                </p>
+            </div>
+
+            @error('report')
+                <x-feedback.callout variant="warning" :heading="__('Laporan belum terkirim')" data-test="report-error">
+                    {{ $message }}
+                </x-feedback.callout>
+            @enderror
+
+            <x-forms.select wire:model="report_field" :label="__('Bagian yang tidak akurat')" required>
+                <option value="">{{ __('Pilih bagian') }}</option>
+                @foreach ($report_fields as $value => $label)
+                    <option value="{{ $value }}">{{ $label }}</option>
+                @endforeach
+            </x-forms.select>
+
+            <div class="w-full">
+                <label for="report-suggested-value" class="mb-1.5 block text-sm font-medium text-zinc-700">{{ __('Informasi yang menurutmu benar') }}</label>
+                <textarea
+                    id="report-suggested-value"
+                    wire:model="report_suggested_value"
+                    rows="3"
+                    maxlength="1000"
+                    required
+                    placeholder="{{ __('Contoh: Deadline diperpanjang sampai 30 November 2026.') }}"
+                    @class([
+                        'block w-full rounded-lg border bg-white px-3 py-2 text-base text-zinc-700 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-accent sm:text-sm',
+                        'border-red-500' => $errors->has('report_suggested_value'),
+                        'border-zinc-200' => ! $errors->has('report_suggested_value'),
+                    ])
+                ></textarea>
+                @error('report_suggested_value')
+                    <p class="mt-1.5 text-sm text-red-600" data-test="error-report_suggested_value">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <x-forms.input
+                type="url"
+                wire:model="report_source_url"
+                :label="__('Tautan bukti atau sumber (opsional)')"
+                placeholder="https://"
+                maxlength="2048"
+            />
+
+            <div class="w-full">
+                <label for="report-note" class="mb-1.5 block text-sm font-medium text-zinc-700">{{ __('Catatan tambahan (opsional)') }}</label>
+                <textarea
+                    id="report-note"
+                    wire:model="report_note"
+                    rows="2"
+                    maxlength="1000"
+                    class="block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-base text-zinc-700 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-accent sm:text-sm"
+                ></textarea>
+                @error('report_note')
+                    <p class="mt-1.5 text-sm text-red-600">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <p class="text-xs text-zinc-500">{{ __('Tautan bukti hanya dilihat tim Skular dan tidak ditampilkan ke mentee lain.') }}</p>
+
+            <div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <x-actions.button type="button" variant="outline" wire:click="$set('show_report_modal', false)">
+                    {{ __('Batal') }}
+                </x-actions.button>
+                <x-actions.button type="submit" icon="paper-airplane" data-test="submit-report">
+                    {{ __('Kirim laporan') }}
+                </x-actions.button>
+            </div>
+        </form>
+    </x-overlay.modal>
 </div>
