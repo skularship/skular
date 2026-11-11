@@ -24,10 +24,9 @@
     ];
 
     $valueMarquee = [
-        'Temukan Beasiswamu',
-        'Bangun Kemampuanmu',
-        'Persiapan yang Terarah',
-        'Masa Depan Dimulai Sekarang',
+        'Cukup 2 Langkah',
+        'Dapatkan Informasi Beasiswa',
+        'Ikuti Stepnya',
     ];
 
     $brandMarquee = ['Belajar', 'Bersiap', 'Bertumbuh', 'Berprestasi'];
@@ -285,15 +284,15 @@
 
                         <div class="mt-8 flex flex-wrap items-center gap-3">
                             <x-actions.link-button :href="route('register')" size="lg" iconTrailing="arrow-right">
-                                {{ __('Mulai Perjalananmu') }}
+                                {{ __('Ikuti Kesiapan') }}
                             </x-actions.link-button>
 
                             <a
-                                href="#cek-kesiapan"
+                                href="#cara-kerja"
                                 class="inline-flex h-12 items-center gap-2 rounded-xl border border-brand-teal/25 bg-white/70 px-6 text-base font-semibold text-brand-teal backdrop-blur transition hover:border-brand-teal hover:bg-white dark:border-white/15 dark:bg-white/5 dark:text-brand-teal-light dark:hover:border-brand-teal-light"
                             >
                                 <x-icons.app-icon name="bolt" class="size-4" />
-                                {{ __('Tes Kesiapan Beasiswa') }}
+                                {{ __('Lihat Fitur') }}
                             </a>
                         </div>
 
