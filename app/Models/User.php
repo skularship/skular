@@ -43,6 +43,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $phone
  * @property string|null $subscription
  * @property Carbon|null $profile_completed_at
+ * @property array<array-key, mixed>|null $onboarding_tours Raw JSON of finished or skipped product tours, {tour key: ISO timestamp}; read through ProductTourService.
  * @property string $password
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
@@ -116,6 +117,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
             'has_sktm' => 'boolean',
             'age' => 'integer',
             'profile_completed_at' => 'datetime',
+            'onboarding_tours' => 'array',
         ];
     }
 

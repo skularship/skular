@@ -9,6 +9,7 @@ use App\Livewire\Dashboard;
 use App\Livewire\Faq\Index as FaqIndex;
 use App\Livewire\Learning\Library;
 use App\Livewire\Learning\ModulePlayer;
+use App\Livewire\Onboarding\Guide;
 use App\Livewire\Profiling\Wizard;
 use App\Livewire\Roadmap;
 use App\Livewire\Scholarships\Index as ScholarshipsIndex;
@@ -48,6 +49,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('scholarships/{scholarship}', ScholarshipShow::class)->name('scholarships.show');
     Route::livewire('cv', CvShow::class)->name('cv.show');
     Route::livewire('bantuan', Help::class)->name('support.index');
+    Route::livewire('panduan', Guide::class)->name('guide.index');
     Route::get('scholarships/{application}/proof', [SubmissionProofController::class, 'show'])->name('applications.proof');
 });
 

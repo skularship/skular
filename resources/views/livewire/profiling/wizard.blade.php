@@ -719,4 +719,7 @@
         <x-icons.app-icon name="lock-closed" class="me-1 inline size-3.5 align-[-2px] text-brand-teal" />
         {{ __('Jawabanmu tersimpan sementara di perangkat ini saat kamu kembali atau memuat ulang halaman, dan baru disimpan ke profilmu setelah kamu menekan tombol rekomendasi di langkah terakhir.') }}
     </p>
+
+    {{-- Onboarding coach marks for this page (opens once; replay from /panduan). --}}
+    <livewire:onboarding.product-tour tour="profiling" />
 </div>

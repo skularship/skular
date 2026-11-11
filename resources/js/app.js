@@ -7,6 +7,9 @@
  * work without JavaScript.
  */
 
+// Onboarding coach marks (Alpine "productTour"), see resources/js/product-tour.js.
+import './product-tour';
+
 /**
  * Scroll reveal for the marketing landing page.
  *

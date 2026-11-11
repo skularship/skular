@@ -845,5 +845,7 @@
                 </div>
             </div>
         </footer>
+
+        @include('partials.landing-tour')
     </body>
 </html>

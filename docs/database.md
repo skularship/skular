@@ -43,7 +43,7 @@ Role & permission memakai tabel spatie/laravel-permission: `roles`, `permissions
 
 | Tabel | Catatan |
 |---|---|
-| `users` | Akun mentee dan admin. Kolom profiling (`level`, `age`, `gpa`, `has_sktm`, `desired_level`, `desired_location`, `cluster_id`, `phone`, `profile_completed_at`) diisi sekali oleh `ProfilingService::complete()`. Admin = user dengan role Shield; `canAccessPanel()` menolak mentee. |
+| `users` | Akun mentee dan admin. Kolom profiling (`level`, `age`, `gpa`, `has_sktm`, `desired_level`, `desired_location`, `cluster_id`, `phone`, `profile_completed_at`) diisi sekali oleh `ProfilingService::complete()`. `onboarding_tours` = JSON `{kunci tur: waktu}` tur Product Tour yang sudah selesai/dilewati (`ProductTourService`); tur landing untuk pengunjung disimpan di localStorage. Admin = user dengan role Shield; `canAccessPanel()` menolak mentee. |
 | `scholarships` | Katalog beasiswa. `status` (`draft`/`active`/`closed`/`archived`): hanya `active` & `closed` yang tampil ke mentee. `link` = tautan sumber resmi. `key_benefits`, `values_sought` = JSON list. `image_path` = gambar kartu opsional di disk `public` (bukan logo penyelenggara, lihat aturan 10 AGENTS.md); upload ≤5 MB di-resize ke WebP ≤512 px dan file asli dibuang; file lama dihapus saat diganti. Menolak `delete()` bila sudah dipilih mentee. |
 | `scholarship_info_reports` | Laporan "Informasi Tidak Akurat?" dari halaman detail beasiswa. `field` = `ReportedField` (tanggal buka, deadline, persyaratan, kuota, benefit, tautan, lainnya), `status` = `ReportStatus` (`new`/`in_review`/`accepted`/`rejected`). Teks disimpan polos (tag dibuang). Anti-spam di `ScholarshipReportService`: maks 5 laporan per mentee per 24 jam dan 1 laporan terbuka per (mentee, beasiswa, bagian). `user_id` dan `reviewed_by` di-*null*-kan saat akun dihapus (laporan tetap ada); `scholarship_id` *restrict* dan dihitung di `hasMenteeHistory()`, jadi beasiswa yang punya laporan tidak bisa dihapus. `source_url` hanya untuk admin. Menerima laporan **tidak** mengubah data beasiswa otomatis. |
 | `support_tickets` | Tiket dari halaman Bantuan (`/bantuan`): `category` = `SupportTicketCategory` (bug, error, akun, modul, AI, beasiswa, lainnya), `status` = `SupportTicketStatus` (`new`/`in_progress`/`resolved`/`closed`). Teks disimpan polos; `screenshot_path` di disk `local` (privat, hanya bisa diunduh admin); `user_agent` dicatat dari request. Maks 5 tiket per mentee per 24 jam (`SupportTicketService`). `user_id`/`handled_by` di-*null*-kan saat akun dihapus. `admin_note` tidak pernah tampil ke mentee. |
@@ -533,6 +533,7 @@ Unique: `(user_id, practice_form_id)`
 | `phone` | varchar | ya |  |
 | `subscription` | varchar | ya |  |
 | `profile_completed_at` | datetime | ya |  |
+| `onboarding_tours` | text | ya |  |
 
 Unique: `(email)`; `(google_id)`
 

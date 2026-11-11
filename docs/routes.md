@@ -41,6 +41,7 @@ Skular adalah aplikasi **Livewire server-rendered**, bukan API JSON. Aksi di hal
 | GET | `/dashboard` | dashboard | `Livewire\Dashboard (Livewire page)` | `auth`, `verified` |
 | GET | `/faq` | faq.index | `Livewire\Faq\Index (Livewire page)` | — |
 | GET | `/roadmap` | roadmap.show | `Livewire\Roadmap (Livewire page)` | `auth`, `verified` |
+| GET | `/panduan` | guide.index | `Livewire\Onboarding\Guide (Livewire page)` | `auth`, `verified` |
 | GET | `/bantuan` | support.index | `Livewire\Support\Help (Livewire page)` | `auth`, `verified` |
 | GET | `/library` | library.index | `Livewire\Learning\Library (Livewire page)` | `auth`, `verified` |
 | GET | `/modules/{module}` | modules.show | `Livewire\Learning\ModulePlayer (Livewire page)` | `auth`, `verified` |

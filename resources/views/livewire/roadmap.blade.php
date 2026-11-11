@@ -228,4 +228,7 @@
             </section>
         @endif
     @endif
+
+    {{-- Onboarding coach marks for this page (opens once; replay from /panduan). --}}
+    <livewire:onboarding.product-tour tour="roadmap" />
 </div>

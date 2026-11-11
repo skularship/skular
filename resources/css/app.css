@@ -591,3 +591,75 @@
         animation-delay: -11s;
     }
 }
+
+/* Onboarding product tour (x-onboarding.tour-overlay). The spotlight is a
+   transparent box whose huge box-shadow dims everything around the target. */
+.sk-tour {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+}
+
+.sk-tour__backdrop {
+    position: absolute;
+    inset: 0;
+    background-color: rgb(9 9 11 / 0.55);
+}
+
+.sk-tour__blocker {
+    position: absolute;
+    inset: 0;
+}
+
+.sk-tour__spotlight {
+    position: fixed;
+    border-radius: 1.25rem;
+    box-shadow:
+        0 0 0 3px var(--color-brand-amber),
+        0 0 0 9999px rgb(9 9 11 / 0.55);
+    pointer-events: none;
+}
+
+.sk-tour__card {
+    position: fixed;
+    z-index: 1;
+    max-width: calc(100vw - 24px);
+    padding: 1.1rem 1.15rem 1rem;
+    border: 1px solid color-mix(in oklab, var(--color-brand-teal) 15%, transparent);
+    border-radius: 1.5rem;
+    background-color: white;
+    box-shadow: 0 24px 60px -20px rgb(9 9 11 / 0.45);
+    outline: none;
+}
+
+.sk-tour__card--centered {
+    top: 50%;
+    left: 50%;
+    width: min(380px, calc(100vw - 24px));
+    transform: translate(-50%, -50%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .sk-tour__spotlight {
+        transition:
+            top 0.25s ease,
+            left 0.25s ease,
+            width 0.25s ease,
+            height 0.25s ease;
+    }
+
+    /* Opacity only: a transform animation would fight the centred card's translate. */
+    .sk-tour__card {
+        animation: skular-tour-in 0.2s ease-out both;
+    }
+}
+
+@keyframes skular-tour-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

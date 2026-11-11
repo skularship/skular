@@ -133,7 +133,7 @@ test('a finished path shows every fase and the finished state', function () {
         ->assertOk()
         ->assertSee('Semua fase di jalur ini sudah selesai')
         ->assertSee('Modul Fase Final 2')
-        ->assertDontSee('Lihat lebih lanjut');
+        ->assertDontSee('data-test="roadmap-locked"', false);
 });
 
 test('a mentee without a scholarship sees the inti roadmap and a prompt to choose one', function () {

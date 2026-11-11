@@ -176,4 +176,7 @@
                 </x-ui.card>
             </div>
         @endif
+
+    {{-- Onboarding coach marks for this page (opens once; replay from /panduan). --}}
+    <livewire:onboarding.product-tour tour="recommendation" />
 </div>

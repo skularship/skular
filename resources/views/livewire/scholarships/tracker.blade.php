@@ -276,4 +276,7 @@
             </x-ui.card>
         @endforeach
     @endif
+
+    {{-- Onboarding coach marks for this page (opens once; replay from /panduan). --}}
+    <livewire:onboarding.product-tour tour="tracker" />
 </div>

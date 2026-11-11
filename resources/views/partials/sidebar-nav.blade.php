@@ -27,6 +27,7 @@
             'links' => [
                 ['route' => 'profiling', 'label' => __('Profil & Profiling'), 'icon' => 'identification', 'pattern' => 'profiling'],
                 ['route' => 'cv.show', 'label' => __('CV Saya'), 'icon' => 'document-text', 'pattern' => 'cv.show'],
+                ['route' => 'guide.index', 'label' => __('Panduan'), 'icon' => 'question-mark-circle', 'pattern' => 'guide.index'],
                 ['route' => 'support.index', 'label' => __('Bantuan'), 'icon' => 'lifebuoy', 'pattern' => 'support.index'],
             ],
         ],
@@ -48,7 +49,7 @@
     @endif
 </div>
 
-<nav class="flex flex-col gap-5 md:mt-5" aria-label="{{ __('Navigasi utama') }}">
+<nav class="flex flex-col gap-5 md:mt-5" aria-label="{{ __('Navigasi utama') }}" data-tour="main-nav">
     @foreach ($groups as $group)
         <div class="flex flex-col gap-1">
             <p class="px-3 text-[0.6875rem] font-bold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
