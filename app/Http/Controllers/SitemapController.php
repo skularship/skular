@@ -13,8 +13,8 @@ use Illuminate\Http\Response;
  * Only pages a crawler can load without authenticating are listed; the
  * scholarship catalogue, learning modules, practice forms, dashboard, profile
  * and Filament admin all require a session. `lastmod` is taken from a real
- * content change (the view file, or the newest published FAQ) instead of the
- * time the sitemap happened to be requested.
+ * content change (a date kept by hand in config/seo.php, or the newest
+ * published FAQ) instead of the deploy or the request time.
  */
 class SitemapController
 {
@@ -38,7 +38,7 @@ class SitemapController
         return [
             [
                 'loc' => Seo::url('/'),
-                'lastmod' => $this->lastModified(resource_path('views/welcome.blade.php')),
+                'lastmod' => $this->configuredLastModified('home'),
             ],
             [
                 'loc' => Seo::url('/faq'),
@@ -48,12 +48,13 @@ class SitemapController
     }
 
     /**
-     * The file's own modification time: the last time the copy changed.
+     * The hand-maintained date from config/seo.php `pages.{page}.lastmod`.
+     *
+     * @param  string  $page  Key under `seo.pages`, e.g. "home".
      */
-    private function lastModified(string $path): string
+    private function configuredLastModified(string $page): string
     {
-        return CarbonImmutable::createFromTimestamp((int) filemtime($path), config('app.timezone'))
-            ->format('Y-m-d');
+        return CarbonImmutable::parse((string) config("seo.pages.{$page}.lastmod"))->format('Y-m-d');
     }
 
     /**
@@ -64,7 +65,7 @@ class SitemapController
         $latest = Faq::query()->published()->max('updated_at');
 
         return $latest === null
-            ? $this->lastModified(resource_path('views/livewire/faq/index.blade.php'))
+            ? $this->configuredLastModified('faq')
             : CarbonImmutable::parse($latest)->setTimezone(config('app.timezone'))->format('Y-m-d');
     }
 }

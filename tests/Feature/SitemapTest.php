@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Faq;
 use App\Support\Seo;
 use Carbon\CarbonImmutable;
 
@@ -44,13 +45,35 @@ test('the sitemap never lists authenticated or internal pages', function () {
     }
 });
 
-test('the sitemap lastmod comes from the content, not from the request time', function () {
-    $content = $this->get('/sitemap.xml')->assertOk()->content();
+test('the home lastmod is the configured date, not the view file time', function () {
+    config(['seo.pages.home.lastmod' => '2026-01-15']);
 
-    $expected = CarbonImmutable::createFromTimestamp(
-        (int) filemtime(resource_path('views/welcome.blade.php')),
-        config('app.timezone'),
-    )->format('Y-m-d');
+    $xml = simplexml_load_string($this->get('/sitemap.xml')->assertOk()->content());
 
-    expect($content)->toContain('<lastmod>'.$expected.'</lastmod>');
+    expect((string) $xml->url[0]->loc)->toBe(Seo::url('/'))
+        ->and((string) $xml->url[0]->lastmod)->toBe('2026-01-15');
+});
+
+test('the faq lastmod follows the newest published faq only', function () {
+    config(['seo.pages.faq.lastmod' => '2026-01-15']);
+
+    Faq::factory()->published()->create([
+        'updated_at' => CarbonImmutable::parse('2026-03-10 09:00:00', config('app.timezone')),
+    ]);
+
+    Faq::factory()->draft()->create([
+        'updated_at' => CarbonImmutable::parse('2026-05-20 09:00:00', config('app.timezone')),
+    ]);
+
+    $xml = simplexml_load_string($this->get('/sitemap.xml')->assertOk()->content());
+
+    expect((string) $xml->url[1]->lastmod)->toBe('2026-03-10');
+});
+
+test('the faq lastmod falls back to the configured date without published faqs', function () {
+    config(['seo.pages.faq.lastmod' => '2026-02-01']);
+
+    $xml = simplexml_load_string($this->get('/sitemap.xml')->assertOk()->content());
+
+    expect((string) $xml->url[1]->lastmod)->toBe('2026-02-01');
 });

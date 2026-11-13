@@ -50,4 +50,19 @@ return [
         'alt' => 'Preview Skular — platform persiapan beasiswa',
     ],
 
+    /*
+    | Sitemap `lastmod` (Y-m-d) for pages whose content lives in a view file.
+    | Change these dates by hand ONLY when the page copy really changes; a
+    | deploy alone must not move them. /faq prefers the newest published FAQ
+    | and falls back to its date here when nothing is published.
+    */
+    'pages' => [
+        'home' => [
+            'lastmod' => env('SEO_HOME_LASTMOD', '2026-11-13'),
+        ],
+        'faq' => [
+            'lastmod' => env('SEO_FAQ_LASTMOD', '2026-11-06'),
+        ],
+    ],
+
 ];
