@@ -401,14 +401,26 @@
 }
 
 /* ==========================================================================
-   Landing page motion system
+   Landing page (welcome.blade.php)
 
-   Everything below animates transform/opacity only, so it stays on the
-   compositor and never triggers layout. The scroll reveal is opt-in: the
+   Motion animates transform/opacity only. The scroll reveal is opt-in: the
    `js` class is only added on the client when IntersectionObserver exists and
    the visitor has not asked for reduced motion, so the content is always
-   readable when JavaScript is unavailable.
+   readable without JavaScript (app.js also reveals everything after 3s).
    ========================================================================== */
+
+/* Visible keyboard focus for every interactive element on the landing page. */
+.sk-landing :where(a, button, summary, input, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-brand-teal);
+    outline-offset: 3px;
+}
+
+/* The one highlighted phrase in the hero: a flat amber highlighter stroke. */
+.sk-marker {
+    background-image: linear-gradient(transparent 58%, color-mix(in oklab, var(--color-brand-amber) 70%, transparent) 58%, color-mix(in oklab, var(--color-brand-amber) 70%, transparent) 92%, transparent 92%);
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
 
 @keyframes skular-marquee-scroll {
     from {
@@ -419,128 +431,61 @@
     }
 }
 
-@keyframes skular-word-cycle {
-    0% {
-        opacity: 0;
-        transform: translate3d(0, 100%, 0);
-    }
-    4%,
-    30% {
-        opacity: 1;
-        transform: translate3d(0, 0, 0);
-    }
-    33.33%,
-    100% {
-        opacity: 0;
-        transform: translate3d(0, -100%, 0);
-    }
+/* Clips the track and fades both edges so the loop never ends in a hard cut. */
+.sk-marquee-frame {
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
 }
 
-@keyframes skular-float {
-    0%,
-    100% {
-        transform: translate3d(0, 0, 0);
-    }
-    50% {
-        transform: translate3d(0, -0.75rem, 0);
-    }
-}
-
-@keyframes skular-drift {
-    0%,
-    100% {
-        transform: translate3d(0, 0, 0) scale(1);
-    }
-    50% {
-        transform: translate3d(0, -1.25rem, 0) scale(1.05);
-    }
-}
-
-/* The marquee wrapper holds two identical tracks, so shifting it by exactly
-   half of its own width lands on a seam-free loop. */
+/* Two identical tracks: shifting by exactly half the width is a seam-free loop. */
 .sk-marquee {
     display: flex;
     width: max-content;
     animation: skular-marquee-scroll var(--sk-marquee-duration, 40s) linear infinite;
-    will-change: transform;
 }
 
-.sk-marquee--reverse {
-    animation-direction: reverse;
+.sk-marquee-frame:hover .sk-marquee {
+    animation-play-state: paused;
 }
 
-.sk-word {
+.js [data-reveal] {
     opacity: 0;
-}
-
-.sk-float {
-    animation: skular-float 7s ease-in-out infinite;
-}
-
-.sk-float--late {
-    animation-delay: -2.5s;
-    animation-duration: 9s;
-}
-
-.sk-drift {
-    animation: skular-drift 18s ease-in-out infinite;
-}
-
-.sk-drift--late {
-    animation-delay: -6s;
-    animation-duration: 22s;
-}
-
-.sk-reveal {
-    opacity: 1;
-}
-
-.js .sk-reveal {
-    opacity: 0;
-    transform: translate3d(0, 1.5rem, 0);
+    transform: translate3d(0, 1rem, 0);
     transition:
-        opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-        transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+        opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
     transition-delay: var(--sk-reveal-delay, 0ms);
 }
 
-.js .sk-reveal.is-revealed {
+.js [data-reveal].is-revealed {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-    .sk-word {
-        animation: skular-word-cycle 9s infinite both;
-    }
-
-    .sk-word:nth-child(2) {
-        animation-delay: 3s;
-    }
-
-    .sk-word:nth-child(3) {
-        animation-delay: 6s;
-    }
+    transform: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .sk-marquee,
-    .sk-float,
-    .sk-drift,
-    .sk-word {
+    /* Without motion the strip becomes a static, wrapping list. */
+    .sk-marquee-frame {
+        mask-image: none;
+    }
+
+    .sk-marquee {
+        width: auto;
         animation: none;
+        justify-content: center;
+        padding-inline: 1rem;
     }
 
-    /* Only the first rotating phrase stays: the others would overlap it. */
-    .sk-word:first-child {
-        opacity: 1;
+    .sk-marquee__track {
+        flex-wrap: wrap;
+        justify-content: center;
+        row-gap: 0.5rem;
     }
 
-    .sk-word:not(:first-child) {
+    .sk-marquee__track[aria-hidden='true'] {
         display: none;
     }
 
-    .js .sk-reveal {
+    .js [data-reveal] {
         opacity: 1;
         transform: none;
         transition: none;

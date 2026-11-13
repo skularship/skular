@@ -48,7 +48,7 @@
             </ul>
         </div>
 
-        <div class="rounded-3xl border border-white/15 bg-warm-cream p-5 shadow-2xl sm:p-8 dark:border-white/10 dark:bg-zinc-900">
+        <div class="rounded-3xl border border-white/15 bg-warm-cream p-5 shadow-2xl sm:p-8">
             @if ($this->result)
                 @php
                     $result = $this->result;
@@ -67,7 +67,7 @@
                     <div class="flex flex-col items-center gap-6 text-center sm:flex-row sm:items-center sm:text-left">
                         <div class="relative shrink-0" role="img" aria-label="{{ __('Skor kesiapan: :score dari 100', ['score' => $result->score]) }}">
                             <svg viewBox="0 0 128 128" class="size-32 -rotate-90" aria-hidden="true">
-                                <circle cx="64" cy="64" r="{{ $radius }}" fill="none" stroke="currentColor" stroke-width="12" class="text-zinc-200 dark:text-white/10" />
+                                <circle cx="64" cy="64" r="{{ $radius }}" fill="none" stroke="currentColor" stroke-width="12" class="text-zinc-200" />
                                 <circle
                                     cx="64"
                                     cy="64"
@@ -89,7 +89,7 @@
                             </svg>
 
                             <div class="absolute inset-0 flex flex-col items-center justify-center" aria-hidden="true">
-                                <span class="text-3xl font-bold text-zinc-900 dark:text-white">{{ $result->score }}</span>
+                                <span class="text-3xl font-bold text-zinc-900">{{ $result->score }}</span>
                                 <span class="text-[0.625rem] font-semibold tracking-wide text-zinc-400 uppercase">/ 100</span>
                             </div>
                         </div>
@@ -99,47 +99,47 @@
                                 {{ $result->categoryLabel() }}
                             </x-ui.pill>
 
-                            <p class="mt-3 text-lg font-bold text-zinc-900 dark:text-white">{{ $result->headline }}</p>
-                            <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{{ $result->subheadline }}</p>
+                            <p class="mt-3 text-lg font-bold text-zinc-900">{{ $result->headline }}</p>
+                            <p class="mt-1 text-sm text-zinc-600">{{ $result->subheadline }}</p>
                         </div>
                     </div>
 
                     <div class="rounded-2xl border border-brand-amber/40 bg-brand-amber/10 p-4">
-                        <p class="flex items-center gap-2 text-xs font-semibold tracking-wide text-brand-teal uppercase dark:text-brand-amber">
+                        <p class="flex items-center gap-2 text-xs font-semibold tracking-wide text-brand-teal uppercase">
                             <x-icons.app-icon name="exclamation-triangle" class="size-4" />
                             {{ __('Hambatan utama') }}
                         </p>
-                        <p class="mt-1.5 text-sm text-zinc-700 dark:text-zinc-200">{{ $result->blocker }}</p>
+                        <p class="mt-1.5 text-sm text-zinc-700">{{ $result->blocker }}</p>
                     </div>
 
                     <div>
-                        <p class="text-xs font-semibold tracking-wide text-brand-teal uppercase dark:text-brand-teal-light">
+                        <p class="text-xs font-semibold tracking-wide text-brand-teal uppercase">
                             {{ __('Tiga langkah berikutnya') }}
                         </p>
 
                         <ol class="mt-3 flex flex-col gap-2.5">
                             @foreach ($result->recommendations as $index => $recommendation)
-                                <li class="flex items-start gap-3 rounded-xl border border-zinc-200/80 bg-white/70 p-3 dark:border-white/10 dark:bg-white/5">
+                                <li class="flex items-start gap-3 rounded-xl border border-zinc-200/80 bg-white/70 p-3">
                                     <span class="brand-gradient mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-brand-ink" aria-hidden="true">
                                         {{ $index + 1 }}
                                     </span>
-                                    <span class="text-sm text-zinc-700 dark:text-zinc-200">{{ $recommendation }}</span>
+                                    <span class="text-sm text-zinc-700">{{ $recommendation }}</span>
                                 </li>
                             @endforeach
                         </ol>
                     </div>
 
-                    <div class="rounded-2xl border border-brand-teal/20 bg-brand-teal/5 p-4 dark:border-brand-teal/30 dark:bg-brand-teal/10">
-                        <p class="flex items-center gap-2 text-xs font-semibold tracking-wide text-brand-teal uppercase dark:text-brand-teal-light">
+                    <div class="rounded-2xl border border-brand-teal/20 bg-brand-teal/5 p-4">
+                        <p class="flex items-center gap-2 text-xs font-semibold tracking-wide text-brand-teal uppercase">
                             <x-icons.app-icon name="calendar-days" class="size-4" />
                             {{ __('Ringkasan waktu') }}
                         </p>
-                        <p class="mt-1.5 text-sm text-zinc-700 dark:text-zinc-200">{{ $result->timeline_summary }}</p>
+                        <p class="mt-1.5 text-sm text-zinc-700">{{ $result->timeline_summary }}</p>
                     </div>
 
-                    <div class="rounded-2xl border border-brand-teal/15 bg-linear-135 from-brand-amber/20 via-white/40 to-brand-teal/10 p-5 dark:border-white/10 dark:from-brand-amber/10 dark:via-zinc-900 dark:to-brand-teal/15">
-                        <p class="text-base font-bold text-zinc-900 dark:text-white">{{ __('Bangun Kesiapanmu Bersama Skular') }}</p>
-                        <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-300">
+                    <div class="rounded-2xl border border-brand-teal/15 bg-linear-135 from-brand-amber/20 via-white/40 to-brand-teal/10 p-5">
+                        <p class="text-base font-bold text-zinc-900">{{ __('Bangun Kesiapanmu Bersama Skular') }}</p>
+                        <p class="mt-1 text-sm text-zinc-600">
                             {{ __('Daftar untuk mulai menyusun langkah persiapan beasiswamu secara lebih terarah.') }}
                         </p>
 
@@ -154,7 +154,7 @@
                         </div>
                     </div>
 
-                    <p class="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                    <p class="text-xs leading-relaxed text-zinc-500">
                         {{ __('Skor ini adalah indikator kesiapan persiapan, bukan peluang lolos beasiswa. Hasil dan jawabanmu tidak disimpan di akun mana pun.') }}
                     </p>
                 </div>
@@ -327,7 +327,7 @@
                     x-on:change="save()"
                 >
                     <div>
-                        <div class="flex items-center justify-between text-xs font-semibold tracking-wide text-brand-teal uppercase dark:text-brand-teal-light">
+                        <div class="flex items-center justify-between text-xs font-semibold tracking-wide text-brand-teal uppercase">
                             <span>
                                 {{ __('Pertanyaan') }}
                                 <span x-text="step" class="tabular-nums">{{ $question_count > 0 ? 1 : 0 }}</span>
@@ -337,7 +337,7 @@
                         </div>
 
                         <div
-                            class="mt-2 h-2 w-full overflow-hidden rounded-full bg-zinc-200/80 dark:bg-white/10"
+                            class="mt-2 h-2 w-full overflow-hidden rounded-full bg-zinc-200/80"
                             role="progressbar"
                             aria-valuenow="{{ (int) round(1 / max(1, $question_count) * 100) }}"
                             x-bind:aria-valuenow="percent"
@@ -362,8 +362,8 @@
                             class="m-0 min-w-0 border-0 p-0"
                         >
                             <legend class="block">
-                                <span class="block text-lg font-bold text-zinc-900 dark:text-white">{{ __($question['title']) }}</span>
-                                <span class="mt-1 block text-sm text-zinc-500 dark:text-zinc-400">{{ __($question['description']) }}</span>
+                                <span class="block text-lg font-bold text-zinc-900">{{ __($question['title']) }}</span>
+                                <span class="mt-1 block text-sm text-zinc-500">{{ __($question['description']) }}</span>
                             </legend>
 
                             <div class="mt-4 grid gap-3 sm:grid-cols-2">
@@ -452,14 +452,14 @@
                         x-show="error"
                         x-cloak
                         role="alert"
-                        class="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-950 dark:text-amber-200"
+                        class="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800"
                     >
                         <span class="font-medium" x-text="error"></span>
                     </div>
 
-                    <div class="flex flex-col-reverse gap-3 border-t border-zinc-200/80 pt-5 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
+                    <div class="flex flex-col-reverse gap-3 border-t border-zinc-200/80 pt-5 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <x-actions.button type="button" variant="ghost" icon="arrow-left" x-on:click="back()" x-show="step > 1" x-cloak data-test="quick-back">
+                            <x-actions.button type="button" variant="ghost" size="lg" icon="arrow-left" x-on:click="back()" x-show="step > 1" x-cloak data-test="quick-back">
                                 {{ __('Kembali') }}
                             </x-actions.button>
                         </div>
@@ -467,6 +467,7 @@
                         <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
                             <x-actions.button
                                 type="button"
+                                size="lg"
                                 iconTrailing="arrow-right"
                                 x-on:click="next()"
                                 x-show="step < total"
@@ -478,6 +479,7 @@
 
                             <x-actions.button
                                 type="button"
+                                size="lg"
                                 iconTrailing="sparkles"
                                 x-on:click="finish()"
                                 x-show="step >= total"
@@ -491,7 +493,7 @@
                         </div>
                     </div>
 
-                    <p class="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                    <p class="text-xs leading-relaxed text-zinc-500">
                         {{ __('Jawabanmu baru dikirim saat kamu menekan tombol hasil di pertanyaan terakhir.') }}
                     </p>
                 </form>

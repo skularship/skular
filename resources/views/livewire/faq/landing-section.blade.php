@@ -1,7 +1,7 @@
 {{-- FAQ section embedded on the landing page (App\Livewire\Faq\LandingSection). --}}
 <div>
     @if ($faqs->isNotEmpty())
-        <section id="faq" class="relative scroll-mt-24 overflow-hidden bg-warm-sand py-20 sm:py-24 dark:bg-zinc-900/50" data-test="landing-faq-section">
+        <section id="faq" class="relative scroll-mt-24 overflow-hidden bg-warm-sand py-20 sm:py-24" data-test="landing-faq-section">
             <div class="pointer-events-none absolute -left-24 top-10 size-72 rounded-full bg-brand-amber/20 blur-3xl" aria-hidden="true"></div>
             <div class="pointer-events-none absolute -right-20 bottom-0 size-72 rounded-full bg-brand-teal/12 blur-3xl" aria-hidden="true"></div>
 
@@ -9,11 +9,11 @@
                 <div class="lg:sticky lg:top-24">
                     <x-ui.pill variant="brand" icon="chat-bubble-left-right">{{ __('FAQ') }}</x-ui.pill>
 
-                    <h2 class="mt-5 text-3xl leading-[1.08] font-extrabold tracking-tight text-zinc-900 sm:text-4xl dark:text-white">
+                    <h2 class="mt-5 text-3xl leading-[1.08] font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
                         {{ __('Pertanyaan yang sering muncul.') }}
                     </h2>
 
-                    <p class="mt-4 max-w-md text-sm leading-relaxed text-zinc-600 sm:text-base dark:text-zinc-300">
+                    <p class="mt-4 max-w-md text-sm leading-relaxed text-zinc-600 sm:text-base">
                         {{ __('Jawaban singkat untuk hal yang paling sering ditanyakan sebelum mulai persiapan beasiswa.') }}
                     </p>
 
@@ -23,7 +23,7 @@
                         </x-actions.link-button>
                     </div>
 
-                    <p class="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
+                    <p class="mt-4 text-xs text-zinc-500">
                         {{ __('Menampilkan :count pertanyaan pilihan dari tim Skular.', ['count' => $faqs->count()]) }}
                     </p>
                 </div>

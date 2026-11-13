@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\AiScoreLabel;
+
 test('the landing page still answers on the home route', function () {
     $this->get(route('home'))
         ->assertOk()
@@ -17,27 +19,48 @@ test('every landing section keeps an anchor for the navigation', function () {
         ->assertSee('id="landing-mobile-menu"', false);
 });
 
-test('the hero rotates through every headline phrase', function () {
-    $response = $this->get(route('home'))->assertOk();
+test('the hero carries the positioning in the single h1', function () {
+    $content = $this->get(route('home'))->assertOk()->content();
 
-    $response->assertSee('Siapkan Dirimu.')
-        ->assertSee('Kejar Beasiswamu.')
-        ->assertSee('sk-word', false);
+    expect(substr_count($content, '<h1'))->toBe(1)
+        ->and($content)->toContain('Dari bingung sampai submit, untuk')
+        ->and($content)->toContain('beberapa beasiswa sekaligus.')
+        ->and($content)->toContain('Satu kali persiapan untuk banyak beasiswa.')
+        ->and($content)->toContain('Informasi Beasiswa')
+        ->and($content)->toContain('Step-by-step Daftar');
+});
 
-    foreach (['Lebih Siap.', 'Lebih Terarah.', 'Lebih Percaya Diri.'] as $phrase) {
-        $response->assertSee($phrase);
+test('the fact strip repeats its content so the loop is seamless', function () {
+    $content = $this->get(route('home'))->content();
+
+    // Two identical tracks: one readable, one hidden from the accessibility
+    // tree, which is what lets the -50% translation loop.
+    expect(substr_count($content, 'Tracker pendaftaran beasiswa'))->toBe(2)
+        ->and(substr_count($content, 'sk-marquee__track'))->toBe(2);
+});
+
+test('the landing page shows no invented statistics or numeric scores', function () {
+    $content = $this->get(route('home'))->content();
+
+    foreach (['92%', '62%', '67%', 'Skor 88', 'Skor rubrik', '24/7'] as $invented) {
+        expect($content)->not->toContain($invented);
     }
 });
 
-test('both marquees repeat their content so the loop is seamless', function () {
-    $content = $this->get(route('home'))->content();
+test('practice feedback is explained with the mentee labels', function () {
+    $response = $this->get(route('home'))->assertOk();
 
-    // Two identical tracks per marquee: one readable, one hidden from the
-    // accessibility tree, which is what lets the -50% translation loop.
-    expect(substr_count($content, 'Temukan Beasiswamu'))->toBe(2)
-        ->and(substr_count($content, 'Masa Depan Dimulai Sekarang'))->toBe(2)
-        ->and(substr_count($content, 'Berprestasi'))->toBe(2)
-        ->and(substr_count($content, 'sk-marquee--reverse'))->toBe(1);
+    foreach (AiScoreLabel::cases() as $label) {
+        $response->assertSee($label->label());
+    }
+});
+
+test('the scholarship disclaimer is shown', function () {
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('tidak berafiliasi dengan penyelenggara beasiswa mana pun')
+        ->assertSee('selalu gratis dan dilakukan di situs resmi penyelenggaranya')
+        ->assertSee('data-test="landing-disclaimer"', false);
 });
 
 test('the calls to action point at the real authentication routes', function () {

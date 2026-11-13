@@ -35,6 +35,7 @@
     $sizeClasses = match ($size) {
         'xs' => $square ? 'size-6 text-xs' : 'h-6 px-2 text-xs',
         'sm' => $square ? 'size-8 text-sm' : 'h-8 px-3 text-sm',
+        'lg' => $square ? 'size-12 text-base' : 'h-12 px-6 text-base',
         default => $square ? 'size-10 text-sm' : 'h-10 px-4 text-sm',
     };
 
