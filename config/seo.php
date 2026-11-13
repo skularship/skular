@@ -30,6 +30,10 @@ return [
 
     'twitter_card' => 'summary_large_image',
 
+    // Browser UI colour: --color-brand-cream in resources/css/app.css, the
+    // public header/background. Keep public/site.webmanifest in sync.
+    'theme_color' => '#fdfaef',
+
     /*
     | Metadata for pages that do not pass their own. These are the landing page
     | values, since `/` is the public page Skular wants search engines to index.
