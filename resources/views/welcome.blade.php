@@ -127,7 +127,8 @@
 
     /*
      * JSON-LD contains only facts that exist in this codebase: the brand, the
-     * public URL and the logo. No ratings, awards, addresses or success
+     * public URL, the logo, the square icon and the official social profiles
+     * (config/seo.php same_as). No ratings, awards, addresses or success
      * statistics are invented.
      */
     $homeUrl = \App\Support\Seo::url('/');
@@ -140,7 +141,9 @@
             'name' => 'Skular',
             'url' => $homeUrl,
             'logo' => \App\Support\Seo::url('/skular-logo.png'),
+            'image' => \App\Support\Seo::url(config('seo.square_logo_path')),
             'description' => config('seo.defaults.description'),
+            ...(filled(config('seo.same_as')) ? ['sameAs' => config('seo.same_as')] : []),
         ],
         [
             '@context' => 'https://schema.org',

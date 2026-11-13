@@ -178,7 +178,7 @@ test('the web manifest is valid and points at existing brand icons', function ()
 });
 
 /**
- * Decode every JSON-LD block in a rendered page.
+ * Decode every JSON-LD node in a rendered page (a block may hold a list).
  *
  * @return list<array<string, mixed>>
  */
@@ -186,11 +186,40 @@ function seoJsonLdBlocks(string $html): array
 {
     preg_match_all('#<script type="application/ld\+json">(.*?)</script>#s', $html, $matches);
 
-    return array_map(
-        fn (string $json): array => json_decode(trim($json), true, flags: JSON_THROW_ON_ERROR),
-        $matches[1],
-    );
+    return collect($matches[1])
+        ->map(fn (string $json): array => json_decode(trim($json), true, flags: JSON_THROW_ON_ERROR))
+        ->flatMap(fn (array $data): array => array_is_list($data) ? $data : [$data])
+        ->values()
+        ->all();
 }
+
+test('the landing organization lists its square image and official profiles', function () {
+    $organization = collect(seoJsonLdBlocks($this->get(route('home'))->assertOk()->content()))
+        ->firstWhere('@type', 'Organization');
+
+    expect($organization)
+        ->logo->toBe(Seo::url('/skular-logo.png'))
+        ->image->toBe(Seo::url('/icon-512.png'))
+        ->sameAs->toBe(['https://www.instagram.com/skulars']);
+
+    expect(file_exists(public_path('icon-512.png')))->toBeTrue();
+});
+
+test('the organization sameAs follows config and disappears when empty', function () {
+    config(['seo.same_as' => ['https://www.instagram.com/skulars', 'https://www.linkedin.com/company/skular']]);
+
+    $organization = collect(seoJsonLdBlocks($this->get(route('home'))->assertOk()->content()))
+        ->firstWhere('@type', 'Organization');
+
+    expect($organization['sameAs'])->toBe(['https://www.instagram.com/skulars', 'https://www.linkedin.com/company/skular']);
+
+    config(['seo.same_as' => []]);
+
+    $organization = collect(seoJsonLdBlocks($this->get(route('home'))->assertOk()->content()))
+        ->firstWhere('@type', 'Organization');
+
+    expect($organization)->not->toHaveKey('sameAs');
+});
 
 test('the faq title carries keywords and stays within 60 characters', function () {
     $html = $this->get(route('faq.index'))->assertOk()->content();

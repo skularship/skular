@@ -30,6 +30,18 @@ return [
 
     'twitter_card' => 'summary_large_image',
 
+    /*
+    | Official Skular profiles for Organization.sameAs in the landing JSON-LD.
+    | SEO_SAME_AS overrides the list with comma-separated absolute URLs.
+    */
+    'same_as' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('SEO_SAME_AS', 'https://www.instagram.com/skulars')),
+    ))),
+
+    // Square brand icon (512 × 512) used as Organization.image.
+    'square_logo_path' => '/icon-512.png',
+
     // Browser UI colour: --color-brand-cream in resources/css/app.css, the
     // public header/background. Keep public/site.webmanifest in sync.
     'theme_color' => '#fdfaef',

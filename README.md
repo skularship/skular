@@ -81,6 +81,7 @@ Nilai rahasia tidak pernah ditulis di dokumentasi. Daftar lengkap ada di [`.env.
 | `APP_LOCALE`, `APP_FALLBACK_LOCALE`, `APP_FAKER_LOCALE` | Locale framework (copy UI ditulis langsung dalam Bahasa Indonesia) | Opsional |
 | `SEO_CANONICAL_URL` | Host kanonik untuk canonical URL, sitemap, Open Graph. Kosong = pakai `APP_URL` | Opsional |
 | `SEO_HOME_LASTMOD`, `SEO_FAQ_LASTMOD` | Override `lastmod` sitemap (`YYYY-MM-DD`) untuk `/` dan `/faq`. Default di `config/seo.php` (`pages.*.lastmod`), diubah manual hanya saat isi halaman berubah. `/faq` memakai `updated_at` FAQ terbit terbaru bila ada | Opsional |
+| `SEO_SAME_AS` | URL profil resmi Skular untuk `sameAs` pada JSON-LD Organization di landing, dipisah koma. Default `https://www.instagram.com/skulars` (`config/seo.php`, `same_as`) | Opsional |
 | `TRUSTED_PROXIES` | IP/CIDR reverse proxy agar HTTPS dan cookie aman terdeteksi | Wajib bila di belakang proxy |
 | `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Koneksi database | Wajib |
 | `SESSION_DRIVER`, `CACHE_STORE`, `QUEUE_CONNECTION` | Default `database`. Untuk trafik tinggi gunakan `redis` | Wajib |
