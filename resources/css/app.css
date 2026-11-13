@@ -418,8 +418,72 @@
 /* The one highlighted phrase in the hero: a flat amber highlighter stroke. */
 .sk-marker {
     background-image: linear-gradient(transparent 58%, color-mix(in oklab, var(--color-brand-amber) 70%, transparent) 58%, color-mix(in oklab, var(--color-brand-amber) 70%, transparent) 92%, transparent 92%);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
     box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
+}
+
+/* Hero text entrance: plays once on load. The `backwards` fill mode means the
+   resting state is the plain, fully visible text, so nothing stays hidden if
+   the animation never runs. */
+@keyframes skular-word-in {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 0.35em, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes skular-marker-draw {
+    from {
+        background-size: 0% 100%;
+    }
+    to {
+        background-size: 100% 100%;
+    }
+}
+
+@keyframes skular-fade-up {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 0.5rem, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.sk-word-in {
+    display: inline-block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .sk-word-in {
+        animation: skular-word-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+        animation-delay: calc(var(--i, 0) * 70ms + 120ms);
+    }
+
+    .sk-marker {
+        animation: skular-marker-draw 0.7s cubic-bezier(0.65, 0, 0.35, 1) 0.85s backwards;
+    }
+
+    .sk-fade-up {
+        animation: skular-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.5s backwards;
+    }
+
+    .sk-fade-up--late {
+        animation-delay: 0.8s;
+    }
+}
+
+/* Pastel band behind the fact strip: Skular teal, amber and peach, softened. */
+.sk-marquee-band {
+    background-image: linear-gradient(100deg, var(--color-brand-teal-soft), var(--color-brand-amber-soft) 50%, var(--color-brand-peach-soft));
 }
 
 @keyframes skular-marquee-scroll {
@@ -444,7 +508,7 @@
     animation: skular-marquee-scroll var(--sk-marquee-duration, 40s) linear infinite;
 }
 
-.sk-marquee-frame:hover .sk-marquee {
+.sk-marquee-band:hover .sk-marquee {
     animation-play-state: paused;
 }
 

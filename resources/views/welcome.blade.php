@@ -285,20 +285,25 @@
             <section class="relative pt-10 pb-16 sm:pt-16 sm:pb-24" aria-labelledby="hero-heading">
                 <div class="mx-auto grid w-full max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-12 lg:items-end lg:gap-10">
                     <div class="lg:col-span-7">
-                        <p class="text-sm font-medium text-brand-teal-deep">
+                        <p class="sk-fade-up text-sm font-medium text-brand-teal-deep">
                             {{ __('Teman perjalanan belajar setiap pelajar Indonesia') }}
                         </p>
 
+                        {{-- Each word rises in once, then the amber highlighter draws itself.
+                             CSS only, so the heading is fully readable without JavaScript. --}}
+                        @php
+                            $hero_lead_words = explode(' ', __('Dari bingung sampai submit, untuk'));
+                            $hero_marked_words = explode(' ', __('beberapa beasiswa sekaligus.'));
+                        @endphp
                         <h1 id="hero-heading" class="mt-5 text-[2.15rem] leading-[1.06] font-bold tracking-tight text-balance sm:text-5xl lg:text-[3.6rem]">
-                            {{ __('Dari bingung sampai submit, untuk') }}
-                            <span class="sk-marker">{{ __('beberapa beasiswa sekaligus.') }}</span>
+                            @foreach ($hero_lead_words as $index => $word)<span class="sk-word-in" style="--i: {{ $index }}">{{ $word }}</span> @endforeach<span class="sk-marker">@foreach ($hero_marked_words as $index => $word)<span class="sk-word-in" style="--i: {{ count($hero_lead_words) + $index }}">{{ $word }}</span>@if (! $loop->last) @endif @endforeach</span>
                         </h1>
 
-                        <p class="mt-6 max-w-xl text-base leading-relaxed text-zinc-700 sm:text-lg">
+                        <p class="sk-fade-up mt-6 max-w-xl text-base leading-relaxed text-zinc-700 sm:text-lg">
                             {{ __('Satu kali persiapan untuk banyak beasiswa. Skular mencarikan beasiswa yang cocok dengan profilmu, lalu memandu langkah daftarnya satu per satu dalam satu aplikasi.') }}
                         </p>
 
-                        <div class="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
+                        <div class="sk-fade-up sk-fade-up--late mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
                             @auth
                                 <x-landing.cta :href="route('dashboard')" wire:navigate size="lg" iconTrailing="arrow-right">
                                     {{ __('Buka Dashboard') }}
@@ -355,18 +360,26 @@
             </section>
 
             {{-- Fact strip: only things that exist in the app. Two identical tracks make the loop seamless. --}}
-            <div class="sk-marquee-frame border-y border-brand-ink/10 bg-white py-4">
-                <div class="sk-marquee" style="--sk-marquee-duration: 60s">
-                    @foreach ([false, true] as $is_duplicate)
-                        <ul class="sk-marquee__track flex shrink-0 items-center" @if ($is_duplicate) aria-hidden="true" @endif>
-                            @foreach ($factStrip as $fact)
-                                <li class="flex shrink-0 items-center gap-6 pe-6 text-sm font-medium whitespace-nowrap text-zinc-700 sm:text-base">
-                                    {{ __($fact) }}
-                                    <span class="size-1.5 rounded-full bg-brand-orange" aria-hidden="true"></span>
-                                </li>
-                            @endforeach
-                        </ul>
-                    @endforeach
+            {{-- Pastel band in the Skular palette; each chip cycles through the accent dots. --}}
+            <div class="sk-marquee-band py-5 sm:py-6">
+                <div class="sk-marquee-frame">
+                    <div class="sk-marquee" style="--sk-marquee-duration: 55s">
+                        @foreach ([false, true] as $is_duplicate)
+                            <ul class="sk-marquee__track flex shrink-0 items-center gap-3 pe-3" @if ($is_duplicate) aria-hidden="true" @endif>
+                                @foreach ($factStrip as $index => $fact)
+                                    <li class="flex shrink-0 items-center gap-2.5 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold whitespace-nowrap text-brand-ink ring-1 ring-brand-ink/5 sm:px-5 sm:py-2.5 sm:text-base">
+                                        <span @class([
+                                            'size-2.5 shrink-0 rounded-full',
+                                            'bg-brand-teal' => $index % 3 === 0,
+                                            'bg-brand-amber' => $index % 3 === 1,
+                                            'bg-brand-orange' => $index % 3 === 2,
+                                        ]) aria-hidden="true"></span>
+                                        {{ __($fact) }}
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endforeach
+                    </div>
                 </div>
             </div>
 

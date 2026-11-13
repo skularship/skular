@@ -22,9 +22,12 @@ test('every landing section keeps an anchor for the navigation', function () {
 test('the hero carries the positioning in the single h1', function () {
     $content = $this->get(route('home'))->assertOk()->content();
 
+    // The heading words are wrapped one per span for the entrance animation,
+    // so compare the readable text instead of the raw markup.
+    $text = preg_replace('/\s+/', ' ', strip_tags($content));
+
     expect(substr_count($content, '<h1'))->toBe(1)
-        ->and($content)->toContain('Dari bingung sampai submit, untuk')
-        ->and($content)->toContain('beberapa beasiswa sekaligus.')
+        ->and($text)->toContain('Dari bingung sampai submit, untuk beberapa beasiswa sekaligus.')
         ->and($content)->toContain('Satu kali persiapan untuk banyak beasiswa.')
         ->and($content)->toContain('Informasi Beasiswa')
         ->and($content)->toContain('Step-by-step Daftar');
