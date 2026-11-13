@@ -48,7 +48,7 @@
             </ul>
         </div>
 
-        <div class="rounded-3xl border border-white/15 bg-warm-cream p-5 shadow-2xl sm:p-8">
+        <div class="clay rounded-[2rem] bg-warm-cream p-5 sm:p-8">
             @if ($this->result)
                 @php
                     $result = $this->result;

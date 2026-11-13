@@ -19,18 +19,33 @@ test('every landing section keeps an anchor for the navigation', function () {
         ->assertSee('id="landing-mobile-menu"', false);
 });
 
-test('the hero carries the positioning in the single h1', function () {
+test('the hero headline keeps a single h1 and the positioning line', function () {
     $content = $this->get(route('home'))->assertOk()->content();
 
-    // The heading words are wrapped one per span for the entrance animation,
-    // so compare the readable text instead of the raw markup.
+    // Heading lines are wrapped in spans for the entrance animation, so
+    // compare the readable text instead of the raw markup.
     $text = preg_replace('/\s+/', ' ', strip_tags($content));
 
     expect(substr_count($content, '<h1'))->toBe(1)
+        ->and($text)->toContain('Banyak Beasiswa. Dalam Satu Website.')
         ->and($text)->toContain('Dari bingung sampai submit, untuk beberapa beasiswa sekaligus.')
         ->and($content)->toContain('Satu kali persiapan untuk banyak beasiswa.')
         ->and($content)->toContain('Informasi Beasiswa')
         ->and($content)->toContain('Step-by-step Daftar');
+});
+
+test('the hero rotates through every phrase and reads it once to screen readers', function () {
+    $response = $this->get(route('home'))->assertOk();
+
+    foreach (['Lebih Banyak.', 'Lebih Cepat.', 'Lebih Pede.'] as $phrase) {
+        $response->assertSee($phrase);
+    }
+
+    $response->assertSee('sk-rotator__word', false)
+        ->assertSee('Lebih banyak, lebih cepat, lebih pede.');
+
+    // Skular has no data behind a higher pass rate, so the hero never claims one.
+    expect(strtolower($response->content()))->not->toContain('peluang lolos');
 });
 
 test('the fact strip repeats its content so the loop is seamless', function () {

@@ -415,13 +415,41 @@
     outline-offset: 3px;
 }
 
-/* The one highlighted phrase in the hero: a flat amber highlighter stroke. */
-.sk-marker {
-    background-image: linear-gradient(transparent 58%, color-mix(in oklab, var(--color-brand-amber) 70%, transparent) 58%, color-mix(in oklab, var(--color-brand-amber) 70%, transparent) 92%, transparent 92%);
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    box-decoration-break: clone;
-    -webkit-box-decoration-break: clone;
+/* Claymorphism: soft outer drop plus a light top-left and a shaded bottom
+   inner edge, so a flat colour reads as a puffy, pressable surface. Shadow
+   only; radius and colour come from regular utilities on the element. */
+@utility clay {
+    box-shadow:
+        0 24px 44px -24px rgb(27 27 24 / 0.32),
+        0 6px 14px -8px rgb(27 27 24 / 0.12),
+        inset 0 -10px 18px -6px rgb(27 27 24 / 0.1),
+        inset 0 10px 16px -6px rgb(255 255 255 / 0.9);
+}
+
+@utility clay-sm {
+    box-shadow:
+        0 10px 20px -12px rgb(27 27 24 / 0.32),
+        inset 0 -5px 10px -4px rgb(27 27 24 / 0.12),
+        inset 0 5px 8px -3px rgb(255 255 255 / 0.85);
+}
+
+/* Lifts on hover and sinks on press, like squeezing clay. */
+@utility clay-press {
+    transition:
+        transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.18s ease,
+        background-color 0.18s ease;
+
+    &:hover {
+        transform: translate3d(0, -2px, 0);
+    }
+
+    &:active {
+        transform: translate3d(0, 1px, 0);
+        box-shadow:
+            0 4px 10px -8px rgb(27 27 24 / 0.3),
+            inset 0 4px 10px -4px rgb(27 27 24 / 0.18);
+    }
 }
 
 /* Hero text entrance: plays once on load. The `backwards` fill mode means the
@@ -438,15 +466,6 @@
     }
 }
 
-@keyframes skular-marker-draw {
-    from {
-        background-size: 0% 100%;
-    }
-    to {
-        background-size: 100% 100%;
-    }
-}
-
 @keyframes skular-fade-up {
     from {
         opacity: 0;
@@ -458,26 +477,98 @@
     }
 }
 
+/* Each phrase holds for ~2s inside a 7.5s cycle of three phrases. */
+@keyframes skular-rotate-word {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 60%, 0) scale(0.92);
+    }
+    5%,
+    29% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    33.33%,
+    100% {
+        opacity: 0;
+        transform: translate3d(0, -60%, 0) scale(0.92);
+    }
+}
+
+@keyframes skular-float {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0);
+    }
+    50% {
+        transform: translate3d(0, -0.6rem, 0);
+    }
+}
+
 .sk-word-in {
     display: inline-block;
 }
 
+/* All phrases share one grid cell, so the clay pill always fits the longest
+   phrase and never jumps in width. Without motion only the first one shows. */
+.sk-rotator {
+    display: inline-grid;
+    overflow: hidden;
+    justify-items: center;
+    vertical-align: bottom;
+}
+
+.sk-rotator__word {
+    grid-area: 1 / 1;
+    white-space: nowrap;
+}
+
+.sk-rotator__word:not(:first-child) {
+    opacity: 0;
+}
+
 @media (prefers-reduced-motion: no-preference) {
     .sk-word-in {
-        animation: skular-word-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
-        animation-delay: calc(var(--i, 0) * 70ms + 120ms);
-    }
-
-    .sk-marker {
-        animation: skular-marker-draw 0.7s cubic-bezier(0.65, 0, 0.35, 1) 0.85s backwards;
+        animation: skular-word-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+        animation-delay: calc(var(--i, 0) * 90ms + 120ms);
     }
 
     .sk-fade-up {
-        animation: skular-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.5s backwards;
+        animation: skular-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.45s backwards;
     }
 
     .sk-fade-up--late {
-        animation-delay: 0.8s;
+        animation-delay: 0.75s;
+    }
+
+    .sk-rotator__word {
+        opacity: 0;
+        animation: skular-rotate-word 7.5s cubic-bezier(0.22, 1, 0.36, 1) infinite both;
+    }
+
+    .sk-rotator__word:nth-child(2) {
+        animation-delay: 2.5s;
+    }
+
+    .sk-rotator__word:nth-child(3) {
+        animation-delay: 5s;
+    }
+
+    .sk-float {
+        animation: skular-float 6s ease-in-out infinite;
+    }
+
+    .sk-float--late {
+        animation-delay: -2.5s;
+        animation-duration: 8s;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .clay-press,
+    .clay-press:hover,
+    .clay-press:active {
+        transform: none;
     }
 }
 
