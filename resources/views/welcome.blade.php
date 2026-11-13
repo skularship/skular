@@ -30,8 +30,6 @@
         'Rekomendasi beasiswa sesuai profilmu',
         'Pilih sampai 5 beasiswa',
         'Modul belajar bertahap',
-        'Feedback latihan berupa label',
-        'Tracker pendaftaran beasiswa',
     ];
 
     $heroScholarships = [
