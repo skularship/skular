@@ -92,6 +92,7 @@ Nilai rahasia tidak pernah ditulis di dokumentasi. Daftar lengkap ada di [`.env.
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | Login Google. Bila kosong, tombol Google mengembalikan ke halaman login | Opsional |
 | `PASSKEYS_USER_HANDLE_SECRET` | Secret user handle passkey. Default `APP_KEY`; biarkan dikomentari bila tidak dipakai | Opsional |
 | `ANALYTICS_PROPERTY_ID` | Property GA4 untuk dashboard analitik admin (+ file kredensial `storage/app/analytics/service-account-credentials.json`) | Opsional |
+| `GA_MEASUREMENT_ID` | Tag tracking GA4 di halaman publik (format `G-XXXXXXXXXX`, hanya production, tidak di `/admin`); beda dengan `ANALYTICS_PROPERTY_ID` | Opsional |
 | `BLAZE_ENABLED` | Default `true`. `false` hanya untuk debugging komponen Blade, lalu `php artisan view:clear` | Opsional |
 | `PERFORMANCE_LOG_SLOW_REQUESTS`, `PERFORMANCE_SLOW_REQUEST_MS`, `PERFORMANCE_LOG_SLOW_QUERIES`, `PERFORMANCE_SLOW_QUERY_MS` | Log request/query lambat (`config/performance.php`) | Opsional |
 | `MAIL_*` | Pengiriman email (verifikasi, reset password) | Wajib di production |

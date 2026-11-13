@@ -65,6 +65,8 @@
     </script>
 @endif
 
+@include('partials.analytics')
+
 @fonts
 
 @vite(['resources/css/app.css', 'resources/js/app.js'])

@@ -14,6 +14,9 @@ use Symfony\Component\HttpFoundation\Response;
  * A Content-Security-Policy is intentionally not set here: Livewire, Filament
  * and Alpine rely on inline bootstrap scripts, so a restrictive policy needs a
  * dedicated nonce strategy and per-panel testing before it can be enabled.
+ * When a CSP is added, allow the GA4 tag (resources/views/partials/analytics):
+ * https://www.googletagmanager.com in script-src and https://*.google-analytics.com
+ * plus https://*.googletagmanager.com in connect-src/img-src.
  */
 class SecurityHeaders
 {
