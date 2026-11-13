@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Faq;
+use App\Models\FaqCategory;
 use App\Models\User;
 use App\Support\Seo;
 
@@ -173,4 +175,105 @@ test('the web manifest is valid and points at existing brand icons', function ()
     foreach ($manifest['icons'] as $icon) {
         expect(file_exists(public_path(ltrim($icon['src'], '/'))))->toBeTrue();
     }
+});
+
+/**
+ * Decode every JSON-LD block in a rendered page.
+ *
+ * @return list<array<string, mixed>>
+ */
+function seoJsonLdBlocks(string $html): array
+{
+    preg_match_all('#<script type="application/ld\+json">(.*?)</script>#s', $html, $matches);
+
+    return array_map(
+        fn (string $json): array => json_decode(trim($json), true, flags: JSON_THROW_ON_ERROR),
+        $matches[1],
+    );
+}
+
+test('the faq title carries keywords and stays within 60 characters', function () {
+    $html = $this->get(route('faq.index'))->assertOk()->content();
+
+    preg_match('#<title>(.*?)</title>#s', $html, $title);
+
+    expect($title[1])->toBe('FAQ Persiapan Beasiswa: Esai dan Wawancara — Skular')
+        ->and(mb_strlen($title[1]))->toBeLessThanOrEqual(60);
+});
+
+test('the faq page publishes FAQPage json-ld for visible published faqs only', function () {
+    $category = FaqCategory::factory()->create();
+    $inactive = FaqCategory::factory()->inactive()->create();
+
+    Faq::factory()->published()->create([
+        'faq_category_id' => $category->id,
+        'question' => 'Apakah Skular gratis?',
+        'answer' => '<p>Ya, <strong>gratis</strong> &amp; terbuka.</p><ul><li>Profiling</li><li>Modul</li></ul>',
+    ]);
+    Faq::factory()->draft()->create(['faq_category_id' => $category->id, 'question' => 'Draf rahasia?']);
+    Faq::factory()->published()->create(['faq_category_id' => $inactive->id, 'question' => 'Kategori nonaktif?']);
+    Faq::factory()->published()->create([
+        'faq_category_id' => $category->id,
+        'question' => 'Belum waktunya?',
+        'published_at' => now()->addDay(),
+    ]);
+
+    $html = $this->get(route('faq.index'))->assertOk()->content();
+
+    $faqPage = collect(seoJsonLdBlocks($html))->firstWhere('@type', 'FAQPage');
+
+    // Plain text of exactly what the accordion shows: tags gone, entities decoded.
+    expect($faqPage)->toBe([
+        '@context' => 'https://schema.org',
+        '@type' => 'FAQPage',
+        'mainEntity' => [[
+            '@type' => 'Question',
+            'name' => 'Apakah Skular gratis?',
+            'acceptedAnswer' => [
+                '@type' => 'Answer',
+                'text' => 'Ya, gratis & terbuka. Profiling Modul',
+            ],
+        ]],
+    ])
+        ->and($html)->toContain('<strong>gratis</strong> &amp; terbuka.');
+});
+
+test('the faq json-ld lists exactly the questions rendered on the current page', function () {
+    $category = FaqCategory::factory()->create();
+
+    foreach (range(1, 12) as $order) {
+        Faq::factory()->published()->create([
+            'faq_category_id' => $category->id,
+            'question' => "Pertanyaan nomor {$order}?",
+            'sort_order' => $order,
+        ]);
+    }
+
+    $faqPage = collect(seoJsonLdBlocks($this->get(route('faq.index'))->assertOk()->content()))
+        ->firstWhere('@type', 'FAQPage');
+
+    expect(array_column($faqPage['mainEntity'], 'name'))
+        ->toBe(array_map(fn (int $order): string => "Pertanyaan nomor {$order}?", range(1, 10)));
+});
+
+test('the faq page renders no FAQPage json-ld without published faqs', function () {
+    Faq::factory()->draft()->create();
+
+    $html = $this->get(route('faq.index'))->assertOk()->content();
+
+    expect($html)->not->toContain('FAQPage')
+        ->and($html)->not->toContain('application/ld+json');
+});
+
+test('faq json-ld cannot break out of its script tag', function () {
+    Faq::factory()->published()->create([
+        'question' => '</script><script>alert(1)</script>?',
+        'answer' => '<p>Aman</p>',
+    ]);
+
+    $html = $this->get(route('faq.index'))->assertOk()->content();
+
+    expect($html)->not->toContain('</script><script>alert(1)')
+        ->and(collect(seoJsonLdBlocks($html))->firstWhere('@type', 'FAQPage')['mainEntity'][0]['name'])
+        ->toBe('</script><script>alert(1)</script>?');
 });

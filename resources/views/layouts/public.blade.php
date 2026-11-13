@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-{{-- Public (guest) layout used by the FAQ page (#[Layout('layouts.public')]): public header, footer and skip link. --}}
+{{-- Public (guest) layout used by the FAQ page (#[Layout('layouts.public')]): public header, footer and skip link.
+     Layout data from the page component: $title (#[Title]) and optional $structuredData (JSON-LD for the head). --}}
 <html
     lang="{{ str_replace('_', '-', app()->getLocale()) }}"
     class="scroll-smooth motion-reduce:scroll-auto"
@@ -7,6 +8,7 @@
     <head>
         @include('partials.head', [
             'description' => __('Kumpulan pertanyaan dan jawaban seputar Skular, pendaftaran beasiswa, administrasi, esai, wawancara, dan layanan Skular.'),
+            'structuredData' => $structuredData ?? null,
         ])
     </head>
     <body class="min-h-screen bg-warm-cream text-zinc-800 antialiased dark:bg-zinc-950 dark:text-zinc-100">

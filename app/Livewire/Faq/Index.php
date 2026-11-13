@@ -4,6 +4,7 @@ namespace App\Livewire\Faq;
 
 use App\Models\Faq;
 use App\Models\FaqCategory;
+use App\Support\Seo;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
@@ -19,9 +20,10 @@ use Livewire\WithPagination;
  *
  * Every read goes through the `published` scope, so drafts and FAQs in
  * inactive categories cannot appear in the list, a search result, a category
- * filter, or a paginated page.
+ * filter, or a paginated page. The FAQPage JSON-LD is built from the same
+ * rendered page of results and handed to the layout's <head>.
  */
-#[Title('FAQ')]
+#[Title('FAQ Persiapan Beasiswa: Esai dan Wawancara')]
 #[Layout('layouts.public')]
 class Index extends Component
 {
@@ -72,6 +74,10 @@ class Index extends Component
     /**
      * Render the public FAQ page (route faq.index).
      *
+     * The FAQPage structured data reuses the paginated rows the view shows, so
+     * it never lists a question that is not visible and costs no extra query.
+     * Livewire only renders the layout on the first (crawler) request.
+     *
      * @return View The livewire.faq.index view.
      */
     public function render(): View
@@ -103,6 +109,8 @@ class Index extends Component
             'faqs' => $faqs,
             'categories' => $categories,
             'activeCategory' => $activeCategory,
+        ])->layoutData([
+            'structuredData' => Seo::faqPage($faqs->getCollection()),
         ]);
     }
 }
