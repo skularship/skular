@@ -35,7 +35,7 @@ class PaymentEventsTable
                     ->label('Diproses')
                     ->dateTime()
                     ->placeholder('Belum')
-                    ->color(fn (?string $state): string => $state === null ? 'warning' : 'success'),
+                    ->color(fn (PaymentEvent $record): string => $record->processed_at === null ? 'warning' : 'success'),
                 TextColumn::make('created_at')->label('Diterima')->dateTime()->sortable(),
             ])
             ->filters([

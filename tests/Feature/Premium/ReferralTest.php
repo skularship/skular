@@ -56,21 +56,31 @@ test('the same order is reused only with the same code', function () {
         ->and($checkout->start($buyer, 'pro_12bln', $code)->id)->toBe($withCode->id);
 });
 
-test('refused codes', function (callable $arrange, string $message) {
-    [$buyer, $code, $plan] = $arrange();
+test('an unknown code is refused', function () {
+    expect(fn () => app(CheckoutServiceInterface::class)->start(User::factory()->create(), 'pro_12bln', 'SALAH12'))
+        ->toThrow(PaymentException::class, 'tidak ditemukan');
 
-    expect(fn () => app(CheckoutServiceInterface::class)->start($buyer, $plan, $code))
-        ->toThrow(PaymentException::class, $message);
     expect(Order::query()->count())->toBe(0);
-})->with([
-    'unknown code' => [fn () => [User::factory()->create(), 'SALAH12', 'pro_12bln'], 'tidak ditemukan'],
-    'own code' => [function () {
-        $user = User::factory()->create();
+});
 
-        return [$user, app(ReferralServiceInterface::class)->codeFor($user)->code, 'pro_12bln'];
-    }, 'kodemu sendiri'],
-    'monthly plan' => [fn () => [User::factory()->create(), app(ReferralServiceInterface::class)->codeFor(User::factory()->create())->code, 'pro_1bln'], 'paket 12 bulan'],
-]);
+test('your own code is refused', function () {
+    $user = User::factory()->create();
+    $code = app(ReferralServiceInterface::class)->codeFor($user)->code;
+
+    expect(fn () => app(CheckoutServiceInterface::class)->start($user, 'pro_12bln', $code))
+        ->toThrow(PaymentException::class, 'kodemu sendiri');
+
+    expect(Order::query()->count())->toBe(0);
+});
+
+test('the monthly plan gets no referral discount', function () {
+    $code = app(ReferralServiceInterface::class)->codeFor(User::factory()->create())->code;
+
+    expect(fn () => app(CheckoutServiceInterface::class)->start(User::factory()->create(), 'pro_1bln', $code))
+        ->toThrow(PaymentException::class, 'paket 12 bulan');
+
+    expect(Order::query()->count())->toBe(0);
+});
 
 test('after launching ends the code no longer gives a discount', function () {
     config(['pricing.launching_until' => null]);
