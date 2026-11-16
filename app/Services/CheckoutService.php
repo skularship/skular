@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Contracts\CheckoutServiceInterface;
 use App\Contracts\PaymentGatewayInterface;
 use App\Contracts\PricingServiceInterface;
+use App\Contracts\ReferralServiceInterface;
 use App\Enums\OrderStatus;
 use App\Exceptions\PaymentException;
 use App\Models\Order;
@@ -27,16 +28,17 @@ class CheckoutService implements CheckoutServiceInterface
     public function __construct(
         private readonly PricingServiceInterface $pricing,
         private readonly PaymentGatewayInterface $gateway,
+        private readonly ReferralServiceInterface $referrals,
     ) {}
 
     /**
      * Create (or reuse a recent identical) pending order and its Snap token.
      *
-     * The price is always recalculated here; the browser only sends the product code.
+     * The price is always recalculated here; the browser only sends the product code and an optional referral code.
      *
      * @throws PaymentException When the plan is not for sale or Midtrans cannot start the payment.
      */
-    public function start(User $user, string $product_code): Order
+    public function start(User $user, string $product_code, ?string $promo_code = null): Order
     {
         $product = $this->pricing->product($product_code);
         $quote = $this->pricing->quote($product_code);
@@ -45,10 +47,20 @@ class CheckoutService implements CheckoutServiceInterface
             throw PaymentException::productUnavailable();
         }
 
+        $amount = $quote->amount;
+        $discount = 0;
+        $referral = null;
+
+        if ($promo_code !== null && trim($promo_code) !== '') {
+            ['code' => $referral, 'discount' => $discount] = $this->referrals->apply($user, $promo_code, $quote);
+            $amount -= $discount;
+        }
+
         $reusable = Order::query()
             ->where('user_id', $user->id)
             ->where('product_id', $product->id)
-            ->where('amount', $quote->amount)
+            ->where('amount', $amount)
+            ->where('promo_code', $referral?->code)
             ->where('status', OrderStatus::Pending)
             ->whereNotNull('snap_token')
             ->where('created_at', '>=', now()->subMinutes(self::REUSE_MINUTES))
@@ -63,7 +75,10 @@ class CheckoutService implements CheckoutServiceInterface
             'order_id' => 'SKL-'.now()->format('ymd').'-'.Str::upper(Str::random(8)),
             'user_id' => $user->id,
             'product_id' => $product->id,
-            'amount' => $quote->amount,
+            'amount' => $amount,
+            'promo_code' => $referral?->code,
+            'referrer_user_id' => $referral?->user_id,
+            'discount_amount' => $discount,
             'status' => OrderStatus::Pending,
         ]);
 

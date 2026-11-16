@@ -15,11 +15,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property string $plan Product code of the last purchase (pro_1bln or pro_12bln).
  * @property CarbonImmutable $active_until
+ * @property CarbonImmutable|null $reminded_7_for End date the 7 day reminder was sent for.
+ * @property CarbonImmutable|null $reminded_1_for End date the 1 day reminder was sent for.
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read User $user
  */
-#[Fillable(['user_id', 'plan', 'active_until'])]
+#[Fillable(['user_id', 'plan', 'active_until', 'reminded_7_for', 'reminded_1_for'])]
 class Subscription extends Model
 {
     /**
@@ -31,6 +33,8 @@ class Subscription extends Model
     {
         return [
             'active_until' => 'datetime',
+            'reminded_7_for' => 'datetime',
+            'reminded_1_for' => 'datetime',
         ];
     }
 

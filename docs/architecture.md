@@ -190,3 +190,5 @@ Semua batas Gratis vs Pro ada di `config/plans.php` dan hanya dibaca lewat `Enti
 Reminder: `reminders:dispatch` (harian 07:00 WIB) mengantrekan `SendDeadlineReminder` per aplikasi di antrean `reminders`; `reminder_logs` mencegah kirim ganda. Belum ada WhatsApp.
 
 Sengaja tidak dikunci: cek kecocokan dan rekomendasi (dipakai alur profiling dan batas 5 beasiswa) dan modul template (bagian roadmap). Keduanya tetap penuh untuk Gratis.
+
+Referral: kode diketik di `/premium` (atau `?kode=`), divalidasi `ReferralService::apply()` di server saat checkout: hanya paket 12 bulan selama harga launching, 10% dari harga launching (Rp74.500 jadi Rp67.050), tidak boleh kode sendiri, satu akun satu kali (order paid dengan referrer). Order menyimpan `promo_code`, `referrer_user_id`, `discount_amount`. Pengingat Pro berakhir (H-7 dan H-1): `subscriptions:remind-expiry` harian 07:10 WIB mengantrekan `SendProExpiryReminder` (antrean `reminders`).
