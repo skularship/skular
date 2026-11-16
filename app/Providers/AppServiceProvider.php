@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Contracts\AiFeedbackServiceInterface;
 use App\Contracts\BrainstormingSessionServiceInterface;
 use App\Contracts\CheckoutServiceInterface;
+use App\Contracts\ConsentServiceInterface;
 use App\Contracts\CvServiceInterface;
 use App\Contracts\EntitlementServiceInterface;
 use App\Contracts\GoogleAuthServiceInterface;
@@ -37,6 +38,7 @@ use App\Contracts\VaultServiceInterface;
 use App\Services\AiFeedbackService;
 use App\Services\BrainstormingSessionService;
 use App\Services\CheckoutService;
+use App\Services\ConsentService;
 use App\Services\CvService;
 use App\Services\EntitlementService;
 use App\Services\GoogleAuthService;
@@ -180,6 +182,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(AiFeedbackServiceInterface::class, AiFeedbackService::class);
         $this->app->bind(CheckoutServiceInterface::class, CheckoutService::class);
+        $this->app->bind(ConsentServiceInterface::class, ConsentService::class);
         $this->app->bind(PaymentGatewayInterface::class, MidtransGateway::class);
         $this->app->bind(PaymentWebhookServiceInterface::class, PaymentWebhookService::class);
         $this->app->bind(PricingServiceInterface::class, PricingService::class);

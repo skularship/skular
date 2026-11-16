@@ -12,6 +12,7 @@ use App\Livewire\Dashboard;
 use App\Livewire\Faq\Index as FaqIndex;
 use App\Livewire\Learning\Library;
 use App\Livewire\Learning\ModulePlayer;
+use App\Livewire\Legal\Consent as LegalConsent;
 use App\Livewire\Onboarding\Guide;
 use App\Livewire\Premium\Billing as PremiumBilling;
 use App\Livewire\Premium\Index as PremiumIndex;
@@ -52,7 +53,11 @@ Route::middleware('throttle:30,1')->group(function () {
     Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+// Consent screen for mentees without consent to the current Terms/Privacy
+// (first Google sign-in, accounts from before the consent log, new versions).
+Route::livewire('persetujuan', LegalConsent::class)->middleware('auth')->name('legal.consent');
+
+Route::middleware(['auth', 'verified', 'legal.consent'])->group(function () {
     Route::livewire('profiling', Wizard::class)->name('profiling');
     Route::livewire('profiling/recommendation', Recommendation::class)->name('profiling.recommendation');
     Route::livewire('dashboard', Dashboard::class)->name('dashboard');

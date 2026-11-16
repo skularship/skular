@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Contracts\ConsentServiceInterface;
 use App\Enums\ApplicationResult;
 use App\Enums\ApplicationStatus;
 use App\Enums\CheckpointStatus;
+use App\Enums\ConsentSource;
 use App\Enums\EducationLevel;
 use App\Enums\LocationScope;
 use App\Models\Checkpoint;
@@ -26,10 +28,12 @@ class DemoMenteeSeeder extends Seeder
         $business = Cluster::query()->where('name', 'bisnis')->first();
 
         // Fresh mentee: has never completed profiling.
-        User::query()->updateOrCreate(
+        $fresh = User::query()->updateOrCreate(
             ['email' => 'mentee.baru@skular.test'],
             ['name' => 'Rani Mentee Baru', 'password' => 'password', 'email_verified_at' => now()],
         );
+
+        $this->acceptLegalDocuments($fresh);
 
         // Profiled mentee with an active roadmap in progress.
         $in_progress = User::query()->updateOrCreate(
@@ -50,6 +54,7 @@ class DemoMenteeSeeder extends Seeder
             ],
         );
 
+        $this->acceptLegalDocuments($in_progress);
         $this->seedProgress($in_progress, completed_modules: 3);
 
         // Mentee who already reported an accepted result (twibbon demo).
@@ -71,6 +76,7 @@ class DemoMenteeSeeder extends Seeder
             ],
         );
 
+        $this->acceptLegalDocuments($accepted);
         $this->seedProgress($accepted, completed_modules: 6);
 
         $accepted_scholarship = Scholarship::query()->where('status', 'active')->first();
@@ -90,6 +96,17 @@ class DemoMenteeSeeder extends Seeder
                 ],
             );
         }
+    }
+
+    /**
+     * Log the demo mentee's consent to the current Terms and Privacy Policy,
+     * as the sign-up form would, so EnsureLegalConsent lets them in.
+     */
+    private function acceptLegalDocuments(User $user): void
+    {
+        $consents = app(ConsentServiceInterface::class);
+
+        $consents->record($user, $consents->requiredDocuments(), ConsentSource::Register, true);
     }
 
     /**

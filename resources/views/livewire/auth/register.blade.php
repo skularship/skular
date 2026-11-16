@@ -57,6 +57,30 @@
                 viewable
             />
 
+            <!-- Legal consent: both statements are validated again in CreateNewUser and logged in user_consents. -->
+            <div class="flex flex-col gap-3">
+                <div>
+                    <label class="flex items-start gap-3 text-sm">
+                        <input type="checkbox" name="terms" value="1" required @checked(old('terms')) class="mt-0.5 size-4 shrink-0 rounded border-zinc-300 accent-zinc-800" data-test="register-terms" />
+                        <span class="text-zinc-700">
+                            {{ __('Aku setuju dengan') }}
+                            <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener" class="font-semibold text-brand-teal underline underline-offset-2">{{ __('Syarat & Ketentuan') }}</a>
+                            {{ __('dan') }}
+                            <a href="{{ route('legal.privacy') }}" target="_blank" rel="noopener" class="font-semibold text-brand-teal underline underline-offset-2">{{ __('Kebijakan Privasi') }}</a>
+                        </span>
+                    </label>
+                    @error('terms') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label class="flex items-start gap-3 text-sm">
+                        <input type="checkbox" name="age_confirmation" value="1" required @checked(old('age_confirmation')) class="mt-0.5 size-4 shrink-0 rounded border-zinc-300 accent-zinc-800" data-test="register-age" />
+                        <span class="text-zinc-700">{{ __('Aku 18 tahun ke atas, atau orang tua/waliku sudah mengizinkan aku memakai Skular.') }}</span>
+                    </label>
+                    @error('age_confirmation') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
             <div class="flex items-center justify-end">
                 <x-actions.button type="submit" class="w-full" loading="auth.submit" data-test="register-user-button">
                     {{ __('Create account') }}

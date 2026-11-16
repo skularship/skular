@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureLegalConsent;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -23,6 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // The cookie banner choice is written by resources/js/cookie-consent.js,
         // so it must stay readable (unencrypted). Keep in sync with config/legal.php.
         $middleware->encryptCookies(except: ['skular_cookie_consent']);
+
+        $middleware->alias([
+            'legal.consent' => EnsureLegalConsent::class,
+        ]);
 
         // Keep the readiness endpoint reachable while the app is in
         // maintenance mode; the liveness route (/up) is excluded by Laravel.

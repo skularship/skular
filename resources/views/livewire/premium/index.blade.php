@@ -193,6 +193,13 @@
                         <x-icons.app-icon name="arrow-right" class="size-4" />
                     </button>
 
+                    <p class="mt-2 text-center text-xs leading-relaxed text-zinc-600" data-test="premium-consent">
+                        {{ __('Dengan membayar, kamu menyetujui') }}
+                        <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2">{{ __('Syarat & Ketentuan') }}</a>
+                        {{ __('dan') }}
+                        <a href="{{ route('legal.refund') }}" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2">{{ __('Kebijakan Pengembalian Dana') }}</a>.
+                    </p>
+
                     <a
                         href="https://wa.me/{{ config('services.support.whatsapp') }}?text={{ rawurlencode('Halo Skular, saya mau tanya soal paket Pro.') }}"
                         target="_blank"
@@ -297,6 +304,12 @@
                 {{ __('Ambil :months bulan', ['months' => $current?->months]) }}
                 <x-icons.app-icon name="arrow-right" class="size-4" />
             </button>
+            <p class="text-xs text-brand-teal-soft" data-test="premium-consent">
+                {{ __('Dengan membayar, kamu menyetujui') }}
+                <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2">{{ __('Syarat & Ketentuan') }}</a>
+                {{ __('dan') }}
+                <a href="{{ route('legal.refund') }}" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2">{{ __('Kebijakan Pengembalian Dana') }}</a>.
+            </p>
         </div>
     </section>
 
@@ -311,6 +324,12 @@
             <div>
                 <p class="text-xs font-semibold text-zinc-500">{{ $current?->name }}</p>
                 <p class="text-lg font-extrabold text-zinc-900">{{ $current ? Rupiah::format($current->monthly) : '' }}<span class="text-xs font-semibold text-zinc-500">/bln</span></p>
+                <p class="text-[0.6875rem] text-zinc-500">
+                    {{ __('Setuju') }}
+                    <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener" class="underline">{{ __('S&K') }}</a>
+                    &amp;
+                    <a href="{{ route('legal.refund') }}" target="_blank" rel="noopener" class="underline">{{ __('Refund') }}</a>
+                </p>
             </div>
             <button type="button" wire:click="checkout" class="clay-sm clay-press inline-flex min-h-11 items-center gap-2 rounded-2xl bg-brand-amber px-5 text-sm font-bold text-brand-ink transition-colors hover:bg-brand-gold">
                 {{ __('Ambil :months bulan', ['months' => $current?->months]) }}

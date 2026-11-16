@@ -63,6 +63,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read Collection<int, ModuleFeedback> $moduleFeedbacks
  * @property-read Subscription|null $proSubscription
  * @property-read Collection<int, Order> $orders
+ * @property-read Collection<int, UserConsent> $consents
  */
 #[Fillable([
     'name',
@@ -106,6 +107,16 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Get the legal documents the mentee accepted (consent log).
+     *
+     * @return HasMany<UserConsent, $this>
+     */
+    public function consents(): HasMany
+    {
+        return $this->hasMany(UserConsent::class);
     }
 
     /**

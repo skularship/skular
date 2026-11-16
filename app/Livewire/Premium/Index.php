@@ -3,9 +3,12 @@
 namespace App\Livewire\Premium;
 
 use App\Contracts\CheckoutServiceInterface;
+use App\Contracts\ConsentServiceInterface;
 use App\Contracts\PaymentGatewayInterface;
 use App\Contracts\PricingServiceInterface;
 use App\Contracts\ReferralServiceInterface;
+use App\Enums\ConsentSource;
+use App\Enums\LegalDocument;
 use App\Exceptions\PaymentException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -54,8 +57,11 @@ class Index extends Component
 
     /**
      * Start the payment for the selected plan, or send a visitor to register first.
+     *
+     * Paying means accepting the Terms and the Refund Policy shown next to the
+     * button, so a started order logs that consent (source checkout).
      */
-    public function checkout(CheckoutServiceInterface $checkout, PricingServiceInterface $pricing): void
+    public function checkout(CheckoutServiceInterface $checkout, PricingServiceInterface $pricing, ConsentServiceInterface $consents): void
     {
         $this->error = null;
 
@@ -85,6 +91,8 @@ class Index extends Component
 
             return;
         }
+
+        $consents->record($user, [LegalDocument::Terms, LegalDocument::Refund], ConsentSource::Checkout);
 
         $this->dispatch(
             'open-snap',

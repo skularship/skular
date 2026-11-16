@@ -2,7 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Enums\ConsentSource;
 use App\Enums\EducationLevel;
+use App\Enums\LegalDocument;
 use App\Enums\LocationScope;
 use App\Models\Cluster;
 use App\Models\User;
@@ -37,6 +39,37 @@ class UserFactory extends Factory
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
         ];
+    }
+
+    /**
+     * Every factory mentee has accepted the current Terms and Privacy Policy,
+     * like a mentee who signed up normally, so the EnsureLegalConsent
+     * middleware lets them in. Use withoutConsent() for the re-consent flow.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            foreach ([LegalDocument::Terms, LegalDocument::Privacy] as $document) {
+                $user->consents()->create([
+                    'document' => $document,
+                    'version' => $document->version(),
+                    'source' => ConsentSource::Register,
+                    'age_confirmed' => true,
+                    'accepted_at' => now(),
+                ]);
+            }
+        });
+    }
+
+    /**
+     * Indicate that the mentee has not accepted any legal document yet
+     * (an existing account from before the consent log, or a new Google account).
+     */
+    public function withoutConsent(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $user->consents()->delete();
+        });
     }
 
     /**
