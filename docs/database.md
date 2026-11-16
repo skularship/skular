@@ -70,6 +70,7 @@ Role & permission memakai tabel spatie/laravel-permission: `roles`, `permissions
 | `faq_categories`, `faqs` | FAQ publik; kategori berisi FAQ menolak `delete()`. |
 | `clusters` | Bidang studi untuk profiling & pencocokan. |
 | `passkeys` | Kredensial WebAuthn (Laravel passkeys). |
+| `user_consents` | Log persetujuan dokumen legal: satu baris per (user, `document`, `version`, `source`). `document` = `LegalDocument` (`privacy`/`terms`/`cookies`/`refund`), `source` = `ConsentSource` (`register`/`google`/`checkout`/`reconsent`), `age_confirmed` = pernyataan "18+ atau diizinkan orang tua/wali" (null bila tidak ditanya). Ditulis hanya oleh `ConsentService::record()` (tidak pernah di-update; versi baru = baris baru). **Tanpa alamat IP.** Ikut terhapus (cascade) saat akun dihapus. Pilihan cookie tidak disimpan di sini, melainkan di cookie browser `skular_cookie_consent`. |
 | `agent_conversations`, `agent_conversation_messages` | Dibuat oleh migration laravel/ai. **Tidak dipakai** kode aplikasi saat ini (riwayat chat AI Mentor hanya di state komponen). |
 
 ## 3. Kolom per tabel
@@ -513,6 +514,24 @@ Unique: `(user_id, practice_form_id)`
 FK: `practice_form_id` → `practice_forms.id` (on delete cascade); `module_id` → `modules.id` (on delete cascade); `user_id` → `users.id` (on delete cascade)
 
 Unique: `(user_id, practice_form_id)`
+
+### `user_consents`
+
+| Kolom | Tipe | Null | Default |
+|---|---|---|---|
+| `id` | integer |  |  |
+| `user_id` | integer |  |  |
+| `document` | varchar(20) |  |  |
+| `version` | varchar(20) |  |  |
+| `source` | varchar(20) |  |  |
+| `age_confirmed` | tinyint(1) | ya |  |
+| `accepted_at` | datetime |  |  |
+| `created_at` | datetime | ya |  |
+| `updated_at` | datetime | ya |  |
+
+FK: `user_id` → `users.id` (on delete cascade)
+
+Index: `(user_id, document, version)`
 
 ### `users`
 

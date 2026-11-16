@@ -37,31 +37,38 @@ Skular adalah aplikasi **Livewire server-rendered**, bukan API JSON. Aksi di hal
 | GET | `/` | home | `view welcome` (Route::view) | — |
 | GET | `/auth/google/callback` | auth.google.callback | `Http\Controllers\Auth\GoogleAuthController@callback` | `throttle:30,1` |
 | GET | `/auth/google/redirect` | auth.google.redirect | `Http\Controllers\Auth\GoogleAuthController@redirect` | `throttle:30,1` |
-| GET | `/cv` | cv.show | `Livewire\Cv\Show (Livewire page)` | `auth`, `verified` |
-| GET | `/dashboard` | dashboard | `Livewire\Dashboard (Livewire page)` | `auth`, `verified` |
+| GET | `/cv` | cv.show | `Livewire\Cv\Show (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/dashboard` | dashboard | `Livewire\Dashboard (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/premium` | premium | `Livewire\Premium\Index (Livewire page)` | — (404 bila `PREMIUM_ENABLED=false`) |
-| GET | `/pembayaran` | payment.index | `Livewire\Premium\Billing (Livewire page)` | `auth`, `verified` |
-| GET | `/pembayaran/{order}` | payment.status | `Livewire\Premium\Status (Livewire page, hanya pemilik order)` | `auth`, `verified` |
-| GET | `/vault` | vault.index | `Livewire\Vault\Index (Livewire page)` | `auth`, `verified` (404 bila Premium mati) |
-| GET | `/vault/{document}/unduh` | vault.download | `Http\Controllers\VaultDownloadController` | `auth`, `verified` (hanya pemilik) |
-| GET | `/scholarships/{application}/checklist` | checklist.show | `Livewire\Checklist\Show (Livewire page)` | `auth`, `verified` (hanya pemilik, Pro untuk mengubah) |
+| GET | `/pembayaran` | payment.index | `Livewire\Premium\Billing (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/pembayaran/{order}` | payment.status | `Livewire\Premium\Status (Livewire page, hanya pemilik order)` | `auth`, `verified`, `legal.consent` |
+| GET | `/vault` | vault.index | `Livewire\Vault\Index (Livewire page)` | `auth`, `verified`, `legal.consent` (404 bila Premium mati) |
+| GET | `/vault/{document}/unduh` | vault.download | `Http\Controllers\VaultDownloadController` | `auth`, `verified`, `legal.consent` (hanya pemilik) |
+| GET | `/scholarships/{application}/checklist` | checklist.show | `Livewire\Checklist\Show (Livewire page)` | `auth`, `verified`, `legal.consent` (hanya pemilik, Pro untuk mengubah) |
 | POST | `/payments/midtrans/notification` | payments.midtrans.notification | `Http\Controllers\MidtransWebhookController` | `throttle:120,1` (tanpa CSRF/session, dimuat dari `routes/payments.php`) |
 | GET | `/faq` | faq.index | `Livewire\Faq\Index (Livewire page)` | — |
-| GET | `/roadmap` | roadmap.show | `Livewire\Roadmap (Livewire page)` | `auth`, `verified` |
-| GET | `/panduan` | guide.index | `Livewire\Onboarding\Guide (Livewire page)` | `auth`, `verified` |
-| GET | `/bantuan` | support.index | `Livewire\Support\Help (Livewire page)` | `auth`, `verified` |
-| GET | `/library` | library.index | `Livewire\Learning\Library (Livewire page)` | `auth`, `verified` |
-| GET | `/modules/{module}` | modules.show | `Livewire\Learning\ModulePlayer (Livewire page)` | `auth`, `verified` |
-| GET | `/profiling/recommendation` | profiling.recommendation | `Livewire\Scholarships\Recommendation (Livewire page)` | `auth`, `verified` |
-| GET | `/profiling` | profiling | `Livewire\Profiling\Wizard (Livewire page)` | `auth`, `verified` |
-| GET | `/scholarships/saya` | scholarships.tracker | `Livewire\Scholarships\Tracker (Livewire page)` | `auth`, `verified` |
-| GET | `/scholarships/{application}/proof` | applications.proof | `Http\Controllers\SubmissionProofController@show` | `auth`, `verified` |
-| GET | `/scholarships/{application}/twibbon` | twibbon.show | `Livewire\Twibbon\Generator (Livewire page)` | `auth`, `verified` |
-| GET | `/scholarships/{scholarship}` | scholarships.show | `Livewire\Scholarships\Show (Livewire page)` | `auth`, `verified` |
-| GET | `/scholarships` | scholarships.index | `Livewire\Scholarships\Index (Livewire page)` | `auth`, `verified` |
+| GET | `/kebijakan-privasi` | legal.privacy | `view legal.privacy` (Route::view, loop `LegalDocument`) | — (tetap tampil walau Premium mati) |
+| GET | `/syarat-ketentuan` | legal.terms | `view legal.terms` | — |
+| GET | `/kebijakan-cookie` | legal.cookies | `view legal.cookies` | — |
+| GET | `/kebijakan-pengembalian-dana` | legal.refund | `view legal.refund` | — |
+| GET | `/persetujuan` | legal.consent | `Livewire\Legal\Consent (Livewire page)` | `auth` (tanpa `legal.consent`) |
+| GET | `/roadmap` | roadmap.show | `Livewire\Roadmap (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/panduan` | guide.index | `Livewire\Onboarding\Guide (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/bantuan` | support.index | `Livewire\Support\Help (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/library` | library.index | `Livewire\Learning\Library (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/modules/{module}` | modules.show | `Livewire\Learning\ModulePlayer (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/profiling/recommendation` | profiling.recommendation | `Livewire\Scholarships\Recommendation (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/profiling` | profiling | `Livewire\Profiling\Wizard (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/scholarships/saya` | scholarships.tracker | `Livewire\Scholarships\Tracker (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/scholarships/{application}/proof` | applications.proof | `Http\Controllers\SubmissionProofController@show` | `auth`, `verified`, `legal.consent` |
+| GET | `/scholarships/{application}/twibbon` | twibbon.show | `Livewire\Twibbon\Generator (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/scholarships/{scholarship}` | scholarships.show | `Livewire\Scholarships\Show (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/scholarships` | scholarships.index | `Livewire\Scholarships\Index (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/settings/profile` | profile.edit | `Livewire\Settings\Profile (Livewire page)` | `auth` |
 | GET | `/settings/security` | security.edit | `Livewire\Settings\Security (Livewire page)` | `auth`, `verified`, `password.confirm` |
 | GET|POST|PUT|PATCH|DELETE|OPTIONS | `/settings` | — | `RedirectController` | `auth` |
+
+Middleware `legal.consent` (`EnsureLegalConsent`) dipasang pada seluruh grup `auth`+`verified` di `routes/web.php`: mentee tanpa persetujuan versi terkini Syarat & Ketentuan dan Kebijakan Privasi diarahkan ke `/persetujuan`. Route pengaturan (`/settings/*`, termasuk hapus akun), halaman legal, logout, dan `/health` tidak memakainya.
 
 ## 3. Autentikasi (Fortify)
 

@@ -172,6 +172,9 @@ public/build/              # Aset Vite hasil build (DI-COMMIT)
 | Pengaturan akun (profil, keamanan, passkey, 2FA) | `/settings/profile`, `/settings/security` | `app/Livewire/Settings/*` |
 | Panel admin (kurikulum, beasiswa, pemantauan mentee, pengguna) | `/admin/*` | `app/Filament/**`, `app/Policies/*` |
 | Pratinjau modul untuk admin (read-only) | `/admin/modules/{record}/preview` | `app/Filament/Resources/Modules/Pages/PreviewModule.php` |
+| Halaman legal (Kebijakan Privasi, Syarat & Ketentuan, Kebijakan Cookie, Kebijakan Pengembalian Dana): Blade statis, isi dari `config/legal.php`, versi + tanggal berlaku per dokumen | `/kebijakan-privasi`, `/syarat-ketentuan`, `/kebijakan-cookie`, `/kebijakan-pengembalian-dana` | `resources/views/legal/*`, `components/legal/*`, `config/legal.php`, `app/Enums/LegalDocument.php`, `php artisan legal:check` |
+| Banner persetujuan cookie (Esensial selalu aktif, Analitik/GA4 opsional); GA4 tidak dimuat sebelum izin, dibuka ulang dari "Pengaturan cookie" di footer | semua halaman publik, auth, dan aplikasi | `partials/cookie-consent.blade.php`, `resources/js/cookie-consent.js`, `partials/analytics.blade.php`, `app/Support/CookieConsent.php` |
+| Pencatatan persetujuan (daftar, login Google pertama, checkout, persetujuan ulang saat versi naik); admin melihat riwayat di halaman edit pengguna | `/register`, `/persetujuan`, `/premium` | `ConsentService.php`, `EnsureLegalConsent.php`, `app/Livewire/Legal/Consent.php`, `CreateNewUser.php`, `Users/RelationManagers/ConsentsRelationManager.php` |
 | SEO, sitemap, health check | `/sitemap.xml`, `/up`, `/health` | `app/Http/Controllers/SitemapController.php`, `HealthCheckController.php`, `config/seo.php` |
 
 ### Aturan bisnis ringkas
@@ -181,6 +184,7 @@ public/build/              # Aset Vite hasil build (DI-COMMIT)
 - **Tiga atribut modul berbeda:** `modules.type` (format penyajian, kolom lama), `modules.category` (`inti` / `template` / `perpustakaan`), `modules.content_status` (`draft` / `published`). Draf 404 di player dan tidak masuk jalur belajar; publikasi hanya lewat aksi Filament yang lolos `ModuleReadinessService`.
 - **Jalur belajar personal** = modul Inti + modul Template beasiswa yang sedang difokuskan. Progres Inti dibagi lintas beasiswa.
 - **Histori mentee tidak bisa terhapus:** Scholarship/Module/Fase yang sudah punya histori menolak `delete()`; gunakan status Closed/Archived atau *Jadikan draf*.
+- **Persetujuan legal:** daftar wajib mencentang S&K + Kebijakan Privasi dan pernyataan usia (divalidasi di `CreateNewUser`). Mentee tanpa persetujuan versi terkini (akun Google baru, akun lama, versi naik) diarahkan ke `/persetujuan` oleh middleware `legal.consent`. Menaikkan `legal.documents.{terms,privacy}.version` = semua mentee menyetujui ulang; menaikkan `cookies` = banner muncul lagi.
 - **AI hanya untuk konten** (feedback, mentor, kerangka). Urutan beasiswa, batas 5, unlock modul, dan gate checkpoint dihitung deterministik dari database.
 
 Detail lengkap: [`AGENTS.md`](AGENTS.md) dan [`docs/architecture.md`](docs/architecture.md).
@@ -234,6 +238,13 @@ composer audit --locked
 npm audit --omit=dev
 ```
 
+### Gerbang halaman legal (sebelum `PREMIUM_ENABLED=true` dan aktivasi Midtrans production)
+
+1. Isi env `LEGAL_*` (lihat `.env.example`) dan keputusan terbuka di `PROGRES-LEGAL.md`.
+2. `php artisan legal:check` di server production harus lulus (gagal bila halaman legal masih memuat `[ISI` atau `[KEPUTUSAN`).
+3. Tinjauan konsultan hukum atas keempat halaman.
+4. Refund belum punya alur di aplikasi: ikuti [`docs/refund-manual.md`](docs/refund-manual.md).
+
 ### Langkah setiap deploy
 
 ```bash
@@ -245,6 +256,7 @@ php artisan queue:restart                      # worker memuat kode job terbaru
 php artisan optimize                           # cache config, route, event, view
 php artisan view:cache                         # wajib: hindari kompilasi view di request pertama
 php artisan filament:optimize
+php artisan legal:check                        # production: gagal bila halaman legal masih ada [ISI]
 php artisan up
 ```
 
