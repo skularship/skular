@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable|null $updated_at
  * @property-read User $user
  * @property-read Product $product
+ * @property-read User|null $referrer
  */
 #[Fillable([
     'order_id',
@@ -92,5 +93,15 @@ class Order extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Get the owner of the referral code used on this order, if any.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function referrer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'referrer_user_id');
     }
 }
