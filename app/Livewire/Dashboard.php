@@ -7,11 +7,13 @@ use App\Contracts\PricingServiceInterface;
 use App\Contracts\ProgressServiceInterface;
 use App\Contracts\ScholarshipApplicationServiceInterface;
 use App\Contracts\ScholarshipPathServiceInterface;
+use App\Data\PriceQuote;
 use App\Data\ProgressSummaryData;
 use App\Enums\ApplicationStatus;
 use App\Models\ScholarshipApplication;
 use App\Models\User;
 use App\Services\ScholarshipApplicationService;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -100,7 +102,7 @@ class Dashboard extends Component
     /**
      * Get what the "Paket kamu" card shows, or null while Premium is switched off.
      *
-     * @return array{has_pro: bool, active_until: \Carbon\CarbonInterface|null, days_left: int|null, quote: \App\Data\PriceQuote|null}|null
+     * @return array{has_pro: bool, active_until: CarbonInterface|null, days_left: int|null, quote: PriceQuote|null}|null
      */
     private function premiumCard(User $user, PricingServiceInterface $pricing): ?array
     {

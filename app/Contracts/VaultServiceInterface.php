@@ -2,6 +2,7 @@
 
 namespace App\Contracts;
 
+use App\Exceptions\VaultException;
 use App\Models\ChecklistItem;
 use App\Models\ScholarshipApplication;
 use App\Models\User;
@@ -17,7 +18,7 @@ interface VaultServiceInterface
     /**
      * Store an uploaded file in the mentee's private vault.
      *
-     * @throws \App\Exceptions\VaultException When the plan, file count or file size does not allow it.
+     * @throws VaultException When the plan, file count or file size does not allow it.
      */
     public function store(User $user, UploadedFile $file, string $title): VaultDocument;
 

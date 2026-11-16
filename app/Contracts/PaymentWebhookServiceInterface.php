@@ -2,6 +2,7 @@
 
 namespace App\Contracts;
 
+use App\Exceptions\PaymentException;
 use App\Models\PaymentEvent;
 
 /**
@@ -17,14 +18,14 @@ interface PaymentWebhookServiceInterface
      *
      * @param  array<string, mixed>  $payload  Decoded notification body.
      *
-     * @throws \App\Exceptions\PaymentException When the signature or the amount is wrong.
+     * @throws PaymentException When the signature or the amount is wrong.
      */
     public function receive(array $payload): PaymentEvent;
 
     /**
      * Apply a stored notification to its order (runs inside the queue job).
      *
-     * @throws \App\Exceptions\PaymentException When the amount does not match the order.
+     * @throws PaymentException When the amount does not match the order.
      */
     public function process(PaymentEvent $event): void;
 }

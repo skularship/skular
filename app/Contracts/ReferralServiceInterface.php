@@ -3,6 +3,7 @@
 namespace App\Contracts;
 
 use App\Data\PriceQuote;
+use App\Exceptions\PaymentException;
 use App\Models\ReferralCode;
 use App\Models\User;
 
@@ -21,7 +22,7 @@ interface ReferralServiceInterface
      *
      * @return array{code: ReferralCode, discount: int}
      *
-     * @throws \App\Exceptions\PaymentException With a message safe to show when the code cannot be used.
+     * @throws PaymentException With a message safe to show when the code cannot be used.
      */
     public function apply(User $buyer, string $code, PriceQuote $quote): array;
 }

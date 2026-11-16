@@ -1,5 +1,6 @@
 <?php
 
+use App\Contracts\PricingServiceInterface;
 use App\Enums\AdminRole;
 use App\Filament\Resources\Orders\OrderResource;
 use App\Filament\Resources\Orders\Pages\ListOrders;
@@ -62,7 +63,7 @@ test('an admin changes a price and the public price follows', function () {
         ->assertHasNoFormErrors();
 
     expect($product->fresh()->price_normal)->toBe(45000)
-        ->and(app(App\Contracts\PricingServiceInterface::class)->quote('pro_1bln')->amount)->toBe(45000);
+        ->and(app(PricingServiceInterface::class)->quote('pro_1bln')->amount)->toBe(45000);
 });
 
 test('a launching price must stay below the normal price', function () {

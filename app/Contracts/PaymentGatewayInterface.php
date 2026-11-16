@@ -2,6 +2,7 @@
 
 namespace App\Contracts;
 
+use App\Exceptions\PaymentException;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
@@ -15,7 +16,7 @@ interface PaymentGatewayInterface
     /**
      * Create a Snap payment session for an order and return its token.
      *
-     * @throws \App\Exceptions\PaymentException When the provider is not configured or refuses the request.
+     * @throws PaymentException When the provider is not configured or refuses the request.
      */
     public function createSnapToken(Order $order, User $user, Product $product): string;
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Contracts\VaultServiceInterface;
 use App\Exceptions\VaultException;
 use App\Livewire\Checklist\Show as ChecklistShow;
 use App\Livewire\Vault\Index as VaultIndex;
@@ -8,6 +9,7 @@ use App\Models\ScholarshipApplication;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\VaultDocument;
+use Database\Factories\ScholarshipFactory;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -121,7 +123,7 @@ test('after Pro ends the mentee keeps the files and can still delete them but no
 
     $this->actingAs($user->fresh())->get(route('vault.download', $document))->assertOk();
 
-    expect(fn () => app(App\Contracts\VaultServiceInterface::class)->store($user->fresh(), UploadedFile::fake()->create('b.pdf', 10, 'application/pdf'), 'B'))
+    expect(fn () => app(VaultServiceInterface::class)->store($user->fresh(), UploadedFile::fake()->create('b.pdf', 10, 'application/pdf'), 'B'))
         ->toThrow(VaultException::class);
 
     Livewire::actingAs($user->fresh())->test(VaultIndex::class)->call('delete', $document->id);
@@ -141,7 +143,7 @@ test('the checklist is created once from defaults and adds SKTM only when the sc
 
     $sktm = ScholarshipApplication::factory()->create([
         'user_id' => $user->id,
-        'scholarship_id' => Database\Factories\ScholarshipFactory::new()->requiringSktm()->create()->id,
+        'scholarship_id' => ScholarshipFactory::new()->requiringSktm()->create()->id,
     ]);
     Livewire::actingAs($user)->test(ChecklistShow::class, ['application' => $sktm]);
 

@@ -14,6 +14,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
@@ -40,13 +41,15 @@ class ScholarshipForm
                             ->maxLength(255)
                             ->columnSpanFull(),
                         TextInput::make('institution')
-                            ->label('Institusi penyelenggara'),
+                            ->label('Institusi penyelenggara')
+                            ->maxLength(255),
                         Select::make('level')
                             ->label('Jenjang')
                             ->options(EducationLevel::class)
                             ->required(),
                         TextInput::make('location')
-                            ->label('Lokasi'),
+                            ->label('Lokasi')
+                            ->maxLength(255),
                         Select::make('scope')
                             ->label('Lokasi studi')
                             ->options(LocationScope::studyDestinationOptions())
@@ -58,7 +61,8 @@ class ScholarshipForm
                             ->preload(),
                         TextInput::make('link')
                             ->label('Link resmi')
-                            ->url(),
+                            ->url()
+                            ->maxLength(255),
                         Select::make('status')
                             ->label('Status')
                             ->options(ScholarshipStatus::class)
@@ -93,13 +97,25 @@ class ScholarshipForm
                             ->default(false),
                         TextInput::make('minimum_value')
                             ->label('IPK minimum')
-                            ->numeric(),
+                            // Same 0–4 scale as the mentee profile (ProfilingRules)
+                            // and the decimal(3,2) column.
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(4)
+                            ->step(0.01)
+                            ->rule('decimal:0,2')
+                            ->helperText('Skala 0–4, maksimal 2 angka di belakang koma. Kosongkan bila tidak ada batas.'),
                         TextInput::make('maximum_age')
                             ->label('Usia maksimal (tahun)')
-                            ->numeric(),
+                            ->integer()
+                            ->minValue(1)
+                            ->maxValue(100),
                         TextInput::make('estimated_quota')
                             ->label('Estimasi kuota')
-                            ->numeric(),
+                            // Upper bound of the unsigned int column.
+                            ->integer()
+                            ->minValue(1)
+                            ->maxValue(4294967295),
                     ])
                     ->columns(2),
 
@@ -108,9 +124,13 @@ class ScholarshipForm
                         DatePicker::make('opening_date')
                             ->label('Tanggal dibuka'),
                         DatePicker::make('closing_date')
-                            ->label('Tanggal ditutup'),
+                            ->label('Tanggal ditutup')
+                            ->afterOrEqual(fn (Get $get): ?string => filled($get('opening_date')) ? 'opening_date' : null)
+                            ->validationMessages(['after_or_equal' => 'Tanggal ditutup tidak boleh sebelum tanggal dibuka.']),
                         DatePicker::make('verification_date')
-                            ->label('Tanggal verifikasi'),
+                            ->label('Tanggal verifikasi')
+                            ->afterOrEqual(fn (Get $get): ?string => filled($get('opening_date')) ? 'opening_date' : null)
+                            ->validationMessages(['after_or_equal' => 'Tanggal verifikasi tidak boleh sebelum tanggal dibuka.']),
                     ])
                     ->columns(3),
 

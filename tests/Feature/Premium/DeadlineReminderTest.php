@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ApplicationStatus;
 use App\Jobs\SendDeadlineReminder;
 use App\Mail\DeadlineReminderMail;
 use App\Models\Scholarship;
@@ -81,7 +82,7 @@ test('a Gratis mentee gets reminders for the primary scholarship only, Pro for a
 test('no reminder is sent for an application already submitted', function () {
     Mail::fake();
     $application = applicationClosingIn(User::factory()->create(), 3, primary: true);
-    $application->update(['status' => App\Enums\ApplicationStatus::Submitted]);
+    $application->update(['status' => ApplicationStatus::Submitted]);
 
     SendDeadlineReminder::dispatchSync($application->id, 3);
 
