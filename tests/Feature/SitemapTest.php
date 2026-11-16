@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\LegalDocument;
 use App\Models\Faq;
 use App\Support\Seo;
 use Carbon\CarbonImmutable;
@@ -13,7 +14,7 @@ test('the sitemap returns valid xml', function () {
 
     expect($xml)->not->toBeFalse()
         ->and($xml->getName())->toBe('urlset')
-        ->and($xml->count())->toBe(2);
+        ->and($xml->count())->toBe(2 + count(LegalDocument::cases()));
 });
 
 test('the sitemap only lists public pages on the canonical host', function () {
@@ -25,7 +26,9 @@ test('the sitemap only lists public pages on the canonical host', function () {
         $locs[] = (string) $url->loc;
     }
 
-    expect($locs)->toBe([Seo::url('/'), Seo::url('/faq')])
+    $legal = array_map(fn (LegalDocument $document): string => Seo::url('/'.$document->path()), LegalDocument::cases());
+
+    expect($locs)->toBe([Seo::url('/'), Seo::url('/faq'), ...$legal])
         ->and($locs)->toBe(array_values(array_unique($locs)));
 
     foreach ($locs as $loc) {
@@ -76,4 +79,20 @@ test('the faq lastmod falls back to the configured date without published faqs',
     $xml = simplexml_load_string($this->get('/sitemap.xml')->assertOk()->content());
 
     expect((string) $xml->url[1]->lastmod)->toBe('2026-02-01');
+});
+
+test('the legal pages use their effective date as lastmod', function () {
+    config(['legal.documents.privacy.effective_at' => '2026-12-01']);
+
+    $xml = simplexml_load_string($this->get('/sitemap.xml')->assertOk()->content());
+
+    foreach ($xml->url as $url) {
+        if ((string) $url->loc === Seo::url('/kebijakan-privasi')) {
+            expect((string) $url->lastmod)->toBe('2026-12-01');
+
+            return;
+        }
+    }
+
+    $this->fail('The privacy policy is missing from the sitemap.');
 });

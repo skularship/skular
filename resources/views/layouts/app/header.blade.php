@@ -5,6 +5,8 @@
         @include('partials.head', ['robots' => 'noindex, follow'])
     </head>
     <body x-data class="min-h-screen bg-white dark:bg-zinc-800">
+        @include('partials.cookie-consent')
+
         <header class="sticky top-0 z-30 flex min-h-14 items-center border-b border-zinc-200 bg-zinc-50 px-6 lg:px-8 dark:border-zinc-700 dark:bg-zinc-900">
             <button
                 type="button"

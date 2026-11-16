@@ -10,6 +10,8 @@
          panel live outside any component, and Alpine only evaluates directives
          that sit inside an Alpine scope. --}}
     <body x-data class="min-h-screen bg-linear-to-b from-warm-cream to-brand-amber/10 text-zinc-800 antialiased dark:bg-linear-to-b dark:from-zinc-900 dark:to-zinc-950 dark:text-zinc-100">
+        @include('partials.cookie-consent')
+
         <div class="flex min-h-screen">
             <!-- Desktop Sidebar -->
             <aside class="sticky top-0 hidden h-dvh w-72 shrink-0 flex-col gap-4 overflow-y-auto overscroll-contain border-e border-brand-teal/12 bg-warm-cream/85 p-4 backdrop-blur lg:flex dark:border-white/10 dark:bg-zinc-900/85">
@@ -18,6 +20,8 @@
                 <p class="pt-2 text-center text-[0.625rem] font-medium tracking-wide text-zinc-400 uppercase dark:text-zinc-500">
                     {{ __('Skular · belajar beasiswa dengan AI') }}
                 </p>
+
+                <x-legal.links class="justify-center gap-x-3 gap-y-1 text-[0.6875rem]" link-class="text-zinc-500 hover:text-brand-teal" />
             </aside>
 
             <!-- Mobile Sidebar Backdrop -->
@@ -65,6 +69,9 @@
 
                 <main class="min-w-0 flex-1 px-4 pt-6 pb-28 sm:px-6 lg:p-8">
                     {{ $slot }}
+
+                    {{-- The desktop sidebar carries these links; phones get them under the page. --}}
+                    <x-legal.links class="mt-10 justify-center gap-x-3 gap-y-1 text-xs lg:hidden" link-class="text-zinc-500 hover:text-brand-teal" />
                 </main>
             </div>
         </div>

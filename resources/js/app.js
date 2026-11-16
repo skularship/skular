@@ -10,6 +10,9 @@
 // Onboarding coach marks (Alpine "productTour"), see resources/js/product-tour.js.
 import './product-tour';
 
+// Cookie consent banner and consent-gated GA4, see resources/js/cookie-consent.js.
+import './cookie-consent';
+
 /**
  * Scroll reveal for the marketing landing page.
  *

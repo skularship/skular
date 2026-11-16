@@ -65,6 +65,9 @@
     </script>
 @endif
 
+{{-- Cookie banner settings for resources/js/cookie-consent.js (cookie name, lifetime, policy version). --}}
+<meta name="skular-consent" content="{{ \App\Support\CookieConsent::clientSettings() }}">
+
 @include('partials.analytics')
 
 @fonts

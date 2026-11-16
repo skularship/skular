@@ -196,6 +196,8 @@
             {{ __('Lewati ke konten utama') }}
         </a>
 
+        @include('partials.cookie-consent')
+
         {{-- Navbar: a floating clay bar --}}
         <header
             x-data="{ open: false }"
@@ -817,6 +819,7 @@
 
                 <div class="flex flex-col gap-3 border-t border-white/10 py-6 text-xs leading-relaxed text-zinc-400">
                     <p class="max-w-3xl">{{ __($disclaimer) }}</p>
+                    <x-legal.links class="text-xs" link-class="flex min-h-11 items-center text-zinc-300 transition-colors hover:text-brand-amber" />
                     <p>&copy; {{ now()->year }} {{ config('app.name', 'Skular') }}. {{ __('Seluruh hak cipta dilindungi.') }}</p>
                 </div>
             </div>

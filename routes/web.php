@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\LegalDocument;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\SitemapController;
@@ -36,6 +37,12 @@ Route::get('health', HealthCheckController::class)->name('health');
 Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 
 Route::livewire('faq', FaqIndex::class)->name('faq.index');
+
+// Legal pages: static Blade views (changes go through commits), always public,
+// also while PREMIUM_ENABLED is false. Texts read config/legal.php.
+foreach (LegalDocument::cases() as $legalDocument) {
+    Route::view($legalDocument->path(), $legalDocument->view())->name($legalDocument->routeName());
+}
 
 // Public price page; returns 404 until PREMIUM_ENABLED is true.
 Route::livewire('premium', PremiumIndex::class)->name('premium');

@@ -20,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(SecurityHeaders::class);
 
+        // The cookie banner choice is written by resources/js/cookie-consent.js,
+        // so it must stay readable (unencrypted). Keep in sync with config/legal.php.
+        $middleware->encryptCookies(except: ['skular_cookie_consent']);
+
         // Keep the readiness endpoint reachable while the app is in
         // maintenance mode; the liveness route (/up) is excluded by Laravel.
         $middleware->preventRequestsDuringMaintenance(['health']);

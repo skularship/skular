@@ -1,23 +1,34 @@
 <!DOCTYPE html>
-{{-- Public (guest) layout used by the FAQ page (#[Layout('layouts.public')]): public header, footer and skip link.
-     Layout data from the page component: $title (#[Title]) and optional $structuredData (JSON-LD for the head). --}}
+{{-- Public (guest) layout: public header, footer with legal links, cookie banner and skip link.
+     Used by Livewire pages (#[Layout('layouts.public')]: FAQ, Premium) and by the legal pages (<x-layouts::public>).
+     Data: $title, optional $description, $structuredData (JSON-LD for the head). The FAQ menu item is only marked
+     active on the FAQ page. --}}
+@php
+    $isFaqPage = request()->routeIs('faq.index');
+    $pageDescription = $description ?? ($isFaqPage
+        ? __('Kumpulan pertanyaan dan jawaban seputar Skular, pendaftaran beasiswa, administrasi, esai, wawancara, dan layanan Skular.')
+        : null);
+@endphp
 <html
     lang="{{ str_replace('_', '-', app()->getLocale()) }}"
     class="scroll-smooth motion-reduce:scroll-auto"
 >
     <head>
         @include('partials.head', [
-            'description' => __('Kumpulan pertanyaan dan jawaban seputar Skular, pendaftaran beasiswa, administrasi, esai, wawancara, dan layanan Skular.'),
+            'title' => $title ?? null,
+            'description' => $pageDescription,
             'structuredData' => $structuredData ?? null,
         ])
     </head>
     <body class="min-h-screen bg-warm-cream text-zinc-800 antialiased dark:bg-zinc-950 dark:text-zinc-100">
         <a
-            href="#faq-main"
+            href="#konten-utama"
             class="sr-only z-[100] rounded-xl bg-brand-ink px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:fixed focus:start-4 focus:top-4"
         >
             {{ __('Lewati ke konten utama') }}
         </a>
+
+        @include('partials.cookie-consent')
 
         <header class="sticky top-0 z-50 border-b border-brand-teal/12 bg-warm-cream/90 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/85">
             <div class="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:h-18 sm:px-6">
@@ -35,8 +46,12 @@
 
                     <a
                         href="{{ route('faq.index') }}"
-                        aria-current="page"
-                        class="rounded-lg bg-brand-amber/25 px-3 py-2 text-sm font-semibold text-brand-teal dark:bg-brand-amber/15 dark:text-brand-amber"
+                        @if ($isFaqPage) aria-current="page" @endif
+                        @class([
+                            'rounded-lg px-3 py-2 text-sm font-semibold transition',
+                            'bg-brand-amber/25 text-brand-teal' => $isFaqPage,
+                            'text-zinc-600 hover:text-brand-teal' => ! $isFaqPage,
+                        ])
                     >
                         {{ __('FAQ') }}
                     </a>
@@ -61,7 +76,7 @@
             </div>
         </header>
 
-        <main id="faq-main">
+        <main id="konten-utama">
             {{ $slot }}
         </main>
 
@@ -92,7 +107,8 @@
             </div>
 
             <div class="border-t border-white/10">
-                <div class="mx-auto w-full max-w-6xl px-4 py-5 text-xs text-zinc-500 sm:px-6">
+                <div class="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-5 text-xs text-zinc-500 sm:px-6">
+                    <x-legal.links class="text-xs" link-class="text-zinc-300 transition hover:text-brand-amber" />
                     <p>&copy; {{ now()->year }} {{ config('app.name', 'Skular') }}. {{ __('Seluruh hak cipta dilindungi.') }}</p>
                 </div>
             </div>

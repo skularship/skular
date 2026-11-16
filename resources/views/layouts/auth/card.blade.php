@@ -5,6 +5,8 @@
         @include('partials.head', ['robots' => 'noindex, follow'])
     </head>
     <body class="min-h-screen bg-linear-to-b from-warm-cream to-brand-amber/15 antialiased dark:bg-linear-to-b dark:from-neutral-950 dark:to-neutral-900">
+        @include('partials.cookie-consent')
+
         <div class="flex min-h-svh flex-col items-center justify-center gap-6 p-4 sm:p-6 md:p-10">
             <div class="flex w-full max-w-md flex-col gap-6">
                 <a href="{{ route('home') }}" class="flex flex-col items-center gap-2 font-medium" wire:navigate>
@@ -20,6 +22,7 @@
                         <div class="px-5 py-7 sm:px-8 sm:py-8 lg:px-10">{{ $slot }}</div>
                     </div>
                 </div>
+                <x-legal.links class="justify-center pt-4 text-xs" link-class="text-zinc-500 underline-offset-2 hover:text-brand-teal hover:underline" />
             </div>
         </div>
 

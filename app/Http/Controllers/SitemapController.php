@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\LegalDocument;
 use App\Models\Faq;
 use App\Support\Seo;
 use Carbon\CarbonImmutable;
@@ -35,7 +36,7 @@ class SitemapController
      */
     private function urls(): array
     {
-        return [
+        $urls = [
             [
                 'loc' => Seo::url('/'),
                 'lastmod' => $this->configuredLastModified('home'),
@@ -45,6 +46,15 @@ class SitemapController
                 'lastmod' => $this->faqLastModified(),
             ],
         ];
+
+        foreach (LegalDocument::cases() as $document) {
+            $urls[] = [
+                'loc' => Seo::url('/'.$document->path()),
+                'lastmod' => $document->effectiveAt()->format('Y-m-d'),
+            ];
+        }
+
+        return $urls;
     }
 
     /**
