@@ -31,7 +31,8 @@ test('the daily command queues reminders only for plans ending in 7 or 1 day', f
 
     $this->artisan('subscriptions:remind-expiry')->assertSuccessful();
 
-    Queue::assertPushedOn('reminders', SendProExpiryReminder::class, 2);
+    Queue::assertPushed(SendProExpiryReminder::class, 2);
+    Queue::assertPushedOn('reminders', SendProExpiryReminder::class);
 });
 
 test('each end date is reminded once, and a renewal reminds again', function () {

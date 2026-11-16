@@ -53,8 +53,9 @@ test('the fact strip repeats its content so the loop is seamless', function () {
 
     // Two identical tracks: one readable, one hidden from the accessibility
     // tree, which is what lets the -50% translation loop.
-    expect(substr_count($content, 'Tracker pendaftaran beasiswa'))->toBe(2)
-        ->and(substr_count($content, 'sk-marquee__track'))->toBe(2);
+    expect(substr_count($content, 'sk-marquee__track'))->toBe(2)
+        ->and(preg_match_all('/<ul class="sk-marquee__track[^>]*aria-hidden="true"/', $content))->toBe(1)
+        ->and(substr_count($content, 'Profiling 8 langkah'))->toBeGreaterThanOrEqual(2);
 });
 
 test('the landing page shows no invented statistics or numeric scores', function () {

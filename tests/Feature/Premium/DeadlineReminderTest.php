@@ -36,7 +36,8 @@ test('the daily command queues one job per application at 7, 3 and 1 day and ign
 
     $this->artisan('reminders:dispatch')->assertSuccessful();
 
-    Queue::assertPushedOn('reminders', SendDeadlineReminder::class, 3);
+    Queue::assertPushed(SendDeadlineReminder::class, 3);
+    Queue::assertPushedOn('reminders', SendDeadlineReminder::class);
 });
 
 test('the command does nothing while Premium is off', function () {

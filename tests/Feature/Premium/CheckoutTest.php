@@ -17,13 +17,21 @@ beforeEach(function () {
         'services.midtrans.client_key' => 'SB-Mid-client-test',
         'services.midtrans.is_production' => false,
     ]);
+});
 
+/**
+ * Fake a working Midtrans Snap endpoint. Call it only in tests that need it:
+ * the first matching fake wins, so a test cannot override it later.
+ */
+function fakeMidtrans(): void
+{
     Http::fake([
         'app.sandbox.midtrans.com/snap/v1/transactions' => Http::response(['token' => 'snap-token-1', 'redirect_url' => 'https://example.test'], 201),
     ]);
-});
+}
 
 test('checkout creates a pending order priced by the server and stores the snap token', function () {
+    fakeMidtrans();
     $user = User::factory()->create();
 
     $order = app(CheckoutServiceInterface::class)->start($user, 'pro_12bln');
@@ -39,6 +47,7 @@ test('checkout creates a pending order priced by the server and stores the snap 
 });
 
 test('starting checkout twice quickly reuses the same pending order', function () {
+    fakeMidtrans();
     $user = User::factory()->create();
 
     $first = app(CheckoutServiceInterface::class)->start($user, 'pro_12bln');
@@ -67,6 +76,7 @@ test('when Midtrans refuses, the order is marked failed and the mentee gets a fr
 });
 
 test('a missing server key stops checkout before any request is sent', function () {
+    Http::fake();
     config(['services.midtrans.server_key' => null]);
 
     expect(fn () => app(CheckoutServiceInterface::class)->start(User::factory()->create(), 'pro_12bln'))
@@ -82,6 +92,7 @@ test('a visitor who clicks pay is sent to register', function () {
 });
 
 test('a signed-in mentee gets the snap token in the browser and the price comes from the server', function () {
+    fakeMidtrans();
     $user = User::factory()->create();
 
     Livewire::actingAs($user)
@@ -94,6 +105,7 @@ test('a signed-in mentee gets the snap token in the browser and the price comes 
 });
 
 test('an unverified mentee is sent to verify the email first', function () {
+    Http::fake();
     Livewire::actingAs(User::factory()->unverified()->create())
         ->test(Index::class)
         ->call('checkout')
