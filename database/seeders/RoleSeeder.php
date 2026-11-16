@@ -64,6 +64,11 @@ class RoleSeeder extends Seeder
             'Checkpoint' => self::READ,
             'ModuleFeedback' => self::READ,
             'User' => self::READ,
+            // Money: co-admin reads orders and notifications and can retry one, edits prices, and may give Pro by hand.
+            'Product' => self::REVIEW,
+            'Order' => self::READ,
+            'Subscription' => self::WRITE,
+            'PaymentEvent' => self::REVIEW,
         ],
         AdminRole::StaffDivisi->value => [
             'Fase' => self::WRITE,

@@ -95,6 +95,7 @@ Nilai rahasia tidak pernah ditulis di dokumentasi. Daftar lengkap ada di [`.env.
 | `GA_MEASUREMENT_ID` | Tag tracking GA4 di halaman publik (format `G-XXXXXXXXXX`, hanya production, tidak di `/admin`); beda dengan `ANALYTICS_PROPERTY_ID` | Opsional |
 | `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION` | Kunci Midtrans Snap (sandbox dulu, production setelah akun disetujui). Server key rahasia, jangan di repo | Wajib bila `PREMIUM_ENABLED=true` |
 | `QUEUE_CONNECTION` (worker) | Pembayaran dan reminder berjalan di antrean. Production wajib menjalankan `php artisan queue:work --queue=payments,reminders,default` (Supervisor) dan scheduler (`schedule:run` tiap menit) | Wajib bila `PREMIUM_ENABLED=true` |
+| `SUPPORT_WHATSAPP_NUMBER` | Nomor WhatsApp untuk tombol bantuan di `/bantuan` dan `/premium` | Opsional |
 | `PREMIUM_ENABLED` | Saklar fitur Premium (`/premium`, bagian Harga di landing, kartu paket di dashboard). Default `false` | Opsional |
 | `PRICING_LAUNCHING_UNTIL` | Akhir promo launching (ISO 8601). Kosong atau lewat = harga normal | Opsional |
 | `BLAZE_ENABLED` | Default `true`. `false` hanya untuk debugging komponen Blade, lalu `php artisan view:clear` | Opsional |
@@ -191,7 +192,7 @@ Detail lengkap: [`AGENTS.md`](AGENTS.md) dan [`docs/architecture.md`](docs/archi
 3. Tambah Quick Question dan Latihan praktik dari tabel di halaman modul.
 4. Buka **Pratinjau**, perbaiki item merah di checklist kelengkapan, lalu **Terbitkan**.
 
-Menu admin dikelompokkan: Kurikulum, Materi & Latihan, Beasiswa, Pemantauan Mentee, Pendaftaran Beasiswa, Administrasi Sistem. Role: `super_admin` (melewati semua cek izin), `co_admin`, `staff_divisi` (izin dari `RoleSeeder`).
+Menu admin dikelompokkan: Kurikulum, Materi & Latihan, Beasiswa, Pemantauan Mentee, Pendaftaran Beasiswa, Pembayaran, Administrasi Sistem. Role: `super_admin` (melewati semua cek izin), `co_admin`, `staff_divisi` (izin dari `RoleSeeder`).
 
 ---
 
@@ -239,6 +240,8 @@ npm audit --omit=dev
 php artisan down                               # opsional untuk rilis besar
 composer install --no-dev --optimize-autoloader
 php artisan migrate --force
+php artisan db:seed --class=RoleSeeder --force  # izin admin baru (Pembayaran)
+php artisan queue:restart                      # worker memuat kode job terbaru
 php artisan optimize                           # cache config, route, event, view
 php artisan view:cache                         # wajib: hindari kompilasi view di request pertama
 php artisan filament:optimize
@@ -249,6 +252,10 @@ php artisan up
 
 | Komponen | Keterangan |
 |---|---|
+| Queue worker | Wajib bila `PREMIUM_ENABLED=true`: `php artisan queue:work --queue=payments,reminders,default` di bawah Supervisor (restart otomatis). Tanpa worker, pembayaran masuk tapi Pro belum aktif dan email tidak terkirim; panel admin menampilkan "Notifikasi tertahan" |
+| Scheduler | Cron `* * * * * php artisan schedule:run`: pengingat deadline dan Pro berakhir, antrean ulang pembayaran tertahan |
+| Email | `MAIL_MAILER` nyata (bukan `log`) untuk pengingat |
+| URL notifikasi Midtrans | Isi di dashboard Midtrans: `{APP_URL}/payments/midtrans/notification` |
 | PHP | 8.3+ dengan OPcache aktif; reload PHP-FPM setiap deploy bila `validate_timestamps=0` |
 | Database | MySQL 8+ atau PostgreSQL 15+ (bukan SQLite) |
 | Queue worker | **Tidak wajib** untuk penilaian AI praktik: penilaian pertama dan *Nilai ulang* berjalan sinkron di request web. Saat ini tidak ada job lain di codebase. Job `EvaluatePracticeFeedback` lama yang masih tersisa di tabel `jobs` tidak bisa dijalankan lagi (kelasnya dihapus) dan akan masuk `failed_jobs` bila ada worker; jawaban terkait tampil macet lalu mendapat tombol *Nilai ulang* setelah 75 detik |

@@ -192,3 +192,7 @@ Reminder: `reminders:dispatch` (harian 07:00 WIB) mengantrekan `SendDeadlineRemi
 Sengaja tidak dikunci: cek kecocokan dan rekomendasi (dipakai alur profiling dan batas 5 beasiswa) dan modul template (bagian roadmap). Keduanya tetap penuh untuk Gratis.
 
 Referral: kode diketik di `/premium` (atau `?kode=`), divalidasi `ReferralService::apply()` di server saat checkout: hanya paket 12 bulan selama harga launching, 10% dari harga launching (Rp74.500 jadi Rp67.050), tidak boleh kode sendiri, satu akun satu kali (order paid dengan referrer). Order menyimpan `promo_code`, `referrer_user_id`, `discount_amount`. Pengingat Pro berakhir (H-7 dan H-1): `subscriptions:remind-expiry` harian 07:10 WIB mengantrekan `SendProExpiryReminder` (antrean `reminders`).
+
+## 9. Panel admin pembayaran
+
+Grup menu **Pembayaran** di `/admin`: Paket Pro (edit harga dan status jual, tanpa buat atau hapus), Pesanan (hanya baca), Langganan Pro (beri Pro manual atau ubah tanggal berakhir), Notifikasi Midtrans (log mentah, aksi "Antrekan ulang" untuk yang belum diproses). Widget `PaymentStats` di dashboard: pendapatan 30 hari (sebelum biaya Midtrans), pesanan lunas, Pro aktif, notifikasi tertahan. Izin dari `RoleSeeder`: `co_admin` membaca pesanan, mengedit harga, mengelola langganan; `staff_divisi` tidak punya akses; `super_admin` semuanya. Tanggal akhir promo launching tetap di `PRICING_LAUNCHING_UNTIL`, bukan di panel.

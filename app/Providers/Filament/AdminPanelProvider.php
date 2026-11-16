@@ -96,6 +96,7 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Konten Publik'),
                 NavigationGroup::make('Pemantauan Mentee'),
                 NavigationGroup::make('Pendaftaran Beasiswa'),
+                NavigationGroup::make('Pembayaran'),
                 NavigationGroup::make('Administrasi Sistem'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
