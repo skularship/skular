@@ -117,7 +117,7 @@ class Dashboard extends Component
             'has_pro' => $has_pro,
             'active_until' => $subscription?->active_until,
             'days_left' => $has_pro && $subscription !== null
-                ? (int) ceil(now()->floatDiffInDays($subscription->active_until))
+                ? (int) ceil(now()->diffInDays($subscription->active_until))
                 : null,
             'quote' => $pricing->quote((string) config('pricing.default_plan')),
         ];

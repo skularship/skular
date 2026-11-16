@@ -84,7 +84,7 @@ class VaultService implements VaultServiceInterface
                 $labels[] = __('SKTM atau bukti kondisi ekonomi');
             }
 
-            foreach (array_values($labels) as $position => $label) {
+            foreach ($labels as $position => $label) {
                 $application->checklistItems()->create(['label' => $label, 'position' => $position]);
             }
         }

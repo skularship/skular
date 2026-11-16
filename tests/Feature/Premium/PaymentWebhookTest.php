@@ -60,7 +60,7 @@ test('a settlement marks the order paid and activates Pro for 365 days', functio
         ->and($order->payment_type)->toBe('qris')
         ->and($order->paid_at)->not->toBeNull()
         ->and($subscription->plan)->toBe('pro_12bln')
-        ->and((int) round(now()->floatDiffInDays($subscription->active_until)))->toBe(365)
+        ->and((int) round(now()->diffInDays($subscription->active_until)))->toBe(365)
         ->and($this->user->fresh()->hasPro())->toBeTrue();
 });
 
