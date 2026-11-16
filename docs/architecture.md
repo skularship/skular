@@ -151,3 +151,42 @@ sequenceDiagram
 | Mentee | Middleware `auth` + `verified`; akses modul lewat `ProgressService::checkpointFor()` / `authorisedStatus()`; kepemilikan aplikasi beasiswa dicek di komponen/controller terkait |
 | Admin | `User::canAccessPanel()` + Shield policy (`app/Policies`), permission `{Aksi}:{Model}` dari `RoleSeeder`; `super_admin` melewati semua cek (Gate, `define_via_gate`) |
 | Draft konten | `Module::isPublished()`; draf → 404 di player dan disaring dari jalur belajar |
+
+## 7. Alur pembayaran (Midtrans Snap)
+
+Prepaid tanpa auto-renew. Browser tidak pernah menentukan harga atau status bayar.
+
+```mermaid
+sequenceDiagram
+    participant M as Mentee
+    participant P as Premium\Index
+    participant C as CheckoutService
+    participant G as MidtransGateway
+    participant W as PaymentWebhookService
+    M->>P: pilih paket, klik bayar
+    P->>C: start(user, kode paket)
+    C->>C: hitung harga di server (PricingService), buat/reuse Order pending
+    C->>G: createSnapToken (Http, server key)
+    G-->>P: snap token, dibuka lewat snap.js
+    G->>W: POST /payments/midtrans/notification
+    W->>W: receive(): cek SHA512 + gross_amount, simpan PaymentEvent, dispatch job
+    W-->>G: 200 cepat
+    W->>W: antrean payments: ProcessMidtransNotification, process() menandai Order paid + SubscriptionService::activate
+    M->>M: /pembayaran/{order} polling sampai status berubah
+```
+
+Aturan: webhook satu-satunya sumber kebenaran, dan order berubah hanya di dalam job `ProcessMidtransNotification` (antrean `payments`, 5 percobaan dengan backoff, tidak berjalan bersamaan untuk order yang sama). Worker wajib hidup: `php artisan queue:work --queue=payments,reminders,default`. Jaring pengaman: `payments:requeue-stuck` tiap 5 menit. `paid` bersifat final (notifikasi ulang tidak memperpanjang dua kali); pembelian saat Pro aktif melanjutkan dari `active_until`. 
+
+## 8. Paket Pro: aturan dan fitur
+
+Semua batas Gratis vs Pro ada di `config/plans.php` dan hanya dibaca lewat `EntitlementService` (`can()`, `isPro()`, `reminderLimit()`). Pro yang berakhir dihitung Gratis; data tidak dihapus.
+
+| Fitur | Gratis | Pro |
+|---|---|---|
+| Vault dokumen (`/vault`) | Terkunci (halaman tampil dengan tombol upgrade) | Sampai 50 file, 5 MB |
+| Checklist berkas | Terkunci | Semua beasiswa pilihan |
+| Reminder deadline email (H-7, H-3, H-1) | Beasiswa utama saja | Semua |
+
+Reminder: `reminders:dispatch` (harian 07:00 WIB) mengantrekan `SendDeadlineReminder` per aplikasi di antrean `reminders`; `reminder_logs` mencegah kirim ganda. Belum ada WhatsApp.
+
+Sengaja tidak dikunci: cek kecocokan dan rekomendasi (dipakai alur profiling dan batas 5 beasiswa) dan modul template (bagian roadmap). Keduanya tetap penuh untuk Gratis.

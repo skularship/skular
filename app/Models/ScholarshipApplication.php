@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -32,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable|null $updated_at
  * @property-read Scholarship $scholarship
  * @property-read User $user
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, ChecklistItem> $checklistItems
  */
 #[Fillable([
     'user_id',
@@ -138,5 +140,15 @@ class ScholarshipApplication extends Model
     public function scholarship(): BelongsTo
     {
         return $this->belongsTo(Scholarship::class);
+    }
+
+    /**
+     * Get the checklist items of this application.
+     *
+     * @return HasMany<ChecklistItem, $this>
+     */
+    public function checklistItems(): HasMany
+    {
+        return $this->hasMany(ChecklistItem::class);
     }
 }

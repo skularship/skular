@@ -392,6 +392,53 @@
 
         {{-- Right rail --}}
         <aside class="flex flex-col gap-4">
+            {{-- Paket kamu: only while Premium is switched on (config/pricing.php). --}}
+            @if ($premium)
+                <x-ui.card class="flex flex-col gap-3" data-test="dashboard-premium">
+                    @if ($premium['has_pro'])
+                        <div class="flex flex-wrap items-center gap-2">
+                            <x-ui.pill variant="success" icon="check">{{ __('Pro aktif') }}</x-ui.pill>
+                        </div>
+                        <p class="text-sm text-zinc-600">
+                            {{ __('Pro aktif sampai :date.', ['date' => $premium['active_until']->translatedFormat('j F Y')]) }}
+                        </p>
+
+                        @if ($premium['days_left'] !== null && $premium['days_left'] <= 7)
+                            <p class="rounded-2xl bg-brand-peach-soft/70 px-3 py-2 text-sm font-semibold text-zinc-800">
+                                {{ $premium['days_left'] <= 1 ? __('Pro kamu berakhir besok. Perpanjang supaya fitur Pro tetap terbuka.') : __('Pro kamu berakhir :days hari lagi. Perpanjang supaya fitur Pro tetap terbuka.', ['days' => $premium['days_left']]) }}
+                            </p>
+                        @endif
+
+                        <x-actions.link-button :href="route('premium')" wire:navigate variant="outline" class="justify-center">
+                            {{ __('Perpanjang') }}
+                        </x-actions.link-button>
+                    @else
+                        <p class="font-bold text-zinc-900">{{ __('Paket Gratis') }}</p>
+                        <p class="text-sm text-zinc-600">
+                            @if ($premium['active_until'])
+                                {{ __('Pro kamu sudah berakhir. Datamu aman, fitur Pro terkunci sampai kamu aktifkan lagi.') }}
+                            @else
+                                {{ __('Info beasiswa tetap gratis. Pro menambah alat untuk menyiapkan banyak beasiswa sekaligus.') }}
+                            @endif
+                        </p>
+
+                        @if ($premium['quote']?->is_launching && $premium['quote']->launching_until)
+                            <p class="text-sm font-semibold text-brand-orange">
+                                {{ __('Promo launching sampai :date: Pro :months bulan :price', ['date' => $premium['quote']->launching_until->translatedFormat('j F Y'), 'months' => $premium['quote']->months, 'price' => \App\Support\Rupiah::format($premium['quote']->amount)]) }}
+                            </p>
+                        @endif
+
+                        <x-actions.link-button :href="route('premium')" wire:navigate iconTrailing="arrow-right" class="justify-center">
+                            {{ $premium['active_until'] ? __('Aktifkan lagi') : __('Lihat paket Pro') }}
+                        </x-actions.link-button>
+                    @endif
+
+                    <a href="{{ route('payment.index') }}" wire:navigate class="text-center text-xs font-semibold text-brand-teal hover:underline">
+                        {{ __('Paket dan Tagihan') }}
+                    </a>
+                </x-ui.card>
+            @endif
+
             {{-- Quick access --}}
             <section class="flex flex-col gap-3">
                 <h2 class="text-sm font-bold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">{{ __('Akses cepat') }}</h2>

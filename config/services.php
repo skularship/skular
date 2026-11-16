@@ -17,6 +17,13 @@ return [
         'whatsapp' => env('SUPPORT_WHATSAPP_NUMBER', '6289604883024'),
     ],
 
+    // Midtrans Snap. The server key stays on the backend; only the client key reaches the browser.
+    'midtrans' => [
+        'server_key' => env('MIDTRANS_SERVER_KEY'),
+        'client_key' => env('MIDTRANS_CLIENT_KEY'),
+        'is_production' => (bool) env('MIDTRANS_IS_PRODUCTION', false),
+    ],
+
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),

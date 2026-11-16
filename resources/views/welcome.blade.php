@@ -15,6 +15,11 @@
         ['href' => '#persiapan', 'label' => 'Prinsip'],
     ];
 
+    // The price section only exists while Premium is switched on (config/pricing.php).
+    if (config('pricing.enabled')) {
+        $navLinks[] = ['href' => '#harga', 'label' => 'Harga'];
+    }
+
     /*
      * Rotating hero phrases. "Lebih besar peluang lolos" is deliberately left
      * out: Skular has no data that proves it, and the landing page makes no
@@ -653,6 +658,50 @@
                 </div>
             </section>
 
+            {{-- Harga: prices come from PricingService; hidden while PREMIUM_ENABLED is off. --}}
+            @if (config('pricing.enabled'))
+                @inject('pricing', 'App\Contracts\PricingServiceInterface')
+                @php($quotes = $pricing->quotes())
+
+                <section id="harga" class="scroll-mt-28 bg-warm-sand py-20 sm:py-28" aria-labelledby="harga-heading">
+                    <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
+                        <div class="max-w-2xl" data-reveal>
+                            <h2 id="harga-heading" class="text-3xl leading-tight font-extrabold tracking-tight sm:text-5xl">
+                                {{ __('Mulai gratis. Naik ke Pro saat kamu butuh.') }}
+                            </h2>
+                            <p class="mt-4 leading-relaxed text-zinc-600">
+                                {{ __('Info semua beasiswa tetap gratis. Pro menambah alat untuk menyiapkan banyak beasiswa sekaligus, dan semua fitur Pro baru langsung terbuka selama paketmu aktif.') }}
+                            </p>
+                        </div>
+
+                        <div class="mt-12 grid gap-6 lg:grid-cols-3 lg:items-stretch" data-reveal data-test="landing-pricing">
+                            <div class="clay flex flex-col gap-3 rounded-4xl bg-white p-6">
+                                <p class="font-bold text-zinc-900">{{ __('Gratis') }}</p>
+                                <p class="text-4xl font-extrabold tracking-tight text-zinc-900">Rp0</p>
+                                <p class="text-sm text-zinc-600">{{ __('Info semua beasiswa, profiling, rekomendasi, dan roadmap belajar. Tiap fitur Pro bisa dicoba sedikit.') }}</p>
+                                <x-landing.cta :href="route('register')" variant="quiet" class="mt-auto w-full">{{ __('Mulai gratis') }}</x-landing.cta>
+                            </div>
+
+                            @foreach ($quotes as $quote)
+                                <x-pricing.price-card
+                                    :quote="$quote"
+                                    :featured="$quote->months > 1"
+                                    :href="route('premium', ['paket' => $quote->code])"
+                                    :cta="__('Ambil :months bulan', ['months' => $quote->months])"
+                                />
+                            @endforeach
+                        </div>
+
+                        <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-zinc-600" data-reveal>
+                            <span class="font-semibold">QRIS &middot; GoPay &middot; {{ __('Virtual account') }} &middot; {{ __('Kartu') }}</span>
+                            <span>{{ __('Aktif setelah bayar. Tanpa auto-renew.') }}</span>
+                            <a href="https://wa.me/{{ config('services.support.whatsapp') }}?text={{ rawurlencode('Halo Skular, saya mau tanya soal paket Pro.') }}" target="_blank" rel="noopener" class="font-semibold text-brand-teal hover:underline">{{ __('Tanya lewat WhatsApp') }}</a>
+                            <a href="{{ route('premium') }}" class="font-semibold text-brand-teal hover:underline">{{ __('Lihat semua manfaat dan perbandingan') }} &rarr;</a>
+                        </div>
+                    </div>
+                </section>
+            @endif
+
             {{-- FAQ: only the admin-selected published questions, never the full list. --}}
             <livewire:faq.landing-section />
 
@@ -687,6 +736,12 @@
                                         {{ __('Masuk') }}
                                     </x-landing.cta>
                                 @endauth
+
+                                @if (config('pricing.enabled'))
+                                    <x-landing.cta :href="route('premium')" size="lg" variant="inverse">
+                                        {{ __('Lihat paket Pro') }}
+                                    </x-landing.cta>
+                                @endif
                             </div>
                             <p class="text-sm text-brand-teal-soft lg:text-right">
                                 {{ __('Hasil seleksi tetap ditentukan penyelenggara beasiswa.') }}

@@ -39,6 +39,13 @@ Skular adalah aplikasi **Livewire server-rendered**, bukan API JSON. Aksi di hal
 | GET | `/auth/google/redirect` | auth.google.redirect | `Http\Controllers\Auth\GoogleAuthController@redirect` | `throttle:30,1` |
 | GET | `/cv` | cv.show | `Livewire\Cv\Show (Livewire page)` | `auth`, `verified` |
 | GET | `/dashboard` | dashboard | `Livewire\Dashboard (Livewire page)` | `auth`, `verified` |
+| GET | `/premium` | premium | `Livewire\Premium\Index (Livewire page)` | — (404 bila `PREMIUM_ENABLED=false`) |
+| GET | `/pembayaran` | payment.index | `Livewire\Premium\Billing (Livewire page)` | `auth`, `verified` |
+| GET | `/pembayaran/{order}` | payment.status | `Livewire\Premium\Status (Livewire page, hanya pemilik order)` | `auth`, `verified` |
+| GET | `/vault` | vault.index | `Livewire\Vault\Index (Livewire page)` | `auth`, `verified` (404 bila Premium mati) |
+| GET | `/vault/{document}/unduh` | vault.download | `Http\Controllers\VaultDownloadController` | `auth`, `verified` (hanya pemilik) |
+| GET | `/scholarships/{application}/checklist` | checklist.show | `Livewire\Checklist\Show (Livewire page)` | `auth`, `verified` (hanya pemilik, Pro untuk mengubah) |
+| POST | `/payments/midtrans/notification` | payments.midtrans.notification | `Http\Controllers\MidtransWebhookController` | `throttle:120,1` (tanpa CSRF/session, dimuat dari `routes/payments.php`) |
 | GET | `/faq` | faq.index | `Livewire\Faq\Index (Livewire page)` | — |
 | GET | `/roadmap` | roadmap.show | `Livewire\Roadmap (Livewire page)` | `auth`, `verified` |
 | GET | `/panduan` | guide.index | `Livewire\Onboarding\Guide (Livewire page)` | `auth`, `verified` |

@@ -4,12 +4,17 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SubmissionProofController;
+use App\Http\Controllers\VaultDownloadController;
+use App\Livewire\Checklist\Show as ChecklistShow;
 use App\Livewire\Cv\Show as CvShow;
 use App\Livewire\Dashboard;
 use App\Livewire\Faq\Index as FaqIndex;
 use App\Livewire\Learning\Library;
 use App\Livewire\Learning\ModulePlayer;
 use App\Livewire\Onboarding\Guide;
+use App\Livewire\Premium\Billing as PremiumBilling;
+use App\Livewire\Premium\Index as PremiumIndex;
+use App\Livewire\Premium\Status as PremiumStatus;
 use App\Livewire\Profiling\Wizard;
 use App\Livewire\Roadmap;
 use App\Livewire\Scholarships\Index as ScholarshipsIndex;
@@ -18,6 +23,7 @@ use App\Livewire\Scholarships\Show as ScholarshipShow;
 use App\Livewire\Scholarships\Tracker;
 use App\Livewire\Support\Help;
 use App\Livewire\Twibbon\Generator;
+use App\Livewire\Vault\Index as VaultIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -30,6 +36,9 @@ Route::get('health', HealthCheckController::class)->name('health');
 Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 
 Route::livewire('faq', FaqIndex::class)->name('faq.index');
+
+// Public price page; returns 404 until PREMIUM_ENABLED is true.
+Route::livewire('premium', PremiumIndex::class)->name('premium');
 
 Route::middleware('throttle:30,1')->group(function () {
     Route::get('auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
@@ -49,6 +58,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('scholarships/{scholarship}', ScholarshipShow::class)->name('scholarships.show');
     Route::livewire('cv', CvShow::class)->name('cv.show');
     Route::livewire('bantuan', Help::class)->name('support.index');
+    Route::livewire('pembayaran', PremiumBilling::class)->name('payment.index');
+    Route::livewire('pembayaran/{order}', PremiumStatus::class)->name('payment.status');
+    Route::livewire('vault', VaultIndex::class)->name('vault.index');
+    Route::get('vault/{document}/unduh', VaultDownloadController::class)->name('vault.download');
+    Route::livewire('scholarships/{application}/checklist', ChecklistShow::class)->name('checklist.show');
     Route::livewire('panduan', Guide::class)->name('guide.index');
     Route::get('scholarships/{application}/proof', [SubmissionProofController::class, 'show'])->name('applications.proof');
 });

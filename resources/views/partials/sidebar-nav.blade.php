@@ -32,6 +32,14 @@
             ],
         ],
     ];
+
+    // Premium entry only while Premium is switched on (config/pricing.php).
+    if (config('pricing.enabled')) {
+        array_splice($groups[2]['links'], 3, 0, [
+            ['route' => 'vault.index', 'label' => __('Vault Dokumen'), 'icon' => 'document-text', 'pattern' => ['vault.*', 'checklist.*']],
+            ['route' => 'payment.index', 'label' => __('Paket dan Tagihan'), 'icon' => 'star', 'pattern' => 'payment.*'],
+        ]);
+    }
 @endphp
 
 <div class="flex min-h-10 items-center justify-between gap-2 md:mb-5 md:mt-3">
