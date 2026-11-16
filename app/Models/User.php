@@ -109,6 +109,16 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
     }
 
     /**
+     * Get the mentee's own referral code, if it was ever created.
+     *
+     * @return HasOne<ReferralCode, $this>
+     */
+    public function referralCode(): HasOne
+    {
+        return $this->hasOne(ReferralCode::class);
+    }
+
+    /**
      * Get the documents the mentee keeps in the vault.
      *
      * @return HasMany<VaultDocument, $this>

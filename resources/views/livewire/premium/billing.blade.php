@@ -25,6 +25,12 @@
         @endif
     </x-ui.card>
 
+    <x-ui.card class="flex flex-col gap-2" data-test="billing-referral">
+        <h2 class="font-bold text-zinc-900">{{ __('Kode referralmu') }}</h2>
+        <p class="text-2xl font-extrabold tracking-widest text-brand-teal">{{ $referral_code }}</p>
+        <p class="text-sm text-zinc-600">{{ __('Bagikan ke teman. Mereka dapat diskon 10% untuk paket Pro 12 bulan selama harga launching. Kamu tidak bisa memakai kodemu sendiri.') }}</p>
+    </x-ui.card>
+
     <x-ui.card padding="none" class="overflow-hidden" data-test="billing-history">
         <h2 class="border-b border-zinc-100 px-5 py-4 text-sm font-bold tracking-wide text-zinc-500 uppercase">{{ __('Riwayat Transaksi') }}</h2>
 

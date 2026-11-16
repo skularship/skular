@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Premium;
 
+use App\Contracts\ReferralServiceInterface;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
@@ -26,11 +27,12 @@ class Billing extends Component
      *
      * @return View The livewire.premium.billing view.
      */
-    public function render(): View
+    public function render(ReferralServiceInterface $referrals): View
     {
         $user = Auth::user();
 
         return view('livewire.premium.billing', [
+            'referral_code' => $referrals->codeFor($user)->code,
             'has_pro' => $user->hasPro(),
             'subscription' => $user->proSubscription,
             'orders' => $user->orders()->with('product')->latest('id')->limit(20)->get(),

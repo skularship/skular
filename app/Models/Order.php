@@ -20,6 +20,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property int $product_id
  * @property int $amount Whole rupiah.
+ * @property string|null $promo_code
+ * @property int|null $referrer_user_id Owner of the referral code used, for future rewards.
+ * @property int $discount_amount Rupiah taken off by a referral code.
  * @property OrderStatus $status
  * @property string|null $snap_token
  * @property string|null $midtrans_transaction_id
@@ -35,6 +38,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'user_id',
     'product_id',
     'amount',
+    'promo_code',
+    'referrer_user_id',
+    'discount_amount',
     'status',
     'snap_token',
     'midtrans_transaction_id',

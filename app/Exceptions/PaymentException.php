@@ -40,4 +40,12 @@ class PaymentException extends RuntimeException
     {
         return new self('Jumlah pembayaran tidak sama dengan pesanan.');
     }
+
+    /**
+     * A promo or referral code was refused; the message says why.
+     */
+    public static function promoInvalid(string $message): self
+    {
+        return new self($message);
+    }
 }

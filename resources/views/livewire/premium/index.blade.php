@@ -157,6 +157,20 @@
                         @endforeach
                     </div>
 
+                    @auth
+                        @if ($current?->code === 'pro_12bln' && $current->is_launching)
+                            <div class="mt-4" data-test="premium-promo">
+                                <label for="promo" class="text-sm font-semibold text-zinc-700">{{ __('Punya kode referral?') }}</label>
+                                <input id="promo" type="text" wire:model.live.debounce.500ms="promo" maxlength="20" autocomplete="off" placeholder="{{ __('Contoh: K7M2QPX') }}" class="mt-1 w-full rounded-2xl border border-zinc-200 px-4 py-2.5 uppercase" />
+                                @if ($promo_error)
+                                    <p class="mt-1 text-sm text-red-600" data-test="promo-error">{{ $promo_error }}</p>
+                                @elseif ($promo_discount > 0)
+                                    <p class="mt-1 text-sm font-semibold text-brand-teal" data-test="promo-ok">{{ __('Diskon :amount. Total jadi :total.', ['amount' => Rupiah::format($promo_discount), 'total' => Rupiah::format($current->amount - $promo_discount)]) }}</p>
+                                @endif
+                            </div>
+                        @endif
+                    @endauth
+
                     <p class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-zinc-500">
                         <span>QRIS</span><span>GoPay</span><span>{{ __('Virtual account') }}</span><span>{{ __('Kartu') }}</span>
                         <span class="font-normal">{{ __('Aktif setelah bayar. Tanpa auto-renew.') }}</span>

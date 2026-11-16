@@ -5,6 +5,7 @@ namespace App\Livewire\Premium;
 use App\Contracts\CheckoutServiceInterface;
 use App\Contracts\PaymentGatewayInterface;
 use App\Contracts\PricingServiceInterface;
+use App\Contracts\ReferralServiceInterface;
 use App\Exceptions\PaymentException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +29,9 @@ class Index extends Component
     public string $selected = 'pro_12bln';
 
     public ?string $error = null;
+
+    #[Url(as: 'kode', except: '')]
+    public string $promo = '';
 
     /**
      * Hide the page completely while Premium is switched off.
@@ -75,7 +79,7 @@ class Index extends Component
         }
 
         try {
-            $order = $checkout->start($user, $this->selected);
+            $order = $checkout->start($user, $this->selected, $this->promo);
         } catch (PaymentException $exception) {
             $this->error = $exception->getMessage();
 
@@ -94,13 +98,27 @@ class Index extends Component
      *
      * @return View The livewire.premium.index view.
      */
-    public function render(PricingServiceInterface $pricing, PaymentGatewayInterface $gateway): View
+    public function render(PricingServiceInterface $pricing, PaymentGatewayInterface $gateway, ReferralServiceInterface $referrals): View
     {
         $user = Auth::user();
+        $promo_discount = 0;
+        $promo_error = null;
+
+        if ($user !== null && trim($this->promo) !== '') {
+            $quote = $pricing->quote($this->selected);
+
+            try {
+                $promo_discount = $quote === null ? 0 : $referrals->apply($user, $this->promo, $quote)['discount'];
+            } catch (PaymentException $exception) {
+                $promo_error = $exception->getMessage();
+            }
+        }
 
         return view('livewire.premium.index', [
             'quotes' => $pricing->quotes(),
             'snap' => $gateway->clientConfig(),
+            'promo_discount' => $promo_discount,
+            'promo_error' => $promo_error,
             'has_pro' => $user?->hasPro() ?? false,
             'pro_until' => $user?->proSubscription?->active_until,
         ]);
