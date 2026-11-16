@@ -59,6 +59,13 @@ Role & permission memakai tabel spatie/laravel-permission: `roles`, `permissions
 | `module_mentor_usages` | Kuota AI Mentor: `used` per `(user_id, module_id)` (unique). Direservasi dengan `lockForUpdate` sebelum memanggil LLM, dikurangi lagi bila gagal. |
 | `user_brainstorming_sessions` | Jawaban brainstorming + kerangka AI, satu baris per (user, practice_form) (unique), agar bisa dilanjutkan di perangkat lain. |
 | `twibbon_templates` | Gambar template + `placements` (JSON posisi teks) untuk generator twibbon. |
+| `products` | Katalog paket berbayar (`pro_1bln`, `pro_12bln`): `price`, `launching_price`, `duration_days`. Harga dihitung ulang di server oleh `PricingService`, tidak pernah dari browser. |
+| `orders` | Satu transaksi Midtrans. `order_id` unik (`SKL-ymd-XXXXXXXX`), `status` = `OrderStatus`, `amount` dikunci saat checkout dan dicocokkan dengan `gross_amount` webhook. |
+| `subscriptions` | Satu baris per user (unique `user_id`): `plan`, `active_until`. Pro aktif bila `active_until` di masa depan. Pembelian saat Pro aktif melanjutkan dari `active_until`. |
+| `payment_events` | Log mentah semua notifikasi Midtrans yang lolos tanda tangan dan cek nominal, untuk audit. `processed_at` terisi saat job selesai menerapkannya; yang masih kosong lama akan diantrekan ulang oleh `payments:requeue-stuck`. |
+| `vault_documents` | Dokumen privat mentee Pro (disk `local`, tanpa URL publik, diunduh lewat controller milik pemilik). Batas di `config/plans.php` (50 file, 5 MB). Setelah Pro berakhir file tetap ada: bisa diunduh dan dihapus, tidak bisa menambah. |
+| `checklist_items` | Checklist berkas per `scholarship_applications`; dibuat dari daftar bawaan saat pertama dibuka (plus SKTM bila beasiswa mensyaratkan). `vault_document_id` boleh null dan di-null-kan saat dokumen dihapus. |
+| `reminder_logs` | Bukti pengingat deadline terkirim, unique `(application, days_before)` agar tidak terkirim dua kali. |
 | `faq_categories`, `faqs` | FAQ publik; kategori berisi FAQ menolak `delete()`. |
 | `clusters` | Bidang studi untuk profiling & pencocokan. |
 | `passkeys` | Kredensial WebAuthn (Laravel passkeys). |

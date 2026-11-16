@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Contracts\LearningPathServiceInterface;
+use App\Contracts\PricingServiceInterface;
 use App\Contracts\ProgressServiceInterface;
 use App\Contracts\ScholarshipApplicationServiceInterface;
 use App\Contracts\ScholarshipPathServiceInterface;
@@ -38,6 +39,7 @@ class Dashboard extends Component
         ScholarshipApplicationServiceInterface $application_service,
         ScholarshipPathServiceInterface $path_service,
         LearningPathServiceInterface $learning_path,
+        PricingServiceInterface $pricing,
     ): View {
         $user = $this->user();
 
@@ -90,8 +92,33 @@ class Dashboard extends Component
             'selected_count' => $selected_count,
             'max_selections' => ScholarshipApplicationService::MAX_SELECTIONS,
             'at_limit' => $selected_count >= ScholarshipApplicationService::MAX_SELECTIONS,
+            'premium' => $this->premiumCard($user, $pricing),
             'next_action' => $this->nextAction($user, $summary, $active, $next, $path_completed, $history->isNotEmpty()),
         ]);
+    }
+
+    /**
+     * Get what the "Paket kamu" card shows, or null while Premium is switched off.
+     *
+     * @return array{has_pro: bool, active_until: \Carbon\CarbonInterface|null, days_left: int|null, quote: \App\Data\PriceQuote|null}|null
+     */
+    private function premiumCard(User $user, PricingServiceInterface $pricing): ?array
+    {
+        if (! config('pricing.enabled')) {
+            return null;
+        }
+
+        $subscription = $user->proSubscription;
+        $has_pro = $user->hasPro();
+
+        return [
+            'has_pro' => $has_pro,
+            'active_until' => $subscription?->active_until,
+            'days_left' => $has_pro && $subscription !== null
+                ? (int) ceil(now()->floatDiffInDays($subscription->active_until))
+                : null,
+            'quote' => $pricing->quote((string) config('pricing.default_plan')),
+        ];
     }
 
     /**

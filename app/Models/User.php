@@ -61,6 +61,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read Collection<int, UserPracticeResponse> $practiceResponses
  * @property-read Collection<int, UserBrainstormingSession> $brainstormingSessions
  * @property-read Collection<int, ModuleFeedback> $moduleFeedbacks
+ * @property-read Subscription|null $proSubscription
+ * @property-read Collection<int, Order> $orders
  */
 #[Fillable([
     'name',
@@ -85,6 +87,48 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+
+    /**
+     * Get the mentee's Pro subscription row, if they ever bought Pro.
+     *
+     * @return HasOne<Subscription, $this>
+     */
+    public function proSubscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class);
+    }
+
+    /**
+     * Get the Premium orders the mentee has placed.
+     *
+     * @return HasMany<Order, $this>
+     */
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    /**
+     * Get the documents the mentee keeps in the vault.
+     *
+     * @return HasMany<VaultDocument, $this>
+     */
+    public function vaultDocuments(): HasMany
+    {
+        return $this->hasMany(VaultDocument::class);
+    }
+
+    /**
+     * Determine whether the mentee has an active Pro plan right now.
+     *
+     * The single entry point every paid feature should call.
+     */
+    public function hasPro(): bool
+    {
+        $subscription = $this->proSubscription;
+
+        return $subscription !== null && $subscription->active_until->isFuture();
+    }
 
     /**
      * Determine whether the mentee may access the Filament admin panel.

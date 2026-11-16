@@ -93,6 +93,10 @@ Nilai rahasia tidak pernah ditulis di dokumentasi. Daftar lengkap ada di [`.env.
 | `PASSKEYS_USER_HANDLE_SECRET` | Secret user handle passkey. Default `APP_KEY`; biarkan dikomentari bila tidak dipakai | Opsional |
 | `ANALYTICS_PROPERTY_ID` | Property GA4 untuk dashboard analitik admin (+ file kredensial `storage/app/analytics/service-account-credentials.json`) | Opsional |
 | `GA_MEASUREMENT_ID` | Tag tracking GA4 di halaman publik (format `G-XXXXXXXXXX`, hanya production, tidak di `/admin`); beda dengan `ANALYTICS_PROPERTY_ID` | Opsional |
+| `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION` | Kunci Midtrans Snap (sandbox dulu, production setelah akun disetujui). Server key rahasia, jangan di repo | Wajib bila `PREMIUM_ENABLED=true` |
+| `QUEUE_CONNECTION` (worker) | Pembayaran dan reminder berjalan di antrean. Production wajib menjalankan `php artisan queue:work --queue=payments,reminders,default` (Supervisor) dan scheduler (`schedule:run` tiap menit) | Wajib bila `PREMIUM_ENABLED=true` |
+| `PREMIUM_ENABLED` | Saklar fitur Premium (`/premium`, bagian Harga di landing, kartu paket di dashboard). Default `false` | Opsional |
+| `PRICING_LAUNCHING_UNTIL` | Akhir promo launching (ISO 8601). Kosong atau lewat = harga normal | Opsional |
 | `BLAZE_ENABLED` | Default `true`. `false` hanya untuk debugging komponen Blade, lalu `php artisan view:clear` | Opsional |
 | `PERFORMANCE_LOG_SLOW_REQUESTS`, `PERFORMANCE_SLOW_REQUEST_MS`, `PERFORMANCE_LOG_SLOW_QUERIES`, `PERFORMANCE_SLOW_QUERY_MS` | Log request/query lambat (`config/performance.php`) | Opsional |
 | `MAIL_*` | Pengiriman email (verifikasi, reset password) | Wajib di production |
