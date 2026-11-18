@@ -21,7 +21,7 @@ class EventFactory extends Factory
      */
     public function definition(): array
     {
-        $title = 'Webinar '.fake()->unique()->words(3, true);
+        $title = 'Webinar '.fake()->unique()->company();
         $starts_at = now()->addDays(3)->setTime(12, 0);
 
         return [
