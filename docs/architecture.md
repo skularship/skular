@@ -32,12 +32,15 @@ flowchart LR
 - Panel admin melewati middleware Filament (`Authenticate`, `SetUpPanel:admin`) dan Shield policy di `app/Policies`.
 - Bacaan kurikulum di-cache per versi dengan `ContentCache` (hanya scalar/array). Model Fase, Module, Scholarship, dan ModuleCoreSection memanggil `ContentCache::bump()` saat disimpan/dihapus.
 
-## 3. Alur profiling → rekomendasi → roadmap
+## 3. Alur Info Beasiswa → profiling → rekomendasi → roadmap
+
+Mentee baru tidak langsung diarahkan ke profiling. Setelah daftar (dan login bila profil belum lengkap) mentee mendarat di Info Beasiswa (`/scholarships`), yang bisa dipakai penuh tanpa profiling. Kartu "Bingung pilih yang mana?" dengan tombol **Cari beasiswa yang cocok untukku** (`Scholarships\Index::findMatches()`, dicatat `match_cta_clicked`) membuka profiling; mentee yang sudah profiling melihat tombol **Lihat rekomendasiku**.
 
 ```mermaid
 sequenceDiagram
     actor M as Mentee
     participant F as Fortify (register/login)
+    participant I as Scholarships\Index
     participant W as Profiling\Wizard
     participant PS as ProfilingService
     participant R as Scholarships\Recommendation
@@ -46,7 +49,9 @@ sequenceDiagram
     participant D as Dashboard
 
     M->>F: daftar / login
-    F-->>M: RegisterResponse / LoginResponse → /profiling<br/>(atau /dashboard bila profil lengkap)
+    F-->>M: RegisterResponse / LoginResponse → /scholarships<br/>(atau /dashboard bila profil lengkap)
+    M->>I: lihat & filter beasiswa (tanpa profiling)
+    M->>I: "Cari beasiswa yang cocok untukku" → /profiling
     M->>W: isi 8 langkah (state Alpine + sessionStorage, tanpa request)
     M->>W: submit(answers) sekali di langkah terakhir
     W->>PS: complete(user, payload)

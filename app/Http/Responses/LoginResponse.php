@@ -8,7 +8,7 @@ use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Fortify login response: mentees without a completed profile go to the profiling wizard, everyone else to the dashboard.
+ * Fortify login response: mentees without a completed profile go to the scholarship catalog, everyone else to the dashboard.
  */
 class LoginResponse implements LoginResponseContract
 {
@@ -27,7 +27,7 @@ class LoginResponse implements LoginResponseContract
         $user = $request->user();
 
         $destination = $user instanceof User && ! $user->hasCompletedProfile()
-            ? route('profiling', absolute: false)
+            ? route('scholarships.index', absolute: false)
             : route('dashboard', absolute: false);
 
         return redirect()->intended($destination);

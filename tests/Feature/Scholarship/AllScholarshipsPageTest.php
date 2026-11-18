@@ -196,3 +196,41 @@ test('the catalog scope filter also offers funding categories and filters by the
         ->assertSee('Beasiswa Dana Penuh')
         ->assertDontSee('Beasiswa Dana Parsial');
 });
+
+test('a mentee without a profile sees the match card that opens profiling', function () {
+    $newcomer = User::factory()->create();
+
+    Livewire::actingAs($newcomer)
+        ->test(Index::class)
+        ->assertSee('Bingung pilih yang mana?')
+        ->assertSee('Cari beasiswa yang cocok untukku')
+        ->assertDontSee('Lihat rekomendasiku')
+        ->call('findMatches')
+        ->assertRedirect(route('profiling'));
+});
+
+test('a profiled mentee gets "Lihat rekomendasiku" instead of the match card', function () {
+    Livewire::actingAs($this->mentee)
+        ->test(Index::class)
+        ->assertDontSee('Bingung pilih yang mana?')
+        ->assertSee('Lihat rekomendasiku')
+        ->call('findMatches')
+        ->assertRedirect(route('profiling.recommendation'));
+});
+
+test('the catalog works without profiling and offers a visible clear-filter button', function () {
+    catalogScholarship('Beasiswa Tanpa Profil');
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('scholarships.index'))
+        ->assertOk()
+        ->assertSee('Beasiswa Tanpa Profil');
+
+    Livewire::actingAs($this->mentee)
+        ->test(Index::class)
+        ->assertDontSeeHtml('data-test="clear-filters"')
+        ->set('level', EducationLevel::S2->value)
+        ->assertSeeHtml('data-test="clear-filters"')
+        ->call('resetFilters')
+        ->assertSet('level', '');
+});

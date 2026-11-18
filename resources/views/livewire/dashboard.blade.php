@@ -69,10 +69,10 @@
 
     @if (! $user->hasCompletedProfile())
         <x-ui.empty-state
-            icon="identification"
-            :title="__('Lengkapi profiling dulu ya')"
-            :description="__('Tanpa profil yang lengkap, Skular belum bisa mencocokkanmu dengan beasiswa yang tepat.')"
-            :action-label="__('Mulai profiling')"
+            icon="sparkles"
+            :title="__('Cari beasiswa yang cocok untukmu')"
+            :description="__('Jawab beberapa pertanyaan singkat, nanti Skular carikan beasiswa yang paling cocok untukmu.')"
+            :action-label="__('Mulai')"
             :action-url="route('profiling')"
             action-icon-trailing="arrow-right"
             data-test="profile-empty"

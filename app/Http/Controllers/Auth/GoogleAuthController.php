@@ -81,7 +81,7 @@ class GoogleAuthController extends Controller
         return redirect()->to(
             $user->hasCompletedProfile()
                 ? route('dashboard', absolute: false)
-                : route('profiling', absolute: false),
+                : route('scholarships.index', absolute: false),
         );
     }
 

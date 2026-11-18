@@ -7,13 +7,14 @@ use Filament\Support\Contracts\HasLabel;
 
 /**
  * The guided product tours of the mentee journey, in journey order:
- * landing → profiling → recommendation → dashboard → roadmap → module → Beasiswa Saya.
+ * landing → Info Beasiswa → profiling → recommendation → dashboard → roadmap → module → Beasiswa Saya.
  */
 enum ProductTour: string implements HasLabel
 {
     use HasSelectOptions;
 
     case Landing = 'landing';
+    case Scholarships = 'scholarships';
     case Profiling = 'profiling';
     case Recommendation = 'recommendation';
     case Dashboard = 'dashboard';
@@ -30,6 +31,7 @@ enum ProductTour: string implements HasLabel
     {
         return match ($this) {
             self::Landing => 'Kenalan dengan Skular',
+            self::Scholarships => 'Lihat info beasiswa',
             self::Profiling => 'Isi profiling 8 langkah',
             self::Recommendation => 'Pilih beasiswa yang cocok',
             self::Dashboard => 'Kenali ruang belajarmu',
@@ -46,6 +48,7 @@ enum ProductTour: string implements HasLabel
     {
         return match ($this) {
             self::Landing => 'Lihat apa yang Skular tawarkan dan cek kesiapanmu lewat Profiling Kilat sebelum daftar.',
+            self::Scholarships => 'Lihat semua beasiswa, saring sesuai keinginanmu, lalu minta Skular carikan yang paling cocok.',
             self::Profiling => 'Jawab 8 pertanyaan singkat tentang jenjang, usia, IPK, dan tujuan studimu.',
             self::Recommendation => 'Pilih maksimal 5 beasiswa yang cocok, lalu tandai satu sebagai beasiswa utama.',
             self::Dashboard => 'Pantau progres, label hasil penilaian AI, dan langkah berikutnya yang paling penting.',
@@ -62,6 +65,7 @@ enum ProductTour: string implements HasLabel
     {
         return match ($this) {
             self::Landing => 'sparkles',
+            self::Scholarships => 'magnifying-glass',
             self::Profiling => 'identification',
             self::Recommendation => 'academic-cap',
             self::Dashboard => 'home',
@@ -81,6 +85,7 @@ enum ProductTour: string implements HasLabel
     {
         return match ($this) {
             self::Landing => 'home',
+            self::Scholarships => 'scholarships.index',
             self::Profiling => 'profiling',
             self::Recommendation => 'profiling.recommendation',
             self::Dashboard => 'dashboard',

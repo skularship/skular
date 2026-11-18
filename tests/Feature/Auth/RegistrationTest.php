@@ -12,7 +12,7 @@ test('registration screen can be rendered', function () {
     $response->assertOk();
 });
 
-test('new users can register and are sent to profiling', function () {
+test('new users can register and land on the scholarship catalog', function () {
     $response = $this->post(route('register.store'), [
         'name' => 'John Doe',
         'email' => 'test@example.com',
@@ -23,7 +23,7 @@ test('new users can register and are sent to profiling', function () {
     ]);
 
     $response->assertSessionHasNoErrors()
-        ->assertRedirect(route('profiling', absolute: false));
+        ->assertRedirect(route('scholarships.index', absolute: false));
 
     $this->assertAuthenticated();
 });

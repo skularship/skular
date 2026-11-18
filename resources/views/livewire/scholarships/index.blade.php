@@ -1,3 +1,4 @@
+{{-- Info Beasiswa (App\Livewire\Scholarships\Index): the first page after sign-up. "Cari beasiswa yang cocok untukku" card (or "Lihat rekomendasiku" once profiled), large filters with "Hapus filter", and the scholarship grid. --}}
 @php
     $has_search = filled($search);
     $has_filters = filled($level) || filled($scope) || filled($location) || $include_closed;
@@ -26,27 +27,71 @@
         </x-feedback.callout>
     @endif
 
-    <x-ui.card variant="teal" class="flex flex-col gap-4">
-        <div class="flex items-center gap-2">
-            <x-ui.icon-badge icon="funnel" tone="teal" size="sm" />
-            <p class="text-sm font-bold text-zinc-900 dark:text-white">{{ __('Filter & pencarian') }}</p>
+    @if (! $has_profile)
+        <section class="sk-rise rounded-4xl border-2 border-brand-teal/25 bg-white p-6 shadow-soft sm:p-8 dark:bg-zinc-800/60" data-tour="match-cta" data-test="match-cta">
+            <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex items-start gap-4">
+                    <x-ui.icon-badge icon="sparkles" tone="amber" size="lg" solid />
+
+                    <div class="max-w-xl">
+                        <h2 class="text-xl font-extrabold text-zinc-900 sm:text-2xl dark:text-white">{{ __('Bingung pilih yang mana?') }}</h2>
+                        <p class="mt-2 text-base leading-relaxed text-zinc-700 dark:text-zinc-300">
+                            {{ __('Jawab beberapa pertanyaan singkat, nanti Skular carikan beasiswa yang paling cocok untukmu.') }}
+                        </p>
+                    </div>
+                </div>
+
+                <x-actions.button
+                    type="button"
+                    size="lg"
+                    icon-trailing="arrow-right"
+                    wire:click="findMatches"
+                    class="w-full shrink-0 sm:w-auto"
+                    data-test="find-matches"
+                >
+                    {{ __('Cari beasiswa yang cocok untukku') }}
+                </x-actions.button>
+            </div>
+        </section>
+    @else
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-brand-teal/15 bg-white px-5 py-4 dark:bg-zinc-800/60" data-tour="match-cta" data-test="my-recommendations">
+            <p class="text-base text-zinc-700 dark:text-zinc-300">{{ __('Skular sudah mencarikan beasiswa yang cocok dengan profilmu.') }}</p>
+
+            <x-actions.button type="button" size="lg" variant="outline" icon="sparkles" wire:click="findMatches">
+                {{ __('Lihat rekomendasiku') }}
+            </x-actions.button>
+        </div>
+    @endif
+
+    <x-ui.card variant="teal" class="flex flex-col gap-4" data-tour="scholarship-filters">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <x-ui.icon-badge icon="funnel" tone="teal" size="sm" />
+                <p class="text-base font-bold text-zinc-900 dark:text-white">{{ __('Filter & pencarian') }}</p>
+            </div>
+
+            @if ($has_search || $has_filters)
+                <x-actions.button type="button" variant="outline" icon="x-mark" wire:click="resetFilters" class="min-h-11" data-test="clear-filters">
+                    {{ __('Hapus filter') }}
+                </x-actions.button>
+            @endif
         </div>
 
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <label class="flex flex-col gap-1 lg:col-span-2">
-                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">{{ __('Cari') }}</span>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <label class="flex flex-col gap-1.5 lg:col-span-2">
+                <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{{ __('Cari') }}</span>
                 <input
                     type="search"
                     wire:model.live.debounce.300ms="search"
                     placeholder="{{ __('Nama beasiswa atau institusi...') }}"
-                    class="block h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-700 focus:outline-hidden focus:ring-2 focus:ring-accent sm:h-10 sm:text-sm dark:border-zinc-600 dark:bg-white/10 dark:text-zinc-200"
+                    class="block h-12 w-full rounded-xl border border-zinc-300 bg-white px-4 text-base text-zinc-800 focus:outline-hidden focus:ring-2 focus:ring-accent dark:border-zinc-600 dark:bg-white/10 dark:text-zinc-200"
                     data-test="search-input"
                 >
             </label>
 
-            <label class="flex flex-col gap-1">
-                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">{{ __('Jenjang') }}</span>
-                <select wire:model.live="level" class="block h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-700 focus:outline-hidden focus:ring-2 focus:ring-accent sm:h-10 sm:text-sm dark:border-zinc-600 dark:bg-white/10 dark:text-zinc-200">
+            <label class="flex flex-col gap-1.5">
+                <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{{ __('Jenjang') }}</span>
+                <select wire:model.live="level" class="block h-12 w-full rounded-xl border border-zinc-300 bg-white px-4 text-base text-zinc-800 focus:outline-hidden focus:ring-2 focus:ring-accent dark:border-zinc-600 dark:bg-white/10 dark:text-zinc-200">
                     <option value="">{{ __('Semua jenjang') }}</option>
                     @foreach ($levels as $option)
                         <option value="{{ $option->value }}">{{ $option->label() }}</option>
@@ -54,9 +99,9 @@
                 </select>
             </label>
 
-            <label class="flex flex-col gap-1">
-                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">{{ __('Cakupan') }}</span>
-                <select wire:model.live="scope" class="block h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-700 focus:outline-hidden focus:ring-2 focus:ring-accent sm:h-10 sm:text-sm dark:border-zinc-600 dark:bg-white/10 dark:text-zinc-200">
+            <label class="flex flex-col gap-1.5">
+                <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{{ __('Cakupan') }}</span>
+                <select wire:model.live="scope" class="block h-12 w-full rounded-xl border border-zinc-300 bg-white px-4 text-base text-zinc-800 focus:outline-hidden focus:ring-2 focus:ring-accent dark:border-zinc-600 dark:bg-white/10 dark:text-zinc-200">
                     <option value="">{{ __('Semua cakupan') }}</option>
                     @foreach ($scopes as $option)
                         <option value="{{ $option->value }}">{{ $option->label() }}</option>
@@ -64,9 +109,9 @@
                 </select>
             </label>
 
-            <label class="flex flex-col gap-1">
-                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">{{ __('Lokasi') }}</span>
-                <select wire:model.live="location" class="block h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-700 focus:outline-hidden focus:ring-2 focus:ring-accent sm:h-10 sm:text-sm dark:border-zinc-600 dark:bg-white/10 dark:text-zinc-200">
+            <label class="flex flex-col gap-1.5">
+                <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{{ __('Lokasi') }}</span>
+                <select wire:model.live="location" class="block h-12 w-full rounded-xl border border-zinc-300 bg-white px-4 text-base text-zinc-800 focus:outline-hidden focus:ring-2 focus:ring-accent dark:border-zinc-600 dark:bg-white/10 dark:text-zinc-200">
                     <option value="">{{ __('Semua lokasi') }}</option>
                     @foreach ($locations as $option)
                         <option value="{{ $option }}">{{ $option }}</option>
@@ -74,26 +119,22 @@
                 </select>
             </label>
 
-            <label class="flex flex-col gap-1">
-                <span class="text-xs font-semibold text-zinc-500 dark:text-zinc-400">{{ __('Urutkan') }}</span>
-                <select wire:model.live="sort" class="block h-11 w-full rounded-xl border border-zinc-200 bg-white px-3 text-base text-zinc-700 focus:outline-hidden focus:ring-2 focus:ring-accent sm:h-10 sm:text-sm dark:border-zinc-600 dark:bg-white/10 dark:text-zinc-200">
+            <label class="flex flex-col gap-1.5">
+                <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{{ __('Urutkan') }}</span>
+                <select wire:model.live="sort" class="block h-12 w-full rounded-xl border border-zinc-300 bg-white px-4 text-base text-zinc-800 focus:outline-hidden focus:ring-2 focus:ring-accent dark:border-zinc-600 dark:bg-white/10 dark:text-zinc-200">
                     <option value="deadline">{{ __('Deadline terdekat') }}</option>
                     <option value="name">{{ __('Nama A-Z') }}</option>
                 </select>
             </label>
 
-            <label class="flex items-center gap-2 pb-2 sm:col-span-2">
-                <input type="checkbox" wire:model.live="include_closed" class="size-4 rounded border-zinc-300 text-brand-teal focus:ring-brand-teal">
-                <span class="text-sm text-zinc-600 dark:text-zinc-300">{{ __('Tampilkan yang sudah ditutup') }}</span>
+            <label class="flex min-h-11 cursor-pointer items-center gap-3 self-end sm:col-span-2">
+                <input type="checkbox" wire:model.live="include_closed" class="size-5 rounded border-zinc-300 text-brand-teal focus:ring-brand-teal">
+                <span class="text-base text-zinc-700 dark:text-zinc-300">{{ __('Tampilkan yang sudah ditutup') }}</span>
             </label>
         </div>
 
-        <div class="flex min-h-5 flex-wrap items-center justify-between gap-2">
+        <div class="min-h-5">
             <x-loading.inline loading="scholarship.search" target="search,level,scope,location,sort,include_closed,resetFilters" />
-
-            <button type="button" wire:click="resetFilters" wire:loading.attr="disabled" wire:target="resetFilters" class="ms-auto text-sm font-semibold text-brand-teal transition hover:underline disabled:opacity-50 dark:text-brand-teal-light">
-                {{ __('Reset filter') }}
-            </button>
         </div>
     </x-ui.card>
 
@@ -112,8 +153,8 @@
             data-test="scholarship-empty"
         >
             @if ($has_search || $has_filters)
-                <x-actions.button type="button" variant="outline" icon="arrow-path" wire:click="resetFilters">
-                    {{ __('Reset filter') }}
+                <x-actions.button type="button" variant="outline" icon="x-mark" wire:click="resetFilters">
+                    {{ __('Hapus filter') }}
                 </x-actions.button>
             @endif
         </x-ui.empty-state>
@@ -197,4 +238,7 @@
             {{ $scholarships->links() }}
         </div>
     @endif
+
+    {{-- Onboarding coach marks for this page (opens once; replay from /panduan). --}}
+    <livewire:onboarding.product-tour tour="scholarships" />
 </div>

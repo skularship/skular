@@ -10,7 +10,8 @@ use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Fortify register response: every new mentee starts with the profiling wizard.
+ * Fortify register response: every new mentee starts on the scholarship catalog
+ * (Info Beasiswa); the "Cari beasiswa yang cocok untukku" card there leads to profiling.
  */
 class RegisterResponse implements RegisterResponseContract
 {
@@ -32,6 +33,6 @@ class RegisterResponse implements RegisterResponseContract
             app(ActivityTrackerInterface::class)->track(ActivityName::Registered, user: $user);
         }
 
-        return redirect()->intended(route('profiling', absolute: false));
+        return redirect()->intended(route('scholarships.index', absolute: false));
     }
 }

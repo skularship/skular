@@ -52,7 +52,7 @@ test('the next best action asks for profiling when the profile is incomplete', f
 
     Livewire::actingAs($fresh)
         ->test(Dashboard::class)
-        ->assertSee('Lengkapi profiling dulu');
+        ->assertSee('Cari beasiswa yang cocok untukmu');
 });
 
 test('the next best action points to the current module', function () {

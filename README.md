@@ -2,7 +2,7 @@
 
 ## 1. Tentang Skular
 
-Skular ([skularship.com](https://skularship.com)) adalah platform persiapan beasiswa berbasis AI untuk mahasiswa dan Gen Z. Mentee mengisi profiling 8 langkah, mendapat rekomendasi beasiswa yang cocok (maksimal 5 dipilih), lalu belajar lewat roadmap modul: materi, Quick Question, praktik menulis yang dinilai AI, AI Mentor dengan kuota, dan checkpoint. AI hanya membantu (menjelaskan, menilai, memberi kerangka); jawaban akhir selalu ditulis mentee sendiri.
+Skular ([skularship.com](https://skularship.com)) adalah platform persiapan beasiswa berbasis AI untuk mahasiswa dan Gen Z. Setelah daftar, mentee melihat Info Beasiswa (bisa difilter tanpa profiling), lalu lewat tombol "Cari beasiswa yang cocok untukku" mengisi profiling 8 langkah, mendapat rekomendasi beasiswa yang cocok (maksimal 5 dipilih), lalu belajar lewat roadmap modul: materi, Quick Question, praktik menulis yang dinilai AI, AI Mentor dengan kuota, dan checkpoint. AI hanya membantu (menjelaskan, menilai, memberi kerangka); jawaban akhir selalu ditulis mentee sendiri.
 
 Dokumen lain:
 
@@ -153,7 +153,7 @@ public/build/              # Aset Vite hasil build (DI-COMMIT)
 | Profiling 8 langkah | `/profiling` | `app/Livewire/Profiling/Wizard.php`, `app/Services/ProfilingService.php`, `app/Concerns/ProfilingRules.php` |
 | Rekomendasi & pemilihan beasiswa (maks 5; kartu 1:1 berisi gambar, nama, label kecocokan; alasan kecocokan di halaman detail) | `/profiling/recommendation` | `app/Livewire/Scholarships/Recommendation.php`, `app/Services/ScholarshipMatchingService.php`, `ScholarshipApplicationService.php`, `ScholarshipImageService.php`, `components/scholarship/card-image.blade.php` |
 | Katalog & detail beasiswa | `/scholarships`, `/scholarships/{scholarship}` | `app/Livewire/Scholarships/Index.php`, `Show.php` |
-| Product Tour onboarding (coach marks landing → profiling → rekomendasi → dashboard → roadmap → modul → Beasiswa Saya; muncul sekali per halaman) + halaman Panduan dengan "Ulangi tur" | `/panduan` | `ProductTourService.php`, `app/Livewire/Onboarding`, `components/onboarding/tour-overlay.blade.php`, `resources/js/product-tour.js` |
+| Product Tour onboarding (coach marks landing → Info Beasiswa → profiling → rekomendasi → dashboard → roadmap → modul → Beasiswa Saya; muncul sekali per halaman) + halaman Panduan dengan "Ulangi tur" | `/panduan` | `ProductTourService.php`, `app/Livewire/Onboarding`, `components/onboarding/tour-overlay.blade.php`, `resources/js/product-tour.js` |
 | Bantuan: WhatsApp (`SUPPORT_WHATSAPP_NUMBER`, default +62 896-0488-3024) + form lapor bug/error dengan tangkapan layar opsional (maks 5 tiket/24 jam); admin menangani di *Pemantauan Mentee → Tiket bantuan* | `/bantuan`, `/admin/support-tickets` | `app/Livewire/Support/Help.php`, `SupportTicketService.php`, `app/Filament/Resources/SupportTickets` |
 | Laporan "Informasi Tidak Akurat?" (mentee lapor dari detail beasiswa; admin tinjau di *Beasiswa → Laporan info beasiswa*) | `/scholarships/{scholarship}`, `/admin/scholarship-info-reports` | `ScholarshipReportService.php`, `app/Filament/Resources/ScholarshipInfoReports` |
 | Beasiswa Saya (tracker, bukti, hasil) | `/scholarships/saya`, `/scholarships/{application}/proof` | `app/Livewire/Scholarships/Tracker.php`, `app/Http/Controllers/SubmissionProofController.php`, `app/Services/ScholarshipPathService.php` |

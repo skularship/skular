@@ -32,7 +32,13 @@ class ProductTourService implements ProductTourServiceInterface
                 ['#manfaat', 'Apa yang kamu dapat', 'Rekomendasi beasiswa sesuai profilmu, modul belajar bertahap, dan feedback untuk setiap latihan menulismu.'],
                 ['#cara-kerja', 'Empat tahap, satu perjalanan', 'Profiling, rekomendasi beasiswa, roadmap belajar, lalu latihan dan checkpoint. Setelah daftar, panduan ini menemanimu di setiap tahap.'],
                 ['#cek-kesiapan', 'Cek kesiapanmu dulu', 'Penasaran seberapa siap kamu? Coba Profiling Kilat di sini, tanpa perlu daftar.'],
-                ['#mulai', 'Siap mulai?', 'Daftar gratis, lalu isi profiling 8 langkah. Kami pandu langkah demi langkah sampai kamu siap mendaftar beasiswa.'],
+                ['#mulai', 'Siap mulai?', 'Daftar gratis, lalu lihat info beasiswa. Kalau bingung memilih, Skular carikan yang paling cocok untukmu dan memandumu sampai siap mendaftar.'],
+            ],
+            ProductTour::Scholarships => [
+                [null, 'Ini info beasiswa', 'Di sini ada semua beasiswa yang bisa kamu siapkan. Lihat-lihat dulu, tidak ada yang wajib diisi.'],
+                ['[data-tour="match-cta"]', 'Biar Skular yang carikan', 'Tekan tombol ini, jawab beberapa pertanyaan singkat, lalu Skular carikan beasiswa yang paling cocok untukmu.'],
+                ['[data-tour="scholarship-filters"]', 'Saring sesukamu', 'Pilih jenjang, cakupan, atau lokasi. Tekan "Hapus filter" untuk melihat semuanya lagi.'],
+                ['[data-test="scholarship-grid"]', 'Buka detailnya', 'Tekan kartu beasiswa untuk melihat syarat, tenggat, dan tautan ke situs resminya.'],
             ],
             ProductTour::Profiling => [
                 [null, 'Profiling 8 langkah', 'Jawab 8 pertanyaan singkat tentang jenjang, usia, IPK, dan tujuan studimu. Jawabanmu dipakai untuk mencocokkan beasiswa.'],

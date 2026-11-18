@@ -9,7 +9,7 @@ test('login screen can be rendered', function () {
     $response->assertOk();
 });
 
-test('users without a profile are sent to profiling after logging in', function () {
+test('users without a profile are sent to the scholarship catalog after logging in', function () {
     $user = User::factory()->create();
 
     $response = $this->post(route('login.store'), [
@@ -19,7 +19,7 @@ test('users without a profile are sent to profiling after logging in', function 
 
     $response
         ->assertSessionHasNoErrors()
-        ->assertRedirect(route('profiling', absolute: false));
+        ->assertRedirect(route('scholarships.index', absolute: false));
 
     $this->assertAuthenticated();
 });

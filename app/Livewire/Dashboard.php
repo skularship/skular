@@ -178,10 +178,10 @@ class Dashboard extends Component
     ): array {
         if (! $user->hasCompletedProfile()) {
             return [
-                'icon' => 'identification',
-                'title' => __('Lengkapi profiling dulu'),
-                'description' => __('Isi 8 langkah profiling supaya Skular bisa mencocokkanmu dengan beasiswa yang tepat.'),
-                'label' => __('Mulai profiling'),
+                'icon' => 'sparkles',
+                'title' => __('Cari beasiswa yang cocok untukmu'),
+                'description' => __('Jawab beberapa pertanyaan singkat, nanti Skular carikan beasiswa yang paling cocok untukmu.'),
+                'label' => __('Mulai'),
                 'url' => route('profiling'),
                 'action' => null,
                 'tone' => 'brand',
