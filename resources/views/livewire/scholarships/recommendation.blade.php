@@ -3,6 +3,7 @@
     Each card shows only the image, name, match label (never the numeric score), a select checkbox,
     a primary-choice star and a link to the detail page; deadlines, quota, location and the
     eligibility reasons live on the detail page. The 5-scholarship cap is enforced server-side.
+    Matches are paginated (6 per page); selections persist across pages in $wire.selected.
 --}}
 <div class="mx-auto flex w-full max-w-6xl flex-col gap-6" x-data>
         <x-ui.section-heading
@@ -149,6 +150,12 @@
                     </li>
                 @endforeach
             </ul>
+
+            @if ($matches->hasPages())
+                <div data-test="recommendation-pagination">
+                    {{ $matches->links() }}
+                </div>
+            @endif
 
             {{-- Sit above the fixed mobile tab bar; `bottom-4` would hide the
                  save action behind it until the page is scrolled further. --}}

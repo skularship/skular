@@ -11,18 +11,30 @@ use App\Enums\ActivityName;
 use App\Models\User;
 use App\Services\ScholarshipApplicationService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 /**
+ * Lists the scholarships matched to the mentee's profile after profiling,
+ * six cards per page, and stores the mentee's selection (max five).
+ *
  * @property-read Collection<int, ScholarshipMatchData> $matches
  */
 #[Title('Rekomendasi Beasiswa')]
 class Recommendation extends Component
 {
+    use WithPagination;
+
+    /**
+     * Number of scholarship cards shown per page.
+     */
+    public const PER_PAGE = 6;
+
     /**
      * Scholarship ids selected by the mentee.
      *
@@ -161,8 +173,27 @@ class Recommendation extends Component
      */
     public function render(): View
     {
+        $matches = $this->matches;
+        $page = $this->getPage();
+
+        // The matcher ranks in memory, so the ranked list is sliced here. A page
+        // beyond the last one (e.g. after the profile changes) falls back to the last page.
+        $last_page = max(1, (int) ceil($matches->count() / self::PER_PAGE));
+
+        if ($page > $last_page) {
+            $this->setPage($last_page);
+            $page = $last_page;
+        }
+
+        $paginated = new LengthAwarePaginator(
+            $matches->forPage($page, self::PER_PAGE)->values(),
+            $matches->count(),
+            self::PER_PAGE,
+            $page,
+        );
+
         return view('livewire.scholarships.recommendation', [
-            'matches' => $this->matches,
+            'matches' => $paginated,
             'max_selections' => ScholarshipApplicationService::MAX_SELECTIONS,
         ]);
     }

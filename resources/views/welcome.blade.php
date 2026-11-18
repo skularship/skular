@@ -414,10 +414,6 @@
                             {{ __('Sudah Submit') }}
                         </div>
                         </div>
-
-                        <figcaption class="mt-4 text-xs text-zinc-700 sm:mt-9">
-                            {{ __('Ilustrasi tampilan, bukan data pengguna.') }}
-                        </figcaption>
                     </figure>
                 </div>
             </section>
@@ -660,15 +656,32 @@
                 </div>
             </section>
 
-            {{-- Harga: prices come from PricingService; hidden while PREMIUM_ENABLED is off. --}}
+            {{-- Harga: prices come from PricingService; hidden while PREMIUM_ENABLED is off. Order: Gratis, 12 bulan (featured), 1 bulan. --}}
             @if (config('pricing.enabled'))
                 @inject('pricing', 'App\Contracts\PricingServiceInterface')
-                @php($quotes = $pricing->quotes())
+                @php
+                    $quotes = $pricing->quotes()->sortByDesc('months');
+                    $pro_features = [
+                        [__('Vault dokumen dan checklist berkas tiap beasiswa'), false],
+                        [__('Pengingat deadline email untuk semua beasiswa pilihanmu'), false],
+                        [__('Review esai/CV dan latihan wawancara AI'), true],
+                        [__('Video, live class, dan template dokumen'), true],
+                    ];
+                    $pro_peek = [
+                        ['isi-sekali', __('Isi sekali, daftar banyak')],
+                        ['tracker', __('Tracker beasiswa')],
+                        ['review-esai', __('Review esai AI')],
+                        ['wawancara', __('Latihan wawancara AI')],
+                        ['video-live', __('Video & live class')],
+                        ['template', __('Template dokumen')],
+                    ];
+                @endphp
 
                 <section id="harga" class="scroll-mt-28 bg-warm-sand py-20 sm:py-28" aria-labelledby="harga-heading">
                     <div class="mx-auto w-full max-w-6xl px-4 sm:px-6">
-                        <div class="max-w-2xl" data-reveal>
-                            <h2 id="harga-heading" class="text-3xl leading-tight font-extrabold tracking-tight sm:text-5xl">
+                        <div class="mx-auto max-w-2xl text-center" data-reveal>
+                            <x-ui.pill variant="brand" icon="sparkles">{{ __('Harga') }}</x-ui.pill>
+                            <h2 id="harga-heading" class="mt-4 text-3xl leading-tight font-extrabold tracking-tight text-balance sm:text-5xl">
                                 {{ __('Mulai gratis. Naik ke Pro saat kamu butuh.') }}
                             </h2>
                             <p class="mt-4 leading-relaxed text-zinc-600">
@@ -676,29 +689,61 @@
                             </p>
                         </div>
 
-                        <div class="mt-12 grid gap-6 lg:grid-cols-3 lg:items-stretch" data-reveal data-test="landing-pricing">
-                            <div class="clay flex flex-col gap-3 rounded-4xl bg-white p-6">
-                                <p class="font-bold text-zinc-900">{{ __('Gratis') }}</p>
-                                <p class="text-4xl font-extrabold tracking-tight text-zinc-900">Rp0</p>
-                                <p class="text-sm text-zinc-600">{{ __('Info semua beasiswa, profiling, rekomendasi, dan roadmap belajar. Tiap fitur Pro bisa dicoba sedikit.') }}</p>
-                                <x-landing.cta :href="route('register')" variant="quiet" class="mt-auto w-full">{{ __('Mulai gratis') }}</x-landing.cta>
+                        <div class="mt-14 grid gap-8 md:grid-cols-2 lg:grid-cols-3 lg:items-stretch lg:gap-6" data-reveal data-test="landing-pricing">
+                            <div class="flex flex-col rounded-[1.75rem] border-2 border-zinc-200 bg-white p-6 sm:p-7">
+                                <p class="text-lg font-bold text-zinc-900">{{ __('Gratis') }}</p>
+                                <p class="text-sm text-zinc-500">{{ __('Untuk mulai kenalan') }}</p>
+                                <p class="mt-4 text-4xl font-extrabold tracking-tight text-zinc-900">Rp0</p>
+                                <p class="mt-1 text-sm text-zinc-600">{{ __('Selamanya, tanpa kartu.') }}</p>
+
+                                <ul class="mt-5 flex flex-col gap-2.5 border-t border-dashed border-zinc-200 pt-5 text-sm text-zinc-700">
+                                    @foreach ([__('Info semua beasiswa'), __('Profiling, rekomendasi, dan roadmap belajar'), __('Tiap fitur Pro bisa dicoba sedikit')] as $point)
+                                        <li class="flex items-start gap-2">
+                                            <x-icons.app-icon name="check" class="mt-0.5 size-4 text-brand-teal" />
+                                            {{ $point }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+
+                                <div class="mt-auto pt-6">
+                                    <x-landing.cta :href="route('register')" variant="quiet" class="w-full rounded-full">{{ __('Mulai gratis') }}</x-landing.cta>
+                                </div>
                             </div>
 
                             @foreach ($quotes as $quote)
                                 <x-pricing.price-card
                                     :quote="$quote"
                                     :featured="$quote->months > 1"
+                                    :features="$pro_features"
                                     :href="route('premium', ['paket' => $quote->code])"
                                     :cta="__('Ambil :months bulan', ['months' => $quote->months])"
                                 />
                             @endforeach
                         </div>
 
-                        <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-zinc-600" data-reveal>
-                            <span class="font-semibold">QRIS &middot; GoPay &middot; {{ __('Virtual account') }} &middot; {{ __('Kartu') }}</span>
-                            <span>{{ __('Aktif setelah bayar. Tanpa auto-renew.') }}</span>
-                            <a href="https://wa.me/{{ config('services.support.whatsapp') }}?text={{ rawurlencode('Halo Skular, saya mau tanya soal paket Pro.') }}" target="_blank" rel="noopener" class="font-semibold text-brand-teal hover:underline">{{ __('Tanya lewat WhatsApp') }}</a>
-                            <a href="{{ route('premium') }}" class="font-semibold text-brand-teal hover:underline">{{ __('Lihat semua manfaat dan perbandingan') }} &rarr;</a>
+                        <div class="mt-10 flex flex-col items-center gap-3 text-sm text-zinc-600 sm:flex-row sm:justify-center sm:gap-6" data-reveal>
+                            <x-pricing.payment-methods class="justify-center" />
+                            <a href="https://wa.me/{{ config('services.support.whatsapp') }}?text={{ rawurlencode('Halo Skular, saya mau tanya soal paket Pro.') }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 font-semibold text-emerald-700 hover:underline">
+                                <x-icons.app-icon name="chat-bubble-oval-left-ellipsis" class="size-4" />
+                                {{ __('Tanya lewat WhatsApp') }}
+                            </a>
+                        </div>
+
+                        {{-- Peek at what Pro unlocks --}}
+                        <div class="mt-16" data-reveal>
+                            <div class="flex flex-wrap items-end justify-between gap-3">
+                                <h3 class="text-xl font-extrabold tracking-tight text-zinc-900 sm:text-2xl">{{ __('Yang kebuka di Pro') }}</h3>
+                                <a href="{{ route('premium') }}" class="text-sm font-semibold text-brand-teal hover:underline">{{ __('Lihat semua manfaat dan perbandingan') }} &rarr;</a>
+                            </div>
+
+                            <div class="-mx-4 mt-5 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 lg:grid-cols-6">
+                                @foreach ($pro_peek as [$image, $label])
+                                    <a href="{{ route('premium') }}" class="group w-40 shrink-0 snap-start sm:w-auto">
+                                        <img src="{{ asset('images/pro/'.$image.'.webp') }}" alt="" width="600" height="380" loading="lazy" decoding="async" class="aspect-[600/380] w-full rounded-2xl object-cover transition group-hover:-translate-y-1" />
+                                        <span class="mt-2 block text-sm leading-snug font-bold text-zinc-800">{{ $label }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -733,10 +778,6 @@
                                     <x-landing.cta :href="route('register')" size="lg" iconTrailing="arrow-right">
                                         {{ __('Mulai Sekarang') }}
                                     </x-landing.cta>
-
-                                    <x-landing.cta :href="route('login')" size="lg" variant="inverse">
-                                        {{ __('Masuk') }}
-                                    </x-landing.cta>
                                 @endauth
 
                                 @if (config('pricing.enabled'))
@@ -745,9 +786,6 @@
                                     </x-landing.cta>
                                 @endif
                             </div>
-                            <p class="text-sm text-brand-teal-soft lg:text-right">
-                                {{ __('Hasil seleksi tetap ditentukan penyelenggara beasiswa.') }}
-                            </p>
                         </div>
                     </div>
                 </div>

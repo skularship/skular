@@ -4,7 +4,6 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
-use BezhanSalleh\GoogleAnalytics\GoogleAnalyticsPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -125,7 +124,10 @@ class AdminPanelProvider extends PanelProvider
             ->plugins([
                 FilamentShieldPlugin::make(),
                 BreezyCore::make(),
-                GoogleAnalyticsPlugin::make(),
+                // Google Analytics lives in App\Filament\Pages\SiteAnalytics. The
+                // filament-google-analytics plugin page is not registered: its
+                // widgets ran every filter's GA4 queries on each render (~50
+                // untimed calls) and crashed on any API error.
             ]);
     }
 }

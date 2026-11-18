@@ -174,10 +174,10 @@
                 @endphp
 
                 <x-ui.card :variant="$is_selected ? 'mint' : 'plain'" hover class="flex h-full flex-col gap-4" data-test="scholarship-card">
-                    <div class="flex items-start justify-between gap-3">
-                        <x-ui.icon-badge icon="academic-cap" :tone="$is_selected ? 'mint' : 'teal'" solid />
+                    <div class="relative -mx-6 -mt-6 aspect-2/1 overflow-hidden rounded-t-3xl">
+                        <x-scholarship.card-image :url="$scholarship->image_url" :muted="! $is_open" />
 
-                        <div class="flex flex-wrap justify-end gap-2">
+                        <div class="absolute top-3 right-3 flex flex-wrap justify-end gap-2">
                             @if ($is_selected)
                                 <x-ui.pill variant="success" icon="check-badge">{{ __('Dipilih') }}</x-ui.pill>
                             @elseif (! $is_open)

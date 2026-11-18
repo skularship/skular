@@ -7,6 +7,7 @@ use App\Enums\AdminRole;
 use App\Enums\EducationLevel;
 use App\Enums\LocationScope;
 use App\Filament\Resources\Scholarships\Pages\EditScholarship;
+use App\Livewire\Scholarships\Index;
 use App\Livewire\Scholarships\Recommendation;
 use App\Livewire\Scholarships\Show;
 use App\Models\Scholarship;
@@ -58,6 +59,28 @@ test('a scholarship card without an image shows the branded placeholder', functi
     Livewire::actingAs(cardMentee())
         ->test(Recommendation::class)
         ->assertSee('Beasiswa Tanpa Gambar')
+        ->assertSeeHtml('data-test="scholarship-image-placeholder"');
+});
+
+test('the all scholarships page and the detail page show the card image or the placeholder', function () {
+    $with_image = cardScholarship(['scholarship_name' => 'Beasiswa Bergambar']);
+    $with_image->forceFill(['image_path' => 'scholarships/kartu.webp'])->saveQuietly();
+    $without_image = cardScholarship(['scholarship_name' => 'Beasiswa Tanpa Gambar']);
+    $mentee = cardMentee();
+    $image_html = 'src="'.Storage::disk('public')->url('scholarships/kartu.webp').'"';
+
+    Livewire::actingAs($mentee)
+        ->test(Index::class)
+        ->assertSeeHtml($image_html)
+        ->assertSeeHtml('data-test="scholarship-image-placeholder"');
+
+    Livewire::actingAs($mentee)
+        ->test(Show::class, ['scholarship' => $with_image])
+        ->assertSeeHtml($image_html)
+        ->assertDontSeeHtml('data-test="scholarship-image-placeholder"');
+
+    Livewire::actingAs($mentee)
+        ->test(Show::class, ['scholarship' => $without_image])
         ->assertSeeHtml('data-test="scholarship-image-placeholder"');
 });
 

@@ -47,11 +47,17 @@
                 @endif
             </div>
 
-            <div>
-                <h1 class="text-3xl font-extrabold tracking-tight break-words sm:text-4xl">{{ $scholarship->scholarship_name }}</h1>
-                @if (filled($scholarship->institution))
-                    <p class="mt-1.5 text-sm text-white/80 sm:text-base">{{ $scholarship->institution }}</p>
-                @endif
+            <div class="flex items-center gap-4 sm:gap-5">
+                <div class="size-20 shrink-0 overflow-hidden rounded-3xl bg-white/90 shadow-soft ring-2 ring-white/30 sm:size-24">
+                    <x-scholarship.card-image :url="$scholarship->image_url" :muted="! $scholarship->isOpen()" />
+                </div>
+
+                <div class="min-w-0">
+                    <h1 class="text-3xl font-extrabold tracking-tight break-words sm:text-4xl">{{ $scholarship->scholarship_name }}</h1>
+                    @if (filled($scholarship->institution))
+                        <p class="mt-1.5 text-sm text-white/80 sm:text-base">{{ $scholarship->institution }}</p>
+                    @endif
+                </div>
             </div>
 
             <div class="flex flex-wrap gap-2">

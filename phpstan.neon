@@ -11,3 +11,8 @@ parameters:
         - routes/
 
     level: 7
+
+    # google/protobuf declares Internal\RepeatedField only as a runtime
+    # class_alias; loading the file lets PHPStan resolve the GA4 client types.
+    bootstrapFiles:
+        - vendor/google/protobuf/src/Google/Protobuf/RepeatedField.php

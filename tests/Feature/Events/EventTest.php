@@ -149,13 +149,16 @@ test('the meeting link is shown only to registered mentees from H-1', function (
 });
 
 test('the calendar file holds the event page and never the meeting link', function () {
-    $event = Event::factory()->create(['location_url' => 'https://meet.example.com/rahasia']);
+    $event = Event::factory()->create([
+        'title' => 'Webinar LPDP, Esai; Wawancara',
+        'location_url' => 'https://meet.example.com/rahasia',
+    ]);
 
     $response = $this->actingAs($this->mentee)->get(route('events.calendar', $event))->assertOk();
 
     expect($response->headers->get('Content-Type'))->toContain('text/calendar')
         ->and($response->getContent())->toContain('BEGIN:VEVENT')
-        ->and($response->getContent())->toContain('SUMMARY:'.$event->title)
+        ->and($response->getContent())->toContain('SUMMARY:Webinar LPDP\, Esai\; Wawancara')
         ->and($response->getContent())->not->toContain('meet.example.com');
 });
 

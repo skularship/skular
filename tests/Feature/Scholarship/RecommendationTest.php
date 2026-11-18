@@ -179,3 +179,67 @@ test('only active scholarships can be selected', function () {
         ->call('confirmSelection')
         ->assertHasErrors('selected');
 });
+
+test('recommendations are paginated six per page', function () {
+    $mentee = User::factory()->profiled()->create([
+        'level' => EducationLevel::S1,
+        'desired_location' => LocationScope::DalamNegeri,
+    ]);
+
+    Scholarship::factory()->count(8)->forLevel(EducationLevel::S1)->withoutRequirements()->create([
+        'scope' => LocationScope::DalamNegeri,
+    ]);
+
+    $component = Livewire::actingAs($mentee)->test(Recommendation::class);
+
+    $first_page = $component->viewData('matches');
+
+    expect($first_page->count())->toBe(6)
+        ->and($first_page->total())->toBe(8);
+
+    $component->assertSeeHtml('data-test="recommendation-pagination"');
+
+    $second_page = $component->call('nextPage')->viewData('matches');
+
+    expect($second_page->count())->toBe(2)
+        ->and($second_page->currentPage())->toBe(2);
+});
+
+test('pagination is hidden when every recommendation fits on one page', function () {
+    $mentee = User::factory()->profiled()->create([
+        'level' => EducationLevel::S1,
+        'desired_location' => LocationScope::DalamNegeri,
+    ]);
+
+    Scholarship::factory()->count(3)->forLevel(EducationLevel::S1)->withoutRequirements()->create([
+        'scope' => LocationScope::DalamNegeri,
+    ]);
+
+    Livewire::actingAs($mentee)
+        ->test(Recommendation::class)
+        ->assertDontSeeHtml('data-test="recommendation-pagination"');
+});
+
+test('selections made on another page are kept when confirming', function () {
+    $mentee = User::factory()->profiled()->create([
+        'level' => EducationLevel::S1,
+        'desired_location' => LocationScope::DalamNegeri,
+    ]);
+
+    Scholarship::factory()->count(8)->forLevel(EducationLevel::S1)->withoutRequirements()->create([
+        'scope' => LocationScope::DalamNegeri,
+    ]);
+
+    $component = Livewire::actingAs($mentee)->test(Recommendation::class);
+    $first_id = $component->viewData('matches')->first()->scholarship->id;
+
+    $component->set('selected', [$first_id])->call('nextPage');
+    $second_id = $component->viewData('matches')->first()->scholarship->id;
+
+    $component->set('selected', [$first_id, $second_id])
+        ->call('confirmSelection')
+        ->assertRedirect(route('dashboard'));
+
+    expect($mentee->scholarshipApplications()->pluck('scholarship_id')->map(fn ($id) => (int) $id)->sort()->values()->all())
+        ->toBe(collect([$first_id, $second_id])->sort()->values()->all());
+});

@@ -24,7 +24,7 @@ Versi diambil dari `composer.json` dan `package.json`.
 |---|---|
 | Bahasa & framework | PHP `^8.3` (diuji 8.5), Laravel `^13.17` |
 | UI publik | Livewire `^4.1` (halaman didaftarkan dengan `Route::livewire()`), Alpine.js (bawaan Livewire), Flux `^2.13` |
-| Admin | Filament `^5.0` di `/admin` + filament-shield `^4.3` (role/permission), filament-breezy `^3.2` (2FA admin), filament-google-analytics `^3.3` |
+| Admin | Filament `^5.0` di `/admin` + filament-shield `^4.3` (role/permission), filament-breezy `^3.2` (2FA admin), filament-google-analytics `^3.3` (hanya sebagai penyedia klien GA4; halaman analitik = `App\Filament\Pages\SiteAnalytics`) |
 | CSS & build | Tailwind CSS `^4` (`@tailwindcss/vite`), Vite Plus `0.3.3` (`vp build` / `vp dev`), laravel-vite-plugin `^3.1` |
 | Render Blade | livewire/blaze `^1.0` (mengompilasi `resources/views/components`) |
 | Autentikasi | Laravel Fortify `^1.37` (email/password, verifikasi email, 2FA TOTP, passkey via `@laravel/passkeys`), Socialite `^5.31` (Google) |
@@ -91,7 +91,7 @@ Nilai rahasia tidak pernah ditulis di dokumentasi. Daftar lengkap ada di [`.env.
 | `AI_MODULE_CHAT_LIMIT` | Jumlah pertanyaan AI Mentor ke model per mentee per modul. Default `5` | Opsional |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | Login Google. Bila kosong, tombol Google mengembalikan ke halaman login | Opsional |
 | `PASSKEYS_USER_HANDLE_SECRET` | Secret user handle passkey. Default `APP_KEY`; biarkan dikomentari bila tidak dipakai | Opsional |
-| `ANALYTICS_PROPERTY_ID` | Property GA4 untuk dashboard analitik admin (+ file kredensial `storage/app/analytics/service-account-credentials.json`) | Opsional |
+| `ANALYTICS_PROPERTY_ID` | ID numerik property GA4 (bukan `G-XXXX`) untuk halaman Google Analytics admin (`SiteAnalyticsService`) + file kredensial `storage/app/analytics/service-account-credentials.json`. Email service account wajib ditambahkan sebagai **Viewer** di GA4 → Admin → Property access management; tanpa itu halaman menampilkan pesan "belum punya akses". Cache: hari ini 5 menit, periode lain 1 jam | Opsional |
 | `GA_MEASUREMENT_ID` | Tag tracking GA4 di halaman publik (format `G-XXXXXXXXXX`, hanya production, tidak di `/admin`); beda dengan `ANALYTICS_PROPERTY_ID` | Opsional |
 | `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION` | Kunci Midtrans Snap (sandbox dulu, production setelah akun disetujui). Server key rahasia, jangan di repo | Wajib bila `PREMIUM_ENABLED=true` |
 | `QUEUE_CONNECTION` (worker) | Pembayaran dan reminder (termasuk pengingat event) berjalan di antrean. Production wajib menjalankan `php artisan queue:work --queue=payments,reminders,default` (Supervisor) dan scheduler (`schedule:run` tiap menit) | Wajib bila `PREMIUM_ENABLED=true` atau ada event terbit |
