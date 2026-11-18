@@ -11,7 +11,9 @@ use App\Models\Checkpoint;
 use App\Models\Module;
 use App\Models\Scholarship;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Resolves the progress of a mentee inside their active curriculum.
@@ -81,6 +83,11 @@ interface ProgressServiceInterface
 
     /**
      * Mark a module as completed and unlock the next one.
+     *
+     * Requires saved, assessed practice and the mandatory module feedback.
+     *
+     * @throws AuthorizationException When the module is locked.
+     * @throws ValidationException When practice or feedback is missing.
      */
     public function completeModule(User $user, Module $module, ?int $score = null): Checkpoint;
 

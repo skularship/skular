@@ -70,7 +70,11 @@ test('the checkpoint and module feedback actions are refused on the server while
         ->call('confirmCheckpoint')
         ->assertHasErrors('checkpoint')
         ->assertSet('module_completed', false)
-        ->set('ratings', ['Materi mudah dipahami'])
+        ->set('helpful_score', 5)
+        ->set('difficulty', 'tidak_ada')
+        ->set('open_answer', 'Contoh esainya membantu aku menyusun cerita.')
+        ->call('submitFeedbackAndContinue')
+        ->assertHasErrors('checkpoint')
         ->call('saveModuleFeedback')
         ->assertHasErrors('module_feedback');
 
@@ -98,7 +102,10 @@ test('a failed assessment offers a re-assessment that opens the checkpoint once 
         ->assertDontSeeHtml('data-test="checkpoint-step-locked"')
         ->call('goToSection', 'checkpoint')
         ->assertSet('section', 'checkpoint')
-        ->call('confirmCheckpoint')
+        ->set('helpful_score', 4)
+        ->set('difficulty', 'praktik')
+        ->set('open_answer', 'Bagian praktik bikin aku sadar ceritaku belum runtut.')
+        ->call('submitFeedbackAndContinue')
         ->assertSet('module_completed', true);
 });
 
@@ -122,9 +129,13 @@ test('a completed assessment opens the checkpoint and module feedback', function
         ->assertSee('Hasil penilaian AI')
         ->assertSee('Baik')
         ->assertDontSee('Rata-rata skor AI')
-        ->set('ratings', ['Materi mudah dipahami'])
-        ->call('saveModuleFeedback')
-        ->assertHasNoErrors();
+        ->assertSeeHtml('data-test="module-feedback-form"')
+        ->set('helpful_score', 5)
+        ->set('difficulty', 'tidak_ada')
+        ->set('open_answer', 'Contoh esainya membantu aku menyusun cerita.')
+        ->call('submitFeedbackAndContinue')
+        ->assertHasNoErrors()
+        ->assertSet('module_completed', true);
 
     expect($this->mentee->moduleFeedbacks()->count())->toBe(1);
 });

@@ -55,6 +55,9 @@ class DemoMenteeSeeder extends Seeder
         );
 
         $this->acceptLegalDocuments($in_progress);
+        // Profiled demo mentees already agreed to the free-access commitment,
+        // so their modules open directly (Rani still sees it after profiling).
+        $in_progress->forceFill(['feedback_commitment_at' => now()])->save();
         $this->seedProgress($in_progress, completed_modules: 3);
 
         // Mentee who already reported an accepted result (twibbon demo).
@@ -77,6 +80,7 @@ class DemoMenteeSeeder extends Seeder
         );
 
         $this->acceptLegalDocuments($accepted);
+        $accepted->forceFill(['feedback_commitment_at' => now()])->save();
         $this->seedProgress($accepted, completed_modules: 6);
 
         $accepted_scholarship = Scholarship::query()->where('status', 'active')->first();

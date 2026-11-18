@@ -4,6 +4,7 @@ use App\Contracts\AiFeedbackServiceInterface;
 use App\Data\AiFeedbackData;
 use App\Enums\AiFeedbackStatus;
 use App\Enums\CheckpointStatus;
+use App\Enums\FeedbackDifficulty;
 use App\Exceptions\AiFeedbackException;
 use App\Livewire\Learning\ModulePlayer;
 use App\Models\Fase;
@@ -188,6 +189,8 @@ test('a failed ai request keeps the submission and offers a retry', function () 
 });
 
 test('confirming the checkpoint completes the module and unlocks the next one', function () {
+    giveModuleFeedback($this->mentee, $this->module);
+
     Livewire::actingAs($this->mentee)
         ->test(ModulePlayer::class, ['module' => $this->module])
         ->call('confirmCheckpoint')
@@ -226,6 +229,8 @@ test('the checkpoint can be confirmed once every practice form is submitted', fu
         'attempts' => 1,
         'submitted_at' => now(),
     ]);
+
+    giveModuleFeedback($this->mentee, $this->module);
 
     Livewire::actingAs($this->mentee)
         ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'checkpoint'])
@@ -349,16 +354,20 @@ test('restoring the same section from browser history does not ask the page to s
 test('module feedback is stored for the admin report', function () {
     Livewire::actingAs($this->mentee)
         ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'checkpoint'])
-        ->set('ratings', ['Materi mudah dipahami', 'AI feedback membantu'])
-        ->set('suggestion', 'Tambahkan contoh esai.')
-        ->call('saveModuleFeedback')
+        ->set('helpful_score', 2)
+        ->set('difficulty', 'materi')
+        ->set('open_answer', 'Aku bingung di bagian contoh kedua, terlalu cepat.')
+        ->set('low_score_reason', 'Penjelasannya kurang contoh yang dekat dengan kondisiku.')
+        ->call('submitFeedbackAndContinue')
         ->assertHasNoErrors();
 
     $feedback = $this->mentee->moduleFeedbacks()->firstWhere('module_id', $this->module->id);
 
     expect($feedback)->not->toBeNull()
-        ->and($feedback->ratings)->toBe(['Materi mudah dipahami', 'AI feedback membantu'])
-        ->and($feedback->suggestion)->toBe('Tambahkan contoh esai.');
+        ->and($feedback->helpful_score)->toBe(2)
+        ->and($feedback->difficulty)->toBe(FeedbackDifficulty::Materi)
+        ->and($feedback->open_question)->not->toBeEmpty()
+        ->and($feedback->low_score_reason)->toBe('Penjelasannya kurang contoh yang dekat dengan kondisiku.');
 });
 
 test('pahami only lists filled text insights from the stored json list', function () {

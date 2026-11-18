@@ -12,6 +12,7 @@ use App\Data\PracticeFieldData;
 use App\Enums\ActivityName;
 use App\Enums\AiFeedbackStatus;
 use App\Enums\CheckpointStatus;
+use App\Enums\FeedbackDifficulty;
 use App\Enums\PracticeFieldType;
 use App\Models\Module;
 use App\Models\PracticeForm;
@@ -21,6 +22,7 @@ use App\Models\UserPracticeResponse;
 use App\Services\ModuleFeedbackService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -86,13 +88,24 @@ class ModulePlayer extends Component
     public bool $quick_checked = false;
 
     /**
-     * Module feedback checklist selected by the mentee.
-     *
-     * @var array<int, string>
+     * "Seberapa membantu modul ini?" (1-5) in the mandatory module feedback.
      */
-    public array $ratings = [];
+    public ?int $helpful_score = null;
 
-    public ?string $suggestion = null;
+    /**
+     * "Bagian mana yang paling menyulitkan?" (FeedbackDifficulty value).
+     */
+    public string $difficulty = '';
+
+    /**
+     * Answer to the module's open feedback question.
+     */
+    public string $open_answer = '';
+
+    /**
+     * Why the module was not helpful; required for a score of 1-3.
+     */
+    public string $low_score_reason = '';
 
     public bool $module_completed = false;
 
@@ -141,6 +154,12 @@ class ModulePlayer extends Component
 
         if ($checkpoint === null || $checkpoint->status === CheckpointStatus::Locked) {
             throw new AuthorizationException('Modul ini masih terkunci. Selesaikan modul sebelumnya dulu ya.');
+        }
+
+        // Free access comes with honest feedback per module: no module opens
+        // before the mentee agreed on the commitment screen.
+        if (! $user->hasFeedbackCommitment()) {
+            throw new HttpResponseException(redirect()->route('feedback.commitment', ['modul' => $module->id]));
         }
 
         $this->module = $module->loadMissing(['fase', 'practiceForms', 'quickQuestions', 'scholarship', 'coreSections']);
@@ -393,7 +412,12 @@ class ModulePlayer extends Component
     }
 
     /**
-     * Store the feedback the mentee leaves for this module.
+     * Store (or update) the feedback the mentee leaves for this module.
+     *
+     * Used on a module that is already completed; an open module sends the
+     * feedback together with the checkpoint (submitFeedbackAndContinue).
+     *
+     * @throws ValidationException When the feedback is incomplete or junk.
      */
     public function saveModuleFeedback(): void
     {
@@ -406,20 +430,43 @@ class ModulePlayer extends Component
             return;
         }
 
-        app(ModuleFeedbackServiceInterface::class)->save(
-            $this->user(),
-            $this->module,
-            $this->ratings,
-            $this->suggestion,
-        );
-
-        app(ActivityTrackerInterface::class)->track(ActivityName::FeedbackSubmitted, ['module_id' => $this->module->id], $this->user());
+        $this->storeFeedback();
 
         $this->dispatch('toast', variant: 'success', text: __('Terima kasih, masukanmu tersimpan!'));
     }
 
     /**
-     * Confirm the checkpoint manually and unlock the next module.
+     * "Kirim masukan & lanjut": store the mandatory feedback, then complete
+     * the module and unlock the next one, in one click.
+     *
+     * @throws ValidationException When the feedback is incomplete or junk.
+     */
+    public function submitFeedbackAndContinue(ProgressServiceInterface $progress_service): void
+    {
+        if ($this->module_completed) {
+            $this->saveModuleFeedback();
+
+            return;
+        }
+
+        $blocked = $this->checkpointBlockMessage();
+
+        if ($blocked !== null) {
+            $this->addError('checkpoint', $blocked);
+
+            return;
+        }
+
+        $this->storeFeedback();
+
+        $this->completeCheckpoint($progress_service);
+    }
+
+    /**
+     * Confirm the checkpoint and unlock the next module.
+     *
+     * Refused until the mandatory module feedback is stored; the same rule is
+     * enforced again in ProgressService::completeModule().
      */
     public function confirmCheckpoint(ProgressServiceInterface $progress_service): void
     {
@@ -435,6 +482,43 @@ class ModulePlayer extends Component
             return;
         }
 
+        if (! app(ModuleFeedbackServiceInterface::class)->hasSubmitted($this->user(), $this->module)) {
+            $this->addError('checkpoint', __('Isi masukan singkat dulu ya, setelah itu modul berikutnya terbuka.'));
+
+            return;
+        }
+
+        $this->completeCheckpoint($progress_service);
+    }
+
+    /**
+     * Validate and store the feedback form, and record it in the behaviour log.
+     *
+     * @throws ValidationException When the feedback is incomplete or junk.
+     */
+    private function storeFeedback(): void
+    {
+        $this->resetErrorBag(['helpful_score', 'difficulty', 'open_answer', 'low_score_reason']);
+
+        $feedback = app(ModuleFeedbackServiceInterface::class)->submit($this->user(), $this->module, [
+            'helpful_score' => $this->helpful_score,
+            'difficulty' => $this->difficulty,
+            'open_answer' => $this->open_answer,
+            'low_score_reason' => $this->low_score_reason,
+        ]);
+
+        app(ActivityTrackerInterface::class)->track(ActivityName::FeedbackSubmitted, [
+            'module_id' => $this->module->id,
+            'helpful_score' => $feedback->helpful_score,
+            'difficulty' => $feedback->difficulty?->value,
+        ], $this->user());
+    }
+
+    /**
+     * Complete the module through the progress service and tell the mentee.
+     */
+    private function completeCheckpoint(ProgressServiceInterface $progress_service): void
+    {
         $progress_service->completeModule($this->user(), $this->module, $this->averageScore());
 
         $this->module_completed = true;
@@ -655,9 +739,11 @@ class ModulePlayer extends Component
 
         $feedback = $user->moduleFeedbacks()->where('module_id', $this->module->id)->first();
 
-        if ($feedback !== null) {
-            $this->ratings = array_values(is_array($feedback->ratings) ? $feedback->ratings : []);
-            $this->suggestion = $feedback->suggestion;
+        if ($feedback !== null && $feedback->helpful_score !== null) {
+            $this->helpful_score = $feedback->helpful_score;
+            $this->difficulty = $feedback->difficulty->value ?? '';
+            $this->open_answer = (string) $feedback->open_answer;
+            $this->low_score_reason = (string) $feedback->low_score_reason;
         }
     }
 
@@ -781,7 +867,10 @@ class ModulePlayer extends Component
             'forms' => $this->activeForms,
             'questions' => $this->questions,
             'responses' => $this->responses(),
-            'rating_options' => ModuleFeedbackService::RATING_OPTIONS,
+            'difficulty_options' => FeedbackDifficulty::options(),
+            'open_question' => app(ModuleFeedbackServiceInterface::class)->openQuestionFor($this->module),
+            'low_score_max' => ModuleFeedbackService::LOW_SCORE_MAX,
+            'min_text_length' => ModuleFeedbackService::MIN_TEXT_LENGTH,
             'average_score' => $this->averageScore(),
             'checkpoint_block' => $this->checkpointBlock(),
             'checkpoint_block_message' => $this->checkpointBlockMessage(),

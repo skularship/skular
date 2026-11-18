@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Module;
+use App\Models\ModuleFeedback;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +47,13 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Store the mandatory end-of-module feedback, which ProgressService::completeModule() requires.
+ */
+function giveModuleFeedback(User $user, Module $module): ModuleFeedback
 {
-    // ..
+    return ModuleFeedback::factory()->create([
+        'user_id' => $user->id,
+        'module_id' => $module->id,
+    ]);
 }

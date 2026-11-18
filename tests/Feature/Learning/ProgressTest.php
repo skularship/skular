@@ -44,6 +44,7 @@ test('completing a module unlocks the next one', function () {
     $mentee = User::factory()->profiled()->create();
 
     $progress = app(ProgressServiceInterface::class);
+    giveModuleFeedback($mentee, $first);
     $progress->completeModule($mentee, $first, 90);
 
     $modules = collect($progress->roadmap($mentee)[0]->modules);
@@ -88,6 +89,7 @@ test('a module with practice forms cannot be completed before they are submitted
         'submitted_at' => now(),
     ]);
 
+    giveModuleFeedback($mentee, $first);
     expect($progress->completeModule($mentee, $first, 80)->status)->toBe(CheckpointStatus::Completed);
 });
 
@@ -117,6 +119,7 @@ test('a module cannot be completed until every submission is assessed by the ai'
     // stored answer is kept untouched.
     $response->update(['ai_status' => AiFeedbackStatus::Completed, 'ai_score' => 75]);
 
+    giveModuleFeedback($mentee, $first);
     expect($progress->completeModule($mentee, $first, 75)->status)->toBe(CheckpointStatus::Completed)
         ->and($response->refresh()->answers['jawaban'])->toBe('Jawaban saya.');
 })->with([
@@ -153,7 +156,9 @@ test('the summary aggregates completed modules, percentage and average score', f
     $mentee = User::factory()->profiled()->create();
 
     $progress = app(ProgressServiceInterface::class);
+    giveModuleFeedback($mentee, $first);
     $progress->completeModule($mentee, $first, 80);
+    giveModuleFeedback($mentee, $second);
     $progress->completeModule($mentee, $second, 90);
 
     $summary = $progress->summary($mentee);
@@ -171,8 +176,11 @@ test('the summary is finished once every module is completed', function () {
     $mentee = User::factory()->profiled()->create();
 
     $progress = app(ProgressServiceInterface::class);
+    giveModuleFeedback($mentee, $first);
     $progress->completeModule($mentee, $first, 80);
+    giveModuleFeedback($mentee, $second);
     $progress->completeModule($mentee, $second, 85);
+    giveModuleFeedback($mentee, $third);
     $progress->completeModule($mentee, $third, 90);
 
     $summary = $progress->summary($mentee);
@@ -198,6 +206,7 @@ test('the roadmap reports per fase progress', function () {
     $mentee = User::factory()->profiled()->create();
 
     $progress = app(ProgressServiceInterface::class);
+    giveModuleFeedback($mentee, $first);
     $progress->completeModule($mentee, $first);
 
     $fase_progress = $progress->roadmap($mentee)[0];

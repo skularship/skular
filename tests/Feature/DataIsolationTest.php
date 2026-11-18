@@ -115,6 +115,7 @@ test('learning progress and practice answers are scoped per mentee', function ()
     ]);
 
     $progress = app(ProgressServiceInterface::class);
+    giveModuleFeedback($other, $module);
     $progress->completeModule($other, $module, 90);
 
     // The other mentee progressed, but this mentee's own learning state is untouched.

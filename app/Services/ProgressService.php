@@ -16,6 +16,7 @@ use App\Enums\ModuleCategory;
 use App\Models\Checkpoint;
 use App\Models\Fase;
 use App\Models\Module;
+use App\Models\ModuleFeedback;
 use App\Models\PracticeForm;
 use App\Models\Scholarship;
 use App\Models\User;
@@ -416,6 +417,13 @@ class ProgressService implements ProgressServiceInterface
 
     /**
      * Mark a module as completed and unlock the next module of the path.
+     *
+     * Requires every practice to be saved and assessed, and the mandatory
+     * module feedback. A module completed before keeps its status and is
+     * never asked for feedback afterwards.
+     *
+     * @throws AuthorizationException When the module is locked or outside the path.
+     * @throws ValidationException When practice or the module feedback is missing.
      */
     public function completeModule(User $user, Module $module, ?int $score = null): Checkpoint
     {
@@ -438,6 +446,8 @@ class ProgressService implements ProgressServiceInterface
         if ($checkpoint->isCompleted()) {
             return $checkpoint;
         }
+
+        $this->assertFeedbackSubmitted($user, $module);
 
         $checkpoint->status = CheckpointStatus::Completed;
         $checkpoint->completed_at = now();
@@ -662,6 +672,29 @@ class ProgressService implements ProgressServiceInterface
         if ($statuses->contains(fn (mixed $status): bool => $status !== AiFeedbackStatus::Completed->value)) {
             throw ValidationException::withMessages([
                 'checkpoint' => 'Tunggu sampai semua jawabanmu selesai dinilai AI. Bila penilaian gagal, tekan "Nilai ulang" di langkah Praktik.',
+            ]);
+        }
+    }
+
+    /**
+     * Ensure the mentee sent the mandatory module feedback (with a helpfulness score).
+     *
+     * Second layer behind ModulePlayer: no caller can complete a module and
+     * unlock the next one without the feedback.
+     *
+     * @throws ValidationException When no feedback with a score exists for the module.
+     */
+    private function assertFeedbackSubmitted(User $user, Module $module): void
+    {
+        $submitted = ModuleFeedback::query()
+            ->where('user_id', $user->id)
+            ->where('module_id', $module->id)
+            ->whereNotNull('helpful_score')
+            ->exists();
+
+        if (! $submitted) {
+            throw ValidationException::withMessages([
+                'checkpoint' => 'Isi masukan singkat dulu ya, setelah itu modul berikutnya terbuka.',
             ]);
         }
     }

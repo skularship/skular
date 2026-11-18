@@ -78,7 +78,10 @@ flowchart TD
     B -- tidak --> X404[404]
     B -- ya --> C{checkpointFor: terkunci<br/>atau di luar jalur?}
     C -- ya --> X403[AuthorizationException]
-    C -- tidak --> O[Pembukaan<br/>tujuan, durasi, output]
+    C -- tidak --> K{Sudah setuju komitmen<br/>akses gratis?}
+    K -- belum --> KM[/akses-gratis<br/>Saya setuju/]
+    KM --> O
+    K -- ya --> O[Pembukaan<br/>tujuan, durasi, output]
     O --> P[Pahami<br/>Kata Pengantar → Inti Materi kolom<br/>→ Ringkasan & Insight]
     P --> Q[Quick Question<br/>Benar/Salah, dikoreksi sistem]
     Q --> PR[Praktik<br/>form dinamis + Brainstorming + AI Mentor]
@@ -90,12 +93,14 @@ flowchart TD
     RT --> J
     LBL --> G{Gate checkpoint:<br/>semua form tersimpan<br/>dan selesai dinilai?}
     G -- belum --> PR
-    G -- ya --> CP[Checkpoint<br/>Tandai modul selesai + feedback modul]
-    CP -->|ProgressService::completeModule| N[Modul berikutnya terbuka]
+    G -- ya --> CP[Checkpoint<br/>masukan wajib: skor 1-5, bagian tersulit,<br/>pertanyaan terbuka, alasan bila skor 1-3]
+    CP -->|Kirim masukan & lanjut:<br/>ModuleFeedbackService::submit<br/>lalu ProgressService::completeModule| N[Modul berikutnya terbuka]
 ```
 
 Catatan:
 
+- **Komitmen akses gratis** (`users.feedback_commitment_at`): mentee menyetujui sekali bahwa akses gratis dibayar dengan masukan jujur di akhir setiap modul. Tampil sebagai langkah terakhir profiling (`Profiling\Wizard::submit()` → `/akses-gratis`) atau saat pertama membuka modul, mana yang lebih dulu. `ModulePlayer::mount()` mengalihkan ke `/akses-gratis?modul={id}` selama belum setuju.
+- **Masukan wajib per modul** (`ModuleFeedbackService::submit()`): skor membantu 1-5, bagian tersulit (`FeedbackDifficulty`), satu pertanyaan terbuka (min 20 karakter; `modules.feedback_question` bila diisi admin, selain itu bergilir `modul_order % 3`), dan alasan wajib bila skor 1-3. Teks yang hanya huruf/pola/tanda baca berulang ditolak. Tombol tunggal **Kirim masukan & lanjut** (`submitFeedbackAndContinue()`) menyimpan masukan lalu menyelesaikan modul. `confirmCheckpoint()` dan `ProgressService::completeModule()` (`assertFeedbackSubmitted()`) menolak modul tanpa masukan ber-`helpful_score`. Modul yang sudah selesai sebelum aturan ini tidak diminta mengisi mundur (`completeModule` mengembalikan checkpoint selesai sebelum cek masukan).
 - **Gate checkpoint** ditegakkan di server (`ModulePlayer::guardCheckpointSection()` untuk `mount`, `goToSection`, dan perubahan `?section=`; serta `confirmCheckpoint()` dan `saveModuleFeedback()`). Lapisan kedua ada di `ProgressService::completeModule()`: modul tidak bisa diselesaikan oleh pemanggil mana pun selama ada jawaban yang belum tersimpan atau belum berstatus `completed`. UI hanya mencerminkan status (langkah terkunci, tombol nonaktif selama request penilaian berjalan, polling 5 detik hanya bila penilaian dipegang request lain).
 - **AI Mentor** (`MentorChat`) tampil di langkah Praktik: saran pertanyaan admin (jawaban tim gratis) lalu chat LLM dengan kuota per modul (`MentorQuotaService`).
 - **Brainstorming** menampilkan pertanyaan pemancing buatan admin; AI hanya menyusun kerangka dari jawaban mentee, tidak pernah menimpa jawaban praktik.

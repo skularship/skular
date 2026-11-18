@@ -130,7 +130,12 @@ class Wizard extends Component
             app(ActivityTrackerInterface::class)->track(ActivityName::ProfilingCompleted, user: $this->user());
         }
 
-        $this->redirect(route('profiling.recommendation'), navigate: true);
+        // The free-access commitment is the last step of profiling for mentees
+        // who have not agreed yet; it continues to the recommendations.
+        $this->redirect(
+            $this->user()->hasFeedbackCommitment() ? route('profiling.recommendation') : route('feedback.commitment'),
+            navigate: true,
+        );
 
         return ['ok' => true];
     }

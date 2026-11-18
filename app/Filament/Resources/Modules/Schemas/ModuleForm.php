@@ -417,6 +417,19 @@ class ModuleForm
                     ])
                     ->collapsible(),
 
+                Section::make('Masukan modul')
+                    ->description('Mentee wajib mengisi masukan singkat di akhir modul sebelum modul berikutnya terbuka. Pertanyaan terbuka bergilir otomatis; isi kolom ini bila modul ini butuh pertanyaan khusus.')
+                    ->schema([
+                        TextInput::make('feedback_question')
+                            ->label('Pertanyaan terbuka khusus (opsional)')
+                            ->placeholder('Contoh: Bagian mana dari contoh esai yang paling membantumu?')
+                            ->maxLength(200)
+                            ->helperText('Kosongkan untuk memakai pertanyaan bergilir. Pakai sapaan "kamu".')
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible()
+                    ->collapsed(),
+
                 Section::make('Konteks untuk AI')
                     ->description('Rubrik dan basis pengetahuan yang dipakai AI Mentor, Brainstorming, dan penilaian latihan. Pengaturan teknis AI — penyedia, model, dan API key — tidak diubah dari halaman ini.')
                     ->schema([

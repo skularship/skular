@@ -43,6 +43,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $phone
  * @property string|null $subscription
  * @property Carbon|null $profile_completed_at
+ * @property Carbon|null $feedback_commitment_at When the mentee agreed to give honest feedback at the end of every module (required before opening modules).
  * @property array<array-key, mixed>|null $onboarding_tours Raw JSON of finished or skipped product tours, {tour key: ISO timestamp}; read through ProductTourService.
  * @property string $password
  * @property string|null $two_factor_secret
@@ -182,6 +183,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
             'has_sktm' => 'boolean',
             'age' => 'integer',
             'profile_completed_at' => 'datetime',
+            'feedback_commitment_at' => 'datetime',
             'onboarding_tours' => 'array',
         ];
     }
@@ -204,6 +206,14 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
     public function hasCompletedProfile(): bool
     {
         return $this->profile_completed_at !== null;
+    }
+
+    /**
+     * Determine whether the mentee agreed to the free-access feedback commitment.
+     */
+    public function hasFeedbackCommitment(): bool
+    {
+        return $this->feedback_commitment_at !== null;
     }
 
     /**

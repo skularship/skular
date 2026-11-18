@@ -16,6 +16,7 @@ Skular adalah aplikasi **Livewire server-rendered**, bukan API JSON. Aksi di hal
 | `/dashboard` | Ringkasan progres, beasiswa aktif, kartu ringkas roadmap (fase aktif) | auth + verified |
 | `/roadmap` | Roadmap Belajar: fase selesai, fase aktif + modulnya, fase berikutnya (nama saja), fase lain tertutup awan | auth + verified |
 | `/modules/{module}` | Module player (`?section=opening\|pahami\|quick\|praktik\|checkpoint`); draf → 404, modul terkunci → 403, checkpoint dialihkan ke praktik bila gate belum terpenuhi | auth + verified |
+| `/akses-gratis` | Komitmen akses gratis ("Saya setuju" memberi masukan jujur di akhir setiap modul). `?modul={id}` = lanjut ke modul itu setelah setuju; tanpa parameter lanjut ke rekomendasi | auth + verified |
 | `/library` | Modul Perpustakaan (opsional) | auth + verified |
 | `/scholarships` | Katalog beasiswa (`?q`, `?jenjang`, `?cakupan`, `?lokasi`, `?ditutup`, `?urut`, `?page`) | auth + verified |
 | `/scholarships/saya` | Tracker "Beasiswa Saya" | auth + verified |
@@ -57,6 +58,7 @@ Skular adalah aplikasi **Livewire server-rendered**, bukan API JSON. Aksi di hal
 | GET | `/bantuan` | support.index | `Livewire\Support\Help (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/library` | library.index | `Livewire\Learning\Library (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/modules/{module}` | modules.show | `Livewire\Learning\ModulePlayer (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/akses-gratis` | feedback.commitment | `Livewire\Learning\FeedbackCommitment (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/profiling/recommendation` | profiling.recommendation | `Livewire\Scholarships\Recommendation (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/profiling` | profiling | `Livewire\Profiling\Wizard (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/scholarships/saya` | scholarships.tracker | `Livewire\Scholarships\Tracker (Livewire page)` | `auth`, `verified`, `legal.consent` |

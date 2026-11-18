@@ -10,6 +10,7 @@ use App\Livewire\Checklist\Show as ChecklistShow;
 use App\Livewire\Cv\Show as CvShow;
 use App\Livewire\Dashboard;
 use App\Livewire\Faq\Index as FaqIndex;
+use App\Livewire\Learning\FeedbackCommitment;
 use App\Livewire\Learning\Library;
 use App\Livewire\Learning\ModulePlayer;
 use App\Livewire\Legal\Consent as LegalConsent;
@@ -63,6 +64,7 @@ Route::middleware(['auth', 'verified', 'legal.consent'])->group(function () {
     Route::livewire('dashboard', Dashboard::class)->name('dashboard');
     Route::livewire('roadmap', Roadmap::class)->name('roadmap.show');
     Route::livewire('modules/{module}', ModulePlayer::class)->name('modules.show');
+    Route::livewire('akses-gratis', FeedbackCommitment::class)->name('feedback.commitment');
     Route::livewire('library', Library::class)->name('library.index');
     Route::livewire('scholarships', ScholarshipsIndex::class)->name('scholarships.index');
     Route::livewire('scholarships/saya', Tracker::class)->name('scholarships.tracker');

@@ -106,6 +106,7 @@ function completeModules(User $mentee, array $modules): void
     $progress = app(ProgressServiceInterface::class);
 
     foreach ($modules as $module) {
+        giveModuleFeedback($mentee, $module);
         $progress->completeModule($mentee, $module);
     }
 }

@@ -38,6 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $ai_knowledge
  * @property array<int, array<string, mixed>>|null $brainstorming_questions
  * @property array<int, mixed>|null $mentor_suggestions
+ * @property string|null $feedback_question Admin's open question for the module feedback; empty = rotating default.
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read int|null $practice_forms_count
@@ -69,6 +70,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'ai_knowledge',
     'brainstorming_questions',
     'mentor_suggestions',
+    'feedback_question',
 ])]
 class Module extends Model
 {

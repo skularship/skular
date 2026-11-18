@@ -38,7 +38,21 @@ class UserFactory extends Factory
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
+            // Like the consent rows in configure(): a factory mentee already
+            // agreed to the module feedback commitment. Use
+            // withoutFeedbackCommitment() to test the commitment screen.
+            'feedback_commitment_at' => now(),
         ];
+    }
+
+    /**
+     * Indicate that the mentee has not agreed to the feedback commitment yet.
+     */
+    public function withoutFeedbackCommitment(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'feedback_commitment_at' => null,
+        ]);
     }
 
     /**

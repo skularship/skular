@@ -76,6 +76,7 @@ test('progress is preserved when the active scholarship changes', function () {
     $core = Module::factory()->create(['fase_id' => $this->fase->id, 'modul_order' => 1, 'category' => ModuleCategory::Inti]);
 
     $progress = app(ProgressServiceInterface::class);
+    giveModuleFeedback($this->mentee, $core);
     $progress->completeModule($this->mentee, $core, 85);
 
     $scholarship = Scholarship::factory()->create();
