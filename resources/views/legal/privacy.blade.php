@@ -57,7 +57,11 @@
                     <tbody>
                         <tr><td>{{ __('Akun') }}</td><td>{{ __('Nama, email, password (disimpan dalam bentuk hash, bukan teks asli), ID dan foto profil Google bila kamu masuk dengan Google, passkey, dan pengaturan verifikasi dua langkah.') }}</td></tr>
                         <tr><td>{{ __('Profil beasiswa') }}</td><td>{{ __('Usia, IPK atau nilai rata-rata, status SKTM, jenjang pendidikan sekarang dan tujuan, lokasi studi tujuan, bidang (klaster), dan nomor telepon bila kamu mengisinya.') }}</td></tr>
-                        <tr><td>{{ __('Isi belajar') }}</td><td>{{ __('Jawaban latihan (termasuk esai dan cerita pribadi) dan file yang kamu lampirkan di latihan, sesi AI Brainstorming, progres modul, jawaban Quick Question, feedback modul, dan jumlah pemakaian AI Mentor. Percakapan AI Mentor tidak kami simpan di database; isinya hanya ada selama halaman modul terbuka.') }}</td></tr>
+                        <tr><td>{{ __('Isi belajar') }}</td><td>{{ __('Jawaban latihan (termasuk esai dan cerita pribadi) dan file yang kamu lampirkan di latihan, sesi AI Brainstorming, progres modul, jawaban Quick Question, dan jumlah pemakaian AI Mentor. Percakapan AI Mentor tidak kami simpan di database; isinya hanya ada selama halaman modul terbuka.') }}</td></tr>
+                        <tr><td>{{ __('Masukan') }}</td><td>{{ __('Persetujuanmu pada program akses gratis (dan waktunya), masukan di akhir setiap modul (skor seberapa membantu, bagian yang paling menyulitkan, jawaban pertanyaan terbuka, dan alasan bila skornya rendah), serta skor dan masukan setelah event.') }}</td></tr>
+                        <tr><td>{{ __('Event') }}</td><td>{{ __('Event yang kamu daftari, jawaban pertanyaan pendaftaran event, status kehadiran, dan catatan pengingat email yang sudah dikirim.') }}</td></tr>
+                        <tr><td>{{ __('Aktivitas di Skular') }}</td><td>{{ __('Catatan langkah yang kamu lakukan di Skular, misalnya membuka halaman beasiswa, filter yang dipakai, menekan tombol cari beasiswa yang cocok, mulai dan menyelesaikan profiling atau modul, dan mendaftar event, beserta waktunya. Kata yang kamu ketik di kolom pencarian tidak dicatat. Catatan ini disimpan di server Skular sendiri, tanpa alamat IP dan tanpa layanan pihak ketiga.') }}</td></tr>
+                        <tr><td>{{ __('Label akun') }}</td><td>{{ __('Label yang diberikan admin pada akunmu, misalnya alumni program tertentu, untuk mengundangmu ke event khusus dan memisahkan data masukan.') }}</td></tr>
                         <tr><td>{{ __('Dokumen') }}</td><td>{{ __('Bukti pendaftaran beasiswa yang kamu unggah, dan dokumen di Vault (khusus Pro: PDF, JPG, PNG, DOC, DOCX).') }}</td></tr>
                         <tr><td>{{ __('Beasiswa pilihan') }}</td><td>{{ __('Beasiswa yang kamu pilih (maksimal 5), status pendaftaranmu, dan checklist persiapan (Pro).') }}</td></tr>
                         <tr><td>{{ __('Pembayaran') }}</td><td>{{ __('Nomor pesanan (format SKL-...), paket, nominal, kode referral yang dipakai, status pembayaran, dan masa aktif Pro. Kami juga menyimpan notifikasi status pembayaran yang dikirim Midtrans. Nomor kartu, rekening, dan PIN kamu masukkan langsung di halaman Midtrans, bukan di Skular.') }}</td></tr>
@@ -73,10 +77,10 @@
         <x-legal.section id="tujuan" number="3" :title="$sections[2]['title']">
             <p>{{ __('UU PDP (Pasal 20) mengatur dasar pemrosesan data pribadi. Kami memakai dasar berikut:') }}</p>
             <ul>
-                <li>{{ __('Pelaksanaan perjanjian: membuat dan menjalankan akunmu, memberi rekomendasi beasiswa dari profil, menampilkan roadmap modul, menilai latihan, menjalankan AI Mentor dan Brainstorming, memproses pembayaran Pro, mengirim email pengingat tenggat dan masa Pro, dan menjawab tiket bantuan.') }}</li>
+                <li>{{ __('Pelaksanaan perjanjian: membuat dan menjalankan akunmu, memberi rekomendasi beasiswa dari profil, menampilkan roadmap modul, menilai latihan, menjalankan AI Mentor dan Brainstorming, mengelola pendaftaran event dan mengirim pengingatnya, memproses pembayaran Pro, mengirim email pengingat tenggat dan masa Pro, dan menjawab tiket bantuan. Masukan di akhir setiap modul adalah syarat program akses gratis yang kamu setujui sebelum membuka modul.') }}</li>
                 <li>{{ __('Persetujuan: mengirim isi tulisanmu ke penyedia AI di luar Indonesia, Google Analytics, dan berbagi data yang bisa mengenali kamu kepada pihak lain (hanya bila kamu setuju secara terpisah).') }}</li>
                 <li>{{ __('Kewajiban hukum: menyimpan catatan yang diwajibkan peraturan dan menanggapi permintaan aparat yang sah.') }}</li>
-                <li>{{ __('Kepentingan yang sah: menjaga keamanan akun dan layanan, mencegah penyalahgunaan kuota AI dan kode referral, dan mencari penyebab error dari log.') }}</li>
+                <li>{{ __('Kepentingan yang sah: menjaga keamanan akun dan layanan, mencegah penyalahgunaan kuota AI dan kode referral, mencari penyebab error dari log, dan memperbaiki alur serta modul Skular dari catatan aktivitas dan masukan (dilihat tim dalam bentuk jumlah per langkah dan per modul).') }}</li>
             </ul>
             <p>{{ __('Rekomendasi beasiswa, batas 5 beasiswa, dan pembukaan modul dihitung dengan aturan tetap di sistem, bukan oleh AI. Penilaian latihan oleh AI hanya saran belajar dan tidak menentukan hal lain tentang akunmu.') }}</p>
         </x-legal.section>
@@ -98,7 +102,7 @@
                 <li>{{ __('Google: login dengan Google (bila kamu memilihnya) dan Google Analytics (hanya bila kamu mengizinkan).') }}</li>
                 <li>{{ __('OpenRouter dan penyedia model AI: lihat bagian 4.') }}</li>
                 <li>{{ __('Penyedia hosting (server di :location): menyimpan database, file, dan log.', ['location' => config('legal.hosting.server_location')]) }}</li>
-                <li>{{ __('Penyedia email (:provider): mengirim email verifikasi, reset password, dan pengingat.', ['provider' => config('legal.hosting.mail_provider')]) }}</li>
+                <li>{{ __('Penyedia email (:provider): mengirim email verifikasi, reset password, dan pengingat (termasuk pengingat event).', ['provider' => config('legal.hosting.mail_provider')]) }}</li>
                 <li>{{ __('Tim Skular yang berwenang: admin hanya melihat data sesuai perannya di panel admin.') }}</li>
                 <li>{{ __('Aparat penegak hukum atau lembaga berwenang, bila diwajibkan peraturan.') }}</li>
             </ul>
@@ -124,7 +128,7 @@
             <h3>{{ __('Saat kamu menghapus akun') }}</h3>
             <p>{{ __('Kamu bisa menghapus akun di Pengaturan dengan memasukkan password. Akun yang dibuat lewat Google belum punya password yang kamu ketahui, jadi minta penghapusan lewat :email.', ['email' => $privacyEmail]) }}</p>
             <ul>
-                <li>{{ __('Yang langsung terhapus dari database: akun, profil, passkey, progres modul, jawaban latihan, sesi brainstorming, feedback modul, beasiswa pilihan, checklist, data Vault, langganan Pro, kode referral, dan riwayat pesanan.') }}</li>
+                <li>{{ __('Yang langsung terhapus dari database: akun, profil, passkey, progres modul, jawaban latihan, sesi brainstorming, masukan modul, pendaftaran dan masukan event, catatan aktivitas, label akun, beasiswa pilihan, checklist, data Vault, langganan Pro, kode referral, dan riwayat pesanan.') }}</li>
                 <li>{{ __('Yang tetap tersimpan tanpa tautan ke akunmu: tiket bantuan dan laporan info beasiswa yang pernah kamu kirim, serta notifikasi status pembayaran dari Midtrans.') }}</li>
                 <li>{{ __('File yang kamu unggah (lampiran latihan, bukti pendaftaran, dokumen Vault, screenshot tiket) saat ini belum terhapus otomatis dari server. Minta penghapusannya lewat :email dan kami hapus secara manual.', ['email' => $privacyEmail]) }}</li>
                 <li>{{ __('Catatan transaksi di Midtrans dan data di Google mengikuti kebijakan masing-masing.') }}</li>
