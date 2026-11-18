@@ -1,6 +1,6 @@
 {{-- Public Premium page (App\Livewire\Premium\Index). One centred column: hero, plan picker with checkout (the "price card"),
      illustrated Pro features, journey timeline, how-it-works example, Free vs Pro, FAQ, closing call, and a bottom bar
-     that appears once the price card has scrolled away. Pro features not built yet carry a "Segera" badge and are never sold as available. --}}
+     that appears once the price card has scrolled away. Pro features not built yet carry a "Coming Soon" badge and are never sold as available. --}}
 @use('App\Support\Rupiah')
 
 @php
@@ -266,7 +266,7 @@
     <section class="mx-auto w-full max-w-5xl py-10 sm:px-6 sm:py-14">
         <div class="px-4 sm:px-0">
             <h2 class="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">{{ __('Yang kebuka di Pro') }}</h2>
-            <p class="mt-1 text-sm text-zinc-600">{{ __('Fitur berlabel Segera belum rilis, dan langsung terbuka saat rilis selama paketmu aktif.') }}</p>
+            <p class="mt-1 text-sm text-zinc-600">{{ __('Fitur berlabel Coming Soon belum rilis, dan langsung terbuka saat rilis selama paketmu aktif.') }}</p>
         </div>
 
         <div class="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-3 [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-3">
@@ -284,7 +284,7 @@
                     <h3 class="mt-3 flex flex-wrap items-center gap-2 text-lg font-bold text-zinc-900">
                         {{ $benefit['title'] }}
                         @if ($benefit['soon'])
-                            <x-ui.pill variant="peach">{{ __('Segera') }}</x-ui.pill>
+                            <x-ui.pill variant="peach">{{ __('Coming Soon') }}</x-ui.pill>
                         @endif
                     </h3>
                     <p class="mt-1 text-sm leading-relaxed text-zinc-600">{{ $benefit['text'] }}</p>
@@ -375,7 +375,7 @@
                             <td class="px-4 py-3.5 text-zinc-800 sm:px-5">
                                 {{ $feature }}
                                 @if ($soon)
-                                    <x-ui.pill variant="peach" class="ms-1">{{ __('Segera') }}</x-ui.pill>
+                                    <x-ui.pill variant="peach" class="ms-1">{{ __('Coming Soon') }}</x-ui.pill>
                                 @endif
                             </td>
                             @foreach ([$free, $pro] as $index => $value)

@@ -19,7 +19,7 @@ test('while Premium is off the page, the status page and the landing price secti
         ->assertDontSee('dashboard-premium', false);
 });
 
-test('the Premium page shows the launching prices and the honest Segera labels', function () {
+test('the Premium page shows the launching prices and the honest Coming Soon labels', function () {
     config([
         'pricing.enabled' => true,
         'pricing.launching_until' => now()->addDays(10)->toIso8601String(),
@@ -31,7 +31,8 @@ test('the Premium page shows the launching prices and the honest Segera labels',
         ->assertSee('Rp74.500')
         ->assertSee('Hemat 50%')
         ->assertSee('Rp50.000')
-        ->assertSee('Segera')
+        ->assertSee('Coming Soon')
+        ->assertDontSee('Segera')
         ->assertSee('Review AI adalah saran, bukan jaminan lolos.');
 });
 

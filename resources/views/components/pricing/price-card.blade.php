@@ -48,7 +48,7 @@
                         <span>
                             {{ $text }}
                             @if ($soon)
-                                <x-ui.pill variant="peach" class="ms-0.5">{{ __('Segera') }}</x-ui.pill>
+                                <x-ui.pill variant="peach" class="ms-0.5">{{ __('Coming Soon') }}</x-ui.pill>
                             @endif
                         </span>
                     </li>
