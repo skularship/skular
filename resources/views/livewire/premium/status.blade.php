@@ -1,4 +1,4 @@
-{{-- Payment status (App\Livewire\Premium\Status). Reads the order only; Pro is activated by the Midtrans webhook. --}}
+{{-- Payment status (App\Livewire\Premium\Status). Pro is activated by the Midtrans webhook; while waiting, "Cek status pembayaran" asks Midtrans directly. --}}
 @use('App\Support\Rupiah')
 @use('App\Enums\OrderStatus')
 
@@ -19,7 +19,13 @@
             <x-ui.icon-badge icon="clock" tone="amber" size="lg" solid />
             <h1 class="text-2xl font-extrabold tracking-tight text-zinc-900">{{ __('Menunggu pembayaran') }}</h1>
             <p class="text-zinc-600">{{ __('Selesaikan pembayaranmu. Halaman ini diperbarui otomatis setelah pembayaran masuk.') }}</p>
-            <x-actions.link-button :href="route('premium', ['paket' => $order->product->code])" variant="outline">{{ __('Buka lagi halaman pembayaran') }}</x-actions.link-button>
+            <div class="flex flex-wrap justify-center gap-3">
+                <x-actions.button wire:click="checkStatus" icon="arrow-path" loading-text="{{ __('Mengecek...') }}" data-test="payment-check">{{ __('Cek status pembayaran') }}</x-actions.button>
+                <x-actions.link-button :href="route('premium', ['paket' => $order->product->code])" variant="outline">{{ __('Buka lagi halaman pembayaran') }}</x-actions.link-button>
+            </div>
+            @if ($notice)
+                <p class="text-sm text-zinc-600" role="status" data-test="payment-check-notice">{{ $notice }}</p>
+            @endif
         @else
             <x-ui.icon-badge icon="x-mark" tone="rose" size="lg" solid />
             <h1 class="text-2xl font-extrabold tracking-tight text-zinc-900">{{ __('Pembayaran belum berhasil') }}</h1>

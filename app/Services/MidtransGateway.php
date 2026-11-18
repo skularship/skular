@@ -27,8 +27,8 @@ class MidtransGateway implements PaymentGatewayInterface
     {
         $server_key = $this->serverKey();
 
-        if ($server_key === '') {
-            Log::error('Midtrans server key is not configured.');
+        if ($server_key === '' || $this->clientConfig()['client_key'] === '') {
+            Log::error('Midtrans server key or client key is not configured.');
 
             throw PaymentException::gatewayUnavailable();
         }
@@ -97,6 +97,54 @@ class MidtransGateway implements PaymentGatewayInterface
     }
 
     /**
+     * Ask Midtrans for the status of an order (GET /v2/{order_id}/status).
+     *
+     * Midtrans answers 404 when no payment was ever started for the order, for
+     * example when the mentee closed Snap without choosing a payment method.
+     *
+     * @return array<string, mixed>|null The status body, or null when Midtrans has no transaction for this order.
+     *
+     * @throws PaymentException When the server key is missing or Midtrans cannot be reached.
+     */
+    public function transactionStatus(string $order_id): ?array
+    {
+        $server_key = $this->serverKey();
+
+        if ($server_key === '') {
+            Log::error('Midtrans server key is not configured.');
+
+            throw PaymentException::gatewayUnavailable();
+        }
+
+        try {
+            $response = Http::withBasicAuth($server_key, '')
+                ->acceptJson()
+                ->timeout(15)
+                ->get($this->apiUrl().'/v2/'.rawurlencode($order_id).'/status');
+        } catch (Throwable $exception) {
+            Log::error('Midtrans status request failed.', ['order_id' => $order_id, 'message' => $exception->getMessage()]);
+
+            throw PaymentException::gatewayUnavailable();
+        }
+
+        // Midtrans may answer a missing transaction with HTTP 404 or with HTTP 200 and status_code "404".
+        if ($response->status() === 404 || (string) $response->json('status_code') === '404') {
+            return null;
+        }
+
+        $body = $response->json();
+
+        if (! $response->successful() || ! is_array($body) || ! is_string($body['transaction_status'] ?? null)) {
+            Log::error('Midtrans status request refused.', ['order_id' => $order_id, 'status' => $response->status()]);
+
+            throw PaymentException::gatewayUnavailable();
+        }
+
+        /** @var array<string, mixed> $body */
+        return $body;
+    }
+
+    /**
      * Get what the browser needs to open Snap. The server key is never included.
      *
      * @return array{client_key: string, snap_js_url: string}
@@ -121,6 +169,16 @@ class MidtransGateway implements PaymentGatewayInterface
         return $this->isProduction()
             ? 'https://app.midtrans.com/snap/v1/transactions'
             : 'https://app.sandbox.midtrans.com/snap/v1/transactions';
+    }
+
+    /**
+     * Get the Core API base URL (transaction status) for the current environment.
+     */
+    private function apiUrl(): string
+    {
+        return $this->isProduction()
+            ? 'https://api.midtrans.com'
+            : 'https://api.sandbox.midtrans.com';
     }
 
     /**

@@ -55,20 +55,35 @@
         loading: false,
         stickyBar: false,
         openSnap(detail) {
+            {{-- Success/pending go to the status page; a Snap error stays here with a message and a fresh order next time.
+                 A script that fails to load is removed so the next click downloads it again. --}}
             const finish = () => { window.location.href = detail.finish_url };
-            const open = () => window.snap.pay(detail.token, {
-                onSuccess: finish,
-                onPending: finish,
-                onError: finish,
-                onClose: () => { this.loading = false },
-            });
+            const unavailable = () => { this.loading = false; this.$wire.snapUnavailable() };
+            const open = () => {
+                if (! window.snap) { unavailable(); return; }
+
+                try {
+                    window.snap.pay(detail.token, {
+                        onSuccess: finish,
+                        onPending: finish,
+                        onError: () => { this.loading = false; this.$wire.paymentFailed() },
+                        onClose: () => { this.loading = false },
+                    });
+                } catch (error) {
+                    unavailable();
+                }
+            };
 
             if (window.snap) { open(); return; }
 
+            document.getElementById('midtrans-snap')?.remove();
+
             const script = document.createElement('script');
+            script.id = 'midtrans-snap';
             script.src = @js($snap['snap_js_url']);
             script.setAttribute('data-client-key', @js($snap['client_key']));
             script.onload = open;
+            script.onerror = () => { script.remove(); unavailable() };
             document.head.appendChild(script);
         },
     }"

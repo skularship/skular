@@ -28,6 +28,15 @@ interface PaymentGatewayInterface
     public function isValidSignature(array $payload): bool;
 
     /**
+     * Ask the provider for the current status of an order (used when a notification never arrived).
+     *
+     * @return array<string, mixed>|null The status body (same fields as a notification), or null when the provider has no transaction for this order.
+     *
+     * @throws PaymentException When the provider is not configured or cannot be reached.
+     */
+    public function transactionStatus(string $order_id): ?array;
+
+    /**
      * Get what the browser needs to open Snap. The server key is never included.
      *
      * @return array{client_key: string, snap_js_url: string}

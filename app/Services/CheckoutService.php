@@ -38,10 +38,12 @@ class CheckoutService implements CheckoutServiceInterface
      * Create (or reuse a recent identical) pending order and its Snap token.
      *
      * The price is always recalculated here; the browser only sends the product code and an optional referral code.
+     * Pass $reuse_pending = false after Snap reported an error, so the next try gets a fresh Snap session
+     * (the old order stays pending until Midtrans or payments:reconcile-pending ends it).
      *
      * @throws PaymentException When the plan is not for sale or Midtrans cannot start the payment.
      */
-    public function start(User $user, string $product_code, ?string $promo_code = null): Order
+    public function start(User $user, string $product_code, ?string $promo_code = null, bool $reuse_pending = true): Order
     {
         $product = $this->pricing->product($product_code);
         $quote = $this->pricing->quote($product_code);
@@ -61,7 +63,7 @@ class CheckoutService implements CheckoutServiceInterface
             $amount -= $discount;
         }
 
-        $reusable = Order::query()
+        $reusable = ! $reuse_pending ? null : Order::query()
             ->where('user_id', $user->id)
             ->where('product_id', $product->id)
             ->where('amount', $amount)

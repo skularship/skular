@@ -268,7 +268,7 @@ php artisan up
 | Komponen | Keterangan |
 |---|---|
 | Queue worker | Wajib bila `PREMIUM_ENABLED=true` atau ada event terbit (email pengingat event masuk antrean `reminders`): `php artisan queue:work --queue=payments,reminders,default` di bawah Supervisor (restart otomatis). Tanpa worker, pembayaran masuk tapi Pro belum aktif dan email tidak terkirim; panel admin menampilkan "Notifikasi tertahan" |
-| Scheduler | Cron `* * * * * php artisan schedule:run`: pengingat deadline dan Pro berakhir, pengingat event (`events:remind` tiap 15 menit), antrean ulang pembayaran tertahan |
+| Scheduler | Cron `* * * * * php artisan schedule:run`: pengingat deadline dan Pro berakhir, pengingat event (`events:remind` tiap 15 menit), antrean ulang pembayaran tertahan (`payments:requeue-stuck`), dan pengecekan order pending lebih dari 25 jam ke API Midtrans (`payments:reconcile-pending` tiap jam; order yang tidak pernah dibayar menjadi kedaluwarsa) |
 | Email | `MAIL_MAILER` nyata (bukan `log`) untuk pengingat |
 | URL notifikasi Midtrans | Isi di dashboard Midtrans: `{APP_URL}/payments/midtrans/notification` |
 | PHP | 8.3+ dengan OPcache aktif; reload PHP-FPM setiap deploy bila `validate_timestamps=0` |

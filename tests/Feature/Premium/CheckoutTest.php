@@ -113,3 +113,46 @@ test('an unverified mentee is sent to verify the email first', function () {
 
     Http::assertNothingSent();
 });
+
+test('a missing client key stops checkout before any request is sent', function () {
+    Http::fake();
+    config(['services.midtrans.client_key' => '']);
+
+    expect(fn () => app(CheckoutServiceInterface::class)->start(User::factory()->create(), 'pro_12bln'))
+        ->toThrow(PaymentException::class);
+
+    Http::assertNothingSent();
+});
+
+test('after a Snap error the mentee stays on the page with a message and the next try gets a fresh order', function () {
+    Http::fake([
+        'app.sandbox.midtrans.com/snap/v1/transactions' => Http::sequence()
+            ->push(['token' => 'snap-token-1'], 201)
+            ->push(['token' => 'snap-token-2'], 201),
+    ]);
+    $user = User::factory()->create();
+
+    $page = Livewire::actingAs($user)
+        ->test(Index::class)
+        ->call('checkout')
+        ->assertDispatched('open-snap', token: 'snap-token-1')
+        ->call('paymentFailed')
+        ->assertSee('Pembayaran belum berhasil. Coba lagi atau pilih metode pembayaran lain.')
+        ->assertNoRedirect();
+
+    $page->call('checkout')->assertDispatched('open-snap', token: 'snap-token-2');
+
+    expect(Order::query()->where('user_id', $user->id)->count())->toBe(2)
+        ->and(Order::query()->where('user_id', $user->id)->pluck('status')->all())->each->toBe(OrderStatus::Pending);
+
+    // A later click after a normal close reuses the fresh order again.
+    $page->call('checkout')->assertDispatched('open-snap', token: 'snap-token-2');
+    expect(Order::query()->where('user_id', $user->id)->count())->toBe(2);
+});
+
+test('when the Snap script cannot load the mentee sees a friendly message', function () {
+    Livewire::actingAs(User::factory()->create())
+        ->test(Index::class)
+        ->call('snapUnavailable')
+        ->assertSee('Halaman pembayaran gagal dimuat. Periksa koneksi internetmu, lalu coba lagi.');
+});

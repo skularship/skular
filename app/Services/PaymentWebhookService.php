@@ -23,6 +23,12 @@ use Illuminate\Support\Facades\Log;
 class PaymentWebhookService implements PaymentWebhookServiceInterface
 {
     /**
+     * Hours after which a pending order is checked with Midtrans and, when no payment
+     * was started, expired. Snap sessions expire after 24 hours; one hour of margin.
+     */
+    public const EXPIRE_AFTER_HOURS = 25;
+
+    /**
      * Inject the provider (signature check) and the subscription service.
      */
     public function __construct(
@@ -57,11 +63,100 @@ class PaymentWebhookService implements PaymentWebhookServiceInterface
             throw PaymentException::amountMismatch();
         }
 
-        $event = PaymentEvent::query()->create(['order_id' => $order_id, 'payload' => $payload]);
+        return $this->store($order_id, $payload);
+    }
 
-        ProcessMidtransNotification::dispatch($event->id);
+    /**
+     * Settle an old pending order whose notification never came by asking Midtrans.
+     *
+     * Only orders older than EXPIRE_AFTER_HOURS are touched, so a Snap session that
+     * can still be paid is never expired. The status body comes from an authenticated
+     * Midtrans request, so it is stored without a signature check (the amount is
+     * still compared). While an earlier status of the order waits in the queue, no
+     * second copy is stored.
+     *
+     * @return 'expired'|'queued'|'waiting' What happened to the order.
+     *
+     * @throws PaymentException When Midtrans cannot be reached or reports a different amount.
+     */
+    public function reconcile(Order $order): string
+    {
+        if ($order->status !== OrderStatus::Pending
+            || $order->created_at === null
+            || $order->created_at->greaterThan(now()->subHours(self::EXPIRE_AFTER_HOURS))) {
+            return 'waiting';
+        }
 
-        return $event;
+        $payload = $this->gateway->transactionStatus($order->order_id);
+
+        if ($payload === null) {
+            return $this->expire($order) ? 'expired' : 'waiting';
+        }
+
+        if (($payload['transaction_status'] ?? null) === 'pending') {
+            return 'waiting';
+        }
+
+        $this->assertStatusAmount($order, $payload);
+
+        $already_waiting = PaymentEvent::query()
+            ->where('order_id', $order->order_id)
+            ->whereNull('processed_at')
+            ->exists();
+
+        if (! $already_waiting) {
+            $this->store($order->order_id, $payload);
+        }
+
+        return 'queued';
+    }
+
+    /**
+     * Ask Midtrans about a pending order right now, for the "Cek status pembayaran" button.
+     *
+     * A final status is stored and applied in this request through process(), so the
+     * mentee sees Pro without waiting for the queue. process() locks the order row, so
+     * a webhook job applying the same payment at the same time cannot activate Pro twice.
+     * An order without a transaction is not expired here; payments:reconcile-pending does that.
+     *
+     * @return OrderStatus The order status after the check.
+     *
+     * @throws PaymentException When Midtrans cannot be reached or reports a different amount.
+     */
+    public function refresh(Order $order): OrderStatus
+    {
+        if ($order->status !== OrderStatus::Pending) {
+            return $order->status;
+        }
+
+        $payload = $this->gateway->transactionStatus($order->order_id);
+
+        if ($payload === null || ($payload['transaction_status'] ?? null) === 'pending') {
+            return OrderStatus::Pending;
+        }
+
+        $this->assertStatusAmount($order, $payload);
+
+        $event = PaymentEvent::query()->create(['order_id' => $order->order_id, 'payload' => $payload]);
+        $this->process($event);
+
+        return $order->refresh()->status;
+    }
+
+    /**
+     * Refuse a Midtrans status whose amount differs from the order.
+     *
+     * @param  array<string, mixed>  $payload
+     *
+     * @throws PaymentException When the amounts differ.
+     */
+    private function assertStatusAmount(Order $order, array $payload): void
+    {
+        if ($this->amountOf($payload) !== $order->amount) {
+            Log::warning('Midtrans status rejected: amount mismatch.', ['order_id' => $order->order_id]);
+
+            throw PaymentException::amountMismatch();
+        }
     }
 
     /**
@@ -96,6 +191,40 @@ class PaymentWebhookService implements PaymentWebhookServiceInterface
             }
 
             $event->forceFill(['processed_at' => now()])->save();
+        });
+    }
+
+    /**
+     * Keep the raw status for audit and queue its processing.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    private function store(?string $order_id, array $payload): PaymentEvent
+    {
+        $event = PaymentEvent::query()->create(['order_id' => $order_id, 'payload' => $payload]);
+
+        ProcessMidtransNotification::dispatch($event->id);
+
+        return $event;
+    }
+
+    /**
+     * Mark a still-pending order expired. The row is locked so a notification that
+     * arrives at the same moment wins: a paid or failed order is never changed here.
+     */
+    private function expire(Order $order): bool
+    {
+        return DB::transaction(function () use ($order): bool {
+            $locked = Order::query()->whereKey($order->id)->lockForUpdate()->first();
+
+            if (! $locked instanceof Order || $locked->status !== OrderStatus::Pending) {
+                return false;
+            }
+
+            $locked->status = OrderStatus::Expired;
+            $locked->save();
+
+            return true;
         });
     }
 

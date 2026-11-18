@@ -14,6 +14,7 @@ use App\Enums\LegalDocument;
 use App\Exceptions\PaymentException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -37,6 +38,11 @@ class Index extends Component
 
     #[Url(as: 'kode', except: '')]
     public string $promo = '';
+
+    /**
+     * True after Snap reported an error: the next checkout starts a fresh order instead of reusing the failed session.
+     */
+    public bool $needs_fresh_order = false;
 
     /**
      * Hide the page completely while Premium is switched off.
@@ -89,13 +95,14 @@ class Index extends Component
         }
 
         try {
-            $order = $checkout->start($user, $this->selected, $this->promo);
+            $order = $checkout->start($user, $this->selected, $this->promo, reuse_pending: ! $this->needs_fresh_order);
         } catch (PaymentException $exception) {
             $this->error = $exception->getMessage();
 
             return;
         }
 
+        $this->needs_fresh_order = false;
         $consents->record($user, [LegalDocument::Terms, LegalDocument::Refund], ConsentSource::Checkout);
 
         $this->dispatch(
@@ -103,6 +110,27 @@ class Index extends Component
             token: $order->snap_token,
             finish_url: route('payment.status', $order),
         );
+    }
+
+    /**
+     * Snap reported an error (for example a declined card). Stay on this page with a
+     * clear message instead of showing a "waiting" status, and start a fresh order on
+     * the next try. The order itself is changed only by Midtrans.
+     */
+    public function paymentFailed(): void
+    {
+        $this->needs_fresh_order = true;
+        $this->error = __('Pembayaran belum berhasil. Coba lagi atau pilih metode pembayaran lain.');
+    }
+
+    /**
+     * The Midtrans Snap script could not be loaded or opened in the browser.
+     */
+    public function snapUnavailable(): void
+    {
+        Log::warning('Midtrans Snap could not be opened in the browser.', ['user_id' => Auth::id()]);
+
+        $this->error = __('Halaman pembayaran gagal dimuat. Periksa koneksi internetmu, lalu coba lagi.');
     }
 
     /**
