@@ -8,6 +8,7 @@ use App\Enums\LocationScope;
 use App\Models\User;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
@@ -68,6 +69,12 @@ class UserForm
                     ->tel(),
                 TextInput::make('subscription'),
                 DateTimePicker::make('profile_completed_at'),
+                TagsInput::make('tags')
+                    ->label('Tag mentee')
+                    ->placeholder('Contoh: alumni_akademi_unggulan')
+                    ->helperText('Dipakai untuk event khusus undangan dan untuk memisahkan data masukan. Huruf kecil dan garis bawah.')
+                    ->nestedRecursiveRules(['alpha_dash', 'max:64'])
+                    ->columnSpanFull(),
             ]);
     }
 

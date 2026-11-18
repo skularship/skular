@@ -21,6 +21,7 @@ enum ProductTour: string implements HasLabel
     case Roadmap = 'roadmap';
     case Module = 'module';
     case Tracker = 'tracker';
+    case Events = 'events';
 
     /**
      * Get the Indonesian label shown on the Panduan page.
@@ -38,6 +39,7 @@ enum ProductTour: string implements HasLabel
             self::Roadmap => 'Ikuti roadmap belajar',
             self::Module => 'Kerjakan modul sampai checkpoint',
             self::Tracker => 'Daftar dan laporkan hasil',
+            self::Events => 'Ikut event Skular',
         };
     }
 
@@ -55,6 +57,7 @@ enum ProductTour: string implements HasLabel
             self::Roadmap => 'Kerjakan fase aktif modul demi modul. Fase berikutnya terbuka setelah fase ini selesai.',
             self::Module => 'Pembukaan, Pahami, Quick Question, Praktik dengan feedback AI, lalu Checkpoint.',
             self::Tracker => 'Unggah bukti pendaftaran, laporkan hasilnya, dan rayakan dengan twibbon kalau lolos.',
+            self::Events => 'Daftar webinar, kelas intensif, atau mentoring. Link acara muncul H-1 dan pengingat dikirim lewat email.',
         };
     }
 
@@ -72,6 +75,7 @@ enum ProductTour: string implements HasLabel
             self::Roadmap => 'map',
             self::Module => 'book-open',
             self::Tracker => 'document-arrow-up',
+            self::Events => 'video-camera',
         };
     }
 
@@ -91,6 +95,7 @@ enum ProductTour: string implements HasLabel
             self::Dashboard => 'dashboard',
             self::Roadmap, self::Module => 'roadmap.show',
             self::Tracker => 'scholarships.tracker',
+            self::Events => 'events.index',
         };
     }
 }

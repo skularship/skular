@@ -17,6 +17,9 @@ Skular adalah aplikasi **Livewire server-rendered**, bukan API JSON. Aksi di hal
 | `/roadmap` | Roadmap Belajar: fase selesai, fase aktif + modulnya, fase berikutnya (nama saja), fase lain tertutup awan | auth + verified |
 | `/modules/{module}` | Module player (`?section=opening\|pahami\|quick\|praktik\|checkpoint`); draf → 404, modul terkunci → 403, checkpoint dialihkan ke praktik bila gate belum terpenuhi | auth + verified |
 | `/akses-gratis` | Komitmen akses gratis ("Saya setuju" memberi masukan jujur di akhir setiap modul). `?modul={id}` = lanjut ke modul itu setelah setuju; tanpa parameter lanjut ke rekomendasi | auth + verified |
+| `/event` | Daftar event (`?tab=rekaman` untuk rekaman) | auth + verified |
+| `/event/{event:slug}` | Detail event, daftar (+ pertanyaan singkat), batal, link acara H-1 untuk peserta, masukan 1-5 setelah acara; draf/batal/di luar audiens → 404 | auth + verified |
+| `/event/{event:slug}/kalender` | Unduh file .ics (tanpa link acara) | auth + verified |
 | `/library` | Modul Perpustakaan (opsional) | auth + verified |
 | `/scholarships` | Katalog beasiswa (`?q`, `?jenjang`, `?cakupan`, `?lokasi`, `?ditutup`, `?urut`, `?page`) | auth + verified |
 | `/scholarships/saya` | Tracker "Beasiswa Saya" | auth + verified |
@@ -59,6 +62,9 @@ Skular adalah aplikasi **Livewire server-rendered**, bukan API JSON. Aksi di hal
 | GET | `/library` | library.index | `Livewire\Learning\Library (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/modules/{module}` | modules.show | `Livewire\Learning\ModulePlayer (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/akses-gratis` | feedback.commitment | `Livewire\Learning\FeedbackCommitment (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/event` | events.index | `Livewire\Events\Index (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/event/{event}` | events.show | `Livewire\Events\Show (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/event/{event}/kalender` | events.calendar | `EventCalendarController` | `auth`, `verified`, `legal.consent` |
 | GET | `/profiling/recommendation` | profiling.recommendation | `Livewire\Scholarships\Recommendation (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/profiling` | profiling | `Livewire\Profiling\Wizard (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/scholarships/saya` | scholarships.tracker | `Livewire\Scholarships\Tracker (Livewire page)` | `auth`, `verified`, `legal.consent` |

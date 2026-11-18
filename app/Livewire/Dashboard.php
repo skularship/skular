@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Contracts\EventServiceInterface;
 use App\Contracts\LearningPathServiceInterface;
 use App\Contracts\PricingServiceInterface;
 use App\Contracts\ProgressServiceInterface;
@@ -42,6 +43,7 @@ class Dashboard extends Component
         ScholarshipPathServiceInterface $path_service,
         LearningPathServiceInterface $learning_path,
         PricingServiceInterface $pricing,
+        EventServiceInterface $events,
     ): View {
         $user = $this->user();
 
@@ -95,6 +97,7 @@ class Dashboard extends Component
             'max_selections' => ScholarshipApplicationService::MAX_SELECTIONS,
             'at_limit' => $selected_count >= ScholarshipApplicationService::MAX_SELECTIONS,
             'premium' => $this->premiumCard($user, $pricing),
+            'next_event' => $events->nextFor($user),
             'next_action' => $this->nextAction($user, $summary, $active, $next, $path_completed, $history->isNotEmpty()),
         ]);
     }

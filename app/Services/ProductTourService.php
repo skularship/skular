@@ -69,6 +69,11 @@ class ProductTourService implements ProductTourServiceInterface
                 [null, 'Praktik dengan feedback AI', 'Tulis jawabanmu sendiri. AI menilainya dengan label dan saran perbaikan, tapi tidak menuliskan jawaban untukmu. AI Mentor siap menjawab pertanyaan, maksimal '.$this->mentorLimit().' pertanyaan per modul.'],
                 [null, 'Checkpoint', 'Checkpoint terbuka setelah semua latihan tersimpan dan selesai dinilai. Isi masukan singkat, lalu tekan "Kirim masukan & lanjut" untuk membuka modul berikutnya.'],
             ],
+            ProductTour::Events => [
+                [null, 'Event Skular', 'Di sini ada webinar, kelas intensif, dan mentoring bersama tim Skular. Daftarnya cukup sekali tekan.'],
+                ['[data-tour="event-tabs"]', 'Akan datang dan rekaman', 'Lihat acara yang akan datang, atau tonton rekaman acara yang sudah lewat.'],
+                [null, 'Link muncul H-1', 'Setelah daftar, link acara muncul di halaman acara mulai H-1. Kami juga mengirim pengingat ke emailmu.'],
+            ],
             ProductTour::Tracker => [
                 ['[data-test="application-card"]', 'Beasiswa Saya', 'Pantau status setiap beasiswa yang kamu pilih, dari persiapan sampai hasil.'],
                 ['[data-test="open-confirm"]', 'Konfirmasi pendaftaran', 'Sudah mendaftar di situs penyelenggara? Unggah bukti pendaftarannya di sini.'],

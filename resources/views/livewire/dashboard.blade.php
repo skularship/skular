@@ -303,6 +303,24 @@
                     </div>
                 @endif
 
+                {{-- Next event for the mentee (App\Services\EventService::nextFor). --}}
+                @if ($next_event)
+                    <x-ui.card class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between" data-test="dashboard-next-event">
+                        <div class="flex items-start gap-4">
+                            <x-ui.icon-badge :icon="$next_event->type->icon()" tone="teal" size="lg" />
+                            <div>
+                                <p class="text-sm font-bold text-brand-teal">{{ __('Acara berikutnya untukmu') }}</p>
+                                <p class="mt-1 text-lg font-extrabold text-zinc-900 dark:text-white">{{ $next_event->title }}</p>
+                                <p class="mt-1 text-base text-zinc-700 dark:text-zinc-300">{{ $next_event->startsAtLabel() }}</p>
+                            </div>
+                        </div>
+
+                        <x-actions.link-button :href="route('events.show', $next_event)" wire:navigate size="lg" iconTrailing="arrow-right" class="shrink-0">
+                            {{ __('Lihat acara') }}
+                        </x-actions.link-button>
+                    </x-ui.card>
+                @endif
+
                 {{-- E. Scholarship queue --}}
                 @if ($queue->count() > 1)
                     <x-ui.card padding="none" class="overflow-hidden" data-test="scholarship-queue">

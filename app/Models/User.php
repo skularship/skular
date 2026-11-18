@@ -43,6 +43,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $phone
  * @property string|null $subscription
  * @property Carbon|null $profile_completed_at
+ * @property array<int, string>|null $tags Admin labels such as "alumni_akademi_unggulan" (invitation-only events, feedback segments).
  * @property Carbon|null $feedback_commitment_at When the mentee agreed to give honest feedback at the end of every module (required before opening modules).
  * @property array<array-key, mixed>|null $onboarding_tours Raw JSON of finished or skipped product tours, {tour key: ISO timestamp}; read through ProductTourService.
  * @property string $password
@@ -65,6 +66,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read Subscription|null $proSubscription
  * @property-read Collection<int, Order> $orders
  * @property-read Collection<int, UserConsent> $consents
+ * @property-read Collection<int, EventRegistration> $eventRegistrations
  */
 #[Fillable([
     'name',
@@ -83,6 +85,7 @@ use Spatie\Permission\Traits\HasRoles;
     'phone',
     'subscription',
     'profile_completed_at',
+    'tags',
 ])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail, PasskeyUser
@@ -184,6 +187,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
             'age' => 'integer',
             'profile_completed_at' => 'datetime',
             'feedback_commitment_at' => 'datetime',
+            'tags' => 'array',
             'onboarding_tours' => 'array',
         ];
     }
@@ -214,6 +218,24 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
     public function hasFeedbackCommitment(): bool
     {
         return $this->feedback_commitment_at !== null;
+    }
+
+    /**
+     * Determine whether an admin gave the mentee this tag.
+     */
+    public function hasTag(string $tag): bool
+    {
+        return in_array($tag, $this->tags ?? [], true);
+    }
+
+    /**
+     * Get the mentee's event registrations.
+     *
+     * @return HasMany<EventRegistration, $this>
+     */
+    public function eventRegistrations(): HasMany
+    {
+        return $this->hasMany(EventRegistration::class);
     }
 
     /**

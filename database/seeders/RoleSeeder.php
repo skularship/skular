@@ -69,6 +69,9 @@ class RoleSeeder extends Seeder
             'Order' => self::READ,
             'Subscription' => self::WRITE,
             'PaymentEvent' => self::REVIEW,
+            // Events: full management incl. "Duplikat event"; participants are created by mentees, admins only mark attendance.
+            'Event' => [...self::MANAGE, 'Replicate'],
+            'EventRegistration' => self::REVIEW,
         ],
         AdminRole::StaffDivisi->value => [
             'Fase' => self::WRITE,
@@ -87,6 +90,8 @@ class RoleSeeder extends Seeder
             'UserPracticeResponse' => self::READ,
             'Checkpoint' => self::READ,
             'ModuleFeedback' => self::READ,
+            'Event' => [...self::WRITE, 'Replicate'],
+            'EventRegistration' => self::REVIEW,
         ],
     ];
 

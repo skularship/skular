@@ -2,6 +2,7 @@
 
 use App\Enums\LegalDocument;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\EventCalendarController;
 use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SubmissionProofController;
@@ -9,6 +10,8 @@ use App\Http\Controllers\VaultDownloadController;
 use App\Livewire\Checklist\Show as ChecklistShow;
 use App\Livewire\Cv\Show as CvShow;
 use App\Livewire\Dashboard;
+use App\Livewire\Events\Index as EventsIndex;
+use App\Livewire\Events\Show as EventShow;
 use App\Livewire\Faq\Index as FaqIndex;
 use App\Livewire\Learning\FeedbackCommitment;
 use App\Livewire\Learning\Library;
@@ -78,6 +81,9 @@ Route::middleware(['auth', 'verified', 'legal.consent'])->group(function () {
     Route::get('vault/{document}/unduh', VaultDownloadController::class)->name('vault.download');
     Route::livewire('scholarships/{application}/checklist', ChecklistShow::class)->name('checklist.show');
     Route::livewire('panduan', Guide::class)->name('guide.index');
+    Route::livewire('event', EventsIndex::class)->name('events.index');
+    Route::livewire('event/{event}', EventShow::class)->name('events.show');
+    Route::get('event/{event}/kalender', EventCalendarController::class)->name('events.calendar');
     Route::get('scholarships/{application}/proof', [SubmissionProofController::class, 'show'])->name('applications.proof');
 });
 

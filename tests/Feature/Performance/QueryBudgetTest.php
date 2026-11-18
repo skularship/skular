@@ -119,7 +119,8 @@ test('mentee hot pages stay within their query budget', function () {
         $library['time_ms'],
     ));
 
-    expect($dashboard['count'])->toBeLessThanOrEqual(10)
+    // Dashboard 11: +1 for the "Acara berikutnya untukmu" card (upcoming events).
+    expect($dashboard['count'])->toBeLessThanOrEqual(11)
         ->and($module['count'])->toBeLessThanOrEqual(25)
         ->and($catalog['count'])->toBeLessThanOrEqual(8)
         ->and($library['count'])->toBeLessThanOrEqual(6);

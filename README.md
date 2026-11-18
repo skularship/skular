@@ -94,7 +94,7 @@ Nilai rahasia tidak pernah ditulis di dokumentasi. Daftar lengkap ada di [`.env.
 | `ANALYTICS_PROPERTY_ID` | Property GA4 untuk dashboard analitik admin (+ file kredensial `storage/app/analytics/service-account-credentials.json`) | Opsional |
 | `GA_MEASUREMENT_ID` | Tag tracking GA4 di halaman publik (format `G-XXXXXXXXXX`, hanya production, tidak di `/admin`); beda dengan `ANALYTICS_PROPERTY_ID` | Opsional |
 | `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION` | Kunci Midtrans Snap (sandbox dulu, production setelah akun disetujui). Server key rahasia, jangan di repo | Wajib bila `PREMIUM_ENABLED=true` |
-| `QUEUE_CONNECTION` (worker) | Pembayaran dan reminder berjalan di antrean. Production wajib menjalankan `php artisan queue:work --queue=payments,reminders,default` (Supervisor) dan scheduler (`schedule:run` tiap menit) | Wajib bila `PREMIUM_ENABLED=true` |
+| `QUEUE_CONNECTION` (worker) | Pembayaran dan reminder (termasuk pengingat event) berjalan di antrean. Production wajib menjalankan `php artisan queue:work --queue=payments,reminders,default` (Supervisor) dan scheduler (`schedule:run` tiap menit) | Wajib bila `PREMIUM_ENABLED=true` atau ada event terbit |
 | `SUPPORT_WHATSAPP_NUMBER` | Nomor WhatsApp untuk tombol bantuan di `/bantuan` dan `/premium` | Opsional |
 | `PREMIUM_ENABLED` | Saklar fitur Premium (`/premium`, bagian Harga di landing, kartu paket di dashboard). Default `false` | Opsional |
 | `PRICING_LAUNCHING_UNTIL` | Akhir promo launching (ISO 8601). Kosong atau lewat = harga normal | Opsional |
@@ -165,7 +165,10 @@ public/build/              # Aset Vite hasil build (DI-COMMIT)
 | Praktik + penilaian AI sinkron di request (label, bukan skor) | (di langkah Praktik) | `app/Services/PracticeSubmissionService.php`, `app/Services/AiFeedbackService.php`, `app/Enums/AiScoreLabel.php` |
 | AI Mentor (saran pertanyaan admin + kuota 5/modul) | (di langkah Praktik) | `app/Livewire/Learning/MentorChat.php`, `app/Services/ModuleMentorService.php`, `MentorQuotaService.php` |
 | AI Brainstorming (kerangka draf dari jawaban mentee) | (di form praktik) | `app/Livewire/Learning/Brainstorming.php`, `app/Services/ModuleBrainstormingService.php`, `BrainstormingSessionService.php` |
-| Gate tahap Feedback/Checkpoint | (di langkah Checkpoint) | `ModulePlayer::checkpointBlock()` / `guardCheckpointSection()`, `ProgressService::completeModule()` |
+| Gate tahap Feedback/Checkpoint + masukan wajib per modul (skor 1-5, bagian tersulit, pertanyaan terbuka, alasan bila skor 1-3; tombol "Kirim masukan & lanjut") | (di langkah Checkpoint) | `ModulePlayer::checkpointBlock()` / `guardCheckpointSection()` / `submitFeedbackAndContinue()`, `ModuleFeedbackService.php`, `ProgressService::completeModule()` |
+| Komitmen akses gratis (sekali, setelah profiling atau saat pertama membuka modul) | `/akses-gratis` | `app/Livewire/Learning/FeedbackCommitment.php`, `users.feedback_commitment_at` |
+| Event: webinar, kelas intensif, mentoring personal (daftar + pertanyaan singkat pengganti Google Form, kapasitas, audiens Semua/Pro/Undangan lewat tag mentee, link acara hanya untuk peserta mulai H-1, file .ics, pengingat email H-1 hari & H-1 jam, masukan 1-5 setelah acara, rekaman) | `/event`, `/event/{slug}`, `/event/{slug}/kalender` | `app/Livewire/Events/*`, `app/Services/EventService.php`, `app/Console/Commands/DispatchEventReminders.php`, `app/Mail/EventReminderMail.php`, `app/Filament/Resources/Events/**` |
+| Tracking perilaku mentee (tanpa pihak ketiga) + widget admin "Funnel Mentee" 7/30 hari | (semua alur utama) | `app/Services/ActivityTracker.php`, `app/Enums/ActivityName.php`, `app/Filament/Widgets/MenteeFunnel.php` |
 | Perpustakaan (modul opsional) | `/library` | `app/Livewire/Learning/Library.php` |
 | CV otomatis dari jawaban praktik | `/cv` | `app/Livewire/Cv/Show.php`, `app/Services/CvService.php` |
 | Twibbon | `/scholarships/{application}/twibbon` | `app/Livewire/Twibbon/Generator.php`, `app/Services/TwibbonService.php` |
@@ -264,8 +267,8 @@ php artisan up
 
 | Komponen | Keterangan |
 |---|---|
-| Queue worker | Wajib bila `PREMIUM_ENABLED=true`: `php artisan queue:work --queue=payments,reminders,default` di bawah Supervisor (restart otomatis). Tanpa worker, pembayaran masuk tapi Pro belum aktif dan email tidak terkirim; panel admin menampilkan "Notifikasi tertahan" |
-| Scheduler | Cron `* * * * * php artisan schedule:run`: pengingat deadline dan Pro berakhir, antrean ulang pembayaran tertahan |
+| Queue worker | Wajib bila `PREMIUM_ENABLED=true` atau ada event terbit (email pengingat event masuk antrean `reminders`): `php artisan queue:work --queue=payments,reminders,default` di bawah Supervisor (restart otomatis). Tanpa worker, pembayaran masuk tapi Pro belum aktif dan email tidak terkirim; panel admin menampilkan "Notifikasi tertahan" |
+| Scheduler | Cron `* * * * * php artisan schedule:run`: pengingat deadline dan Pro berakhir, pengingat event (`events:remind` tiap 15 menit), antrean ulang pembayaran tertahan |
 | Email | `MAIL_MAILER` nyata (bukan `log`) untuk pengingat |
 | URL notifikasi Midtrans | Isi di dashboard Midtrans: `{APP_URL}/payments/midtrans/notification` |
 | PHP | 8.3+ dengan OPcache aktif; reload PHP-FPM setiap deploy bila `validate_timestamps=0` |
