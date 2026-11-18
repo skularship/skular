@@ -2,11 +2,13 @@
 
 namespace App\Livewire\Premium;
 
+use App\Contracts\ActivityTrackerInterface;
 use App\Contracts\CheckoutServiceInterface;
 use App\Contracts\ConsentServiceInterface;
 use App\Contracts\PaymentGatewayInterface;
 use App\Contracts\PricingServiceInterface;
 use App\Contracts\ReferralServiceInterface;
+use App\Enums\ActivityName;
 use App\Enums\ConsentSource;
 use App\Enums\LegalDocument;
 use App\Exceptions\PaymentException;
@@ -39,9 +41,11 @@ class Index extends Component
     /**
      * Hide the page completely while Premium is switched off.
      */
-    public function mount(): void
+    public function mount(ActivityTrackerInterface $tracker): void
     {
         abort_unless(config('pricing.enabled'), 404);
+
+        $tracker->track(ActivityName::PremiumViewed);
     }
 
     /**

@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Contracts\ActivityTrackerInterface;
 use App\Contracts\CheckoutServiceInterface;
 use App\Contracts\PaymentGatewayInterface;
 use App\Contracts\PricingServiceInterface;
 use App\Contracts\ReferralServiceInterface;
+use App\Enums\ActivityName;
 use App\Enums\OrderStatus;
 use App\Exceptions\PaymentException;
 use App\Models\Order;
@@ -29,6 +31,7 @@ class CheckoutService implements CheckoutServiceInterface
         private readonly PricingServiceInterface $pricing,
         private readonly PaymentGatewayInterface $gateway,
         private readonly ReferralServiceInterface $referrals,
+        private readonly ActivityTrackerInterface $tracker,
     ) {}
 
     /**
@@ -46,6 +49,8 @@ class CheckoutService implements CheckoutServiceInterface
         if ($product === null || $quote === null) {
             throw PaymentException::productUnavailable();
         }
+
+        $this->tracker->track(ActivityName::CheckoutStarted, ['product' => $product_code], $user);
 
         $amount = $quote->amount;
         $discount = 0;

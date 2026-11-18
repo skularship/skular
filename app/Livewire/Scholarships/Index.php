@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Scholarships;
 
+use App\Contracts\ActivityTrackerInterface;
+use App\Enums\ActivityName;
 use App\Enums\EducationLevel;
 use App\Enums\LocationScope;
 use App\Enums\ScholarshipStatus;
@@ -21,7 +23,9 @@ use Livewire\WithPagination;
  * A mentee-facing catalog of every scholarship they can still prepare for.
  *
  * Draft and archived scholarships are never listed. Closed scholarships are
- * hidden by default and can be revealed with an explicit filter.
+ * hidden by default and can be revealed with an explicit filter. Mentees
+ * without a profile see the "Cari beasiswa yang cocok untukku" card that
+ * leads to profiling; profiled mentees get "Lihat rekomendasiku" instead.
  */
 #[Title('Semua Beasiswa')]
 class Index extends Component
@@ -47,15 +51,67 @@ class Index extends Component
     public string $sort = 'deadline';
 
     /**
+     * Filters whose change is tracked; the search text itself is never stored.
+     *
+     * @var array<int, string>
+     */
+    private const FILTERS = ['search', 'level', 'scope', 'location', 'include_closed', 'sort'];
+
+    /**
+     * Record that the mentee opened the catalog.
+     */
+    public function mount(ActivityTrackerInterface $tracker): void
+    {
+        $tracker->track(ActivityName::ScholarshipsViewed);
+    }
+
+    /**
+     * Record which filter the mentee changed (search text is reduced to "used").
+     */
+    public function updated(string $property): void
+    {
+        if (! in_array($property, self::FILTERS, true)) {
+            return;
+        }
+
+        $value = $property === 'search' ? ($this->search !== '') : $this->{$property};
+
+        app(ActivityTrackerInterface::class)->track(ActivityName::ScholarshipsFiltered, [
+            'filter' => $property,
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * "Cari beasiswa yang cocok untukku": record the click and open profiling,
+     * or the recommendations when the mentee already finished profiling.
+     */
+    public function findMatches(ActivityTrackerInterface $tracker): void
+    {
+        $tracker->track(ActivityName::MatchCtaClicked, ['from' => 'scholarships']);
+
+        /** @var User $user */
+        $user = Auth::user();
+
+        $this->redirect(
+            $user->hasCompletedProfile() ? route('profiling.recommendation') : route('profiling'),
+            navigate: true,
+        );
+    }
+
+    /**
      * Reset to the first page whenever a filter changes.
      */
     public function updating(string $property): void
     {
-        if (in_array($property, ['search', 'level', 'scope', 'location', 'include_closed', 'sort'], true)) {
+        if (in_array($property, self::FILTERS, true)) {
             $this->resetPage();
         }
     }
 
+    /**
+     * Clear every filter ("Hapus filter").
+     */
     public function resetFilters(): void
     {
         $this->search = '';
@@ -87,6 +143,7 @@ class Index extends Component
             'selected_count' => $selected_count,
             'max_selections' => ScholarshipApplicationService::MAX_SELECTIONS,
             'at_limit' => $selected_count >= ScholarshipApplicationService::MAX_SELECTIONS,
+            'has_profile' => $user->hasCompletedProfile(),
         ]);
     }
 

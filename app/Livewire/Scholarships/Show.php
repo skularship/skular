@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Scholarships;
 
+use App\Contracts\ActivityTrackerInterface;
 use App\Contracts\ScholarshipApplicationServiceInterface;
 use App\Contracts\ScholarshipMatchingServiceInterface;
 use App\Contracts\ScholarshipReportServiceInterface;
 use App\Data\UserProfileData;
+use App\Enums\ActivityName;
 use App\Enums\ReportedField;
 use App\Enums\ScholarshipStatus;
 use App\Models\Scholarship;
@@ -90,7 +92,7 @@ class Show extends Component
      *
      * @param  Scholarship  $scholarship  Route-bound scholarship.
      */
-    public function mount(Scholarship $scholarship): void
+    public function mount(Scholarship $scholarship, ActivityTrackerInterface $tracker): void
     {
         // Draft and archived scholarships are not mentee-facing.
         if (! in_array($scholarship->status, ScholarshipStatus::publiclyVisible(), true)) {
@@ -98,6 +100,8 @@ class Show extends Component
         }
 
         $this->scholarship = $scholarship->loadMissing('cluster');
+
+        $tracker->track(ActivityName::ScholarshipOpened, ['scholarship_id' => $scholarship->id]);
     }
 
     /**
@@ -140,6 +144,11 @@ class Show extends Component
 
             return;
         }
+
+        app(ActivityTrackerInterface::class)->track(ActivityName::ScholarshipsSelected, [
+            'count' => $added,
+            'from' => 'detail',
+        ], $user);
 
         $this->dispatch('toast', variant: 'success', text: __('Beasiswa berhasil ditambahkan ke daftar persiapanmu.'));
     }

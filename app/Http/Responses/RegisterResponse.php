@@ -2,6 +2,9 @@
 
 namespace App\Http\Responses;
 
+use App\Contracts\ActivityTrackerInterface;
+use App\Enums\ActivityName;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,6 +26,12 @@ class RegisterResponse implements RegisterResponseContract
     public function toResponse($request): Response
     {
         /** @var Request $request */
+        $user = $request->user();
+
+        if ($user instanceof User) {
+            app(ActivityTrackerInterface::class)->track(ActivityName::Registered, user: $user);
+        }
+
         return redirect()->intended(route('profiling', absolute: false));
     }
 }

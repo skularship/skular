@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\ActivityTrackerInterface;
 use App\Contracts\AiFeedbackServiceInterface;
 use App\Contracts\BrainstormingSessionServiceInterface;
 use App\Contracts\CheckoutServiceInterface;
@@ -35,6 +36,7 @@ use App\Contracts\SubscriptionServiceInterface;
 use App\Contracts\SupportTicketServiceInterface;
 use App\Contracts\TwibbonServiceInterface;
 use App\Contracts\VaultServiceInterface;
+use App\Services\ActivityTracker;
 use App\Services\AiFeedbackService;
 use App\Services\BrainstormingSessionService;
 use App\Services\CheckoutService;
@@ -180,6 +182,7 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function registerServiceBindings(): void
     {
+        $this->app->bind(ActivityTrackerInterface::class, ActivityTracker::class);
         $this->app->bind(AiFeedbackServiceInterface::class, AiFeedbackService::class);
         $this->app->bind(CheckoutServiceInterface::class, CheckoutService::class);
         $this->app->bind(ConsentServiceInterface::class, ConsentService::class);

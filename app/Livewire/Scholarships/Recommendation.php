@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Scholarships;
 
+use App\Contracts\ActivityTrackerInterface;
 use App\Contracts\ScholarshipApplicationServiceInterface;
 use App\Contracts\ScholarshipMatchingServiceInterface;
 use App\Data\ScholarshipMatchData;
 use App\Data\UserProfileData;
+use App\Enums\ActivityName;
 use App\Models\User;
 use App\Services\ScholarshipApplicationService;
 use Illuminate\Contracts\View\View;
@@ -99,6 +101,11 @@ class Recommendation extends Component
         if ($added === 0) {
             $this->dispatch('toast', variant: 'info', text: __('Pilihanmu sudah tersimpan sebelumnya.'));
         } else {
+            app(ActivityTrackerInterface::class)->track(ActivityName::ScholarshipsSelected, [
+                'count' => $added,
+                'from' => 'recommendation',
+            ], $user);
+
             $this->dispatch('toast', variant: 'success', text: __(':count beasiswa berhasil ditambahkan ke dashboardmu.', ['count' => $added]));
         }
 

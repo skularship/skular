@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Contracts\ActivityTrackerInterface;
 use App\Contracts\GoogleAuthServiceInterface;
+use App\Enums\ActivityName;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -71,6 +73,10 @@ class GoogleAuthController extends Controller
 
         Auth::login($user, remember: true);
         session()->regenerate();
+
+        if ($user->wasRecentlyCreated) {
+            app(ActivityTrackerInterface::class)->track(ActivityName::Registered, ['via' => 'google'], $user);
+        }
 
         return redirect()->to(
             $user->hasCompletedProfile()

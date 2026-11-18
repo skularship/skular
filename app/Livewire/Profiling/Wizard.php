@@ -3,7 +3,9 @@
 namespace App\Livewire\Profiling;
 
 use App\Concerns\ProfilingRules;
+use App\Contracts\ActivityTrackerInterface;
 use App\Contracts\ProfilingServiceInterface;
+use App\Enums\ActivityName;
 use App\Enums\EducationLevel;
 use App\Enums\LocationScope;
 use App\Models\Cluster;
@@ -73,9 +75,13 @@ class Wizard extends Component
     /**
      * Hydrate the wizard from the persisted profile.
      */
-    public function mount(ProfilingServiceInterface $profiling_service): void
+    public function mount(ProfilingServiceInterface $profiling_service, ActivityTrackerInterface $tracker): void
     {
         $this->answers = $profiling_service->values($this->user());
+
+        if (! $this->user()->hasCompletedProfile()) {
+            $tracker->track(ActivityName::ProfilingStarted);
+        }
 
         $this->step = max(1, min(count($profiling_service->steps()), $this->step));
     }
@@ -116,7 +122,13 @@ class Wizard extends Component
         $this->answers = $payload;
         $this->resetErrorBag();
 
+        $was_profiled = $this->user()->hasCompletedProfile();
+
         $profiling_service->complete($this->user(), $payload);
+
+        if (! $was_profiled) {
+            app(ActivityTrackerInterface::class)->track(ActivityName::ProfilingCompleted, user: $this->user());
+        }
 
         $this->redirect(route('profiling.recommendation'), navigate: true);
 

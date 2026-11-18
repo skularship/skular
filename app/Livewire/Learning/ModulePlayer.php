@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Learning;
 
+use App\Contracts\ActivityTrackerInterface;
 use App\Contracts\ModuleFeedbackServiceInterface;
 use App\Contracts\ModuleOutlineServiceInterface;
 use App\Contracts\PracticeSubmissionServiceInterface;
 use App\Contracts\ProgressServiceInterface;
 use App\Data\ModuleProgressData;
 use App\Data\PracticeFieldData;
+use App\Enums\ActivityName;
 use App\Enums\AiFeedbackStatus;
 use App\Enums\CheckpointStatus;
 use App\Enums\PracticeFieldType;
@@ -154,6 +156,8 @@ class ModulePlayer extends Component
         }
 
         $this->module_started = true;
+
+        app(ActivityTrackerInterface::class)->track(ActivityName::ModuleOpened, ['module_id' => $module->id], $user);
 
         $this->prefill($user);
 
@@ -329,6 +333,12 @@ class ModulePlayer extends Component
 
         $this->responses_cache = null;
 
+        app(ActivityTrackerInterface::class)->track(ActivityName::PracticeSubmitted, [
+            'module_id' => $this->module->id,
+            'practice_form_id' => $form->id,
+            'ai_status' => $response->ai_status->value,
+        ], $this->user());
+
         // The submission is saved before the AI call, so a failed evaluation
         // still gets an honest message and a retry action instead of a
         // success toast for work the AI never completed.
@@ -403,6 +413,8 @@ class ModulePlayer extends Component
             $this->suggestion,
         );
 
+        app(ActivityTrackerInterface::class)->track(ActivityName::FeedbackSubmitted, ['module_id' => $this->module->id], $this->user());
+
         $this->dispatch('toast', variant: 'success', text: __('Terima kasih, masukanmu tersimpan!'));
     }
 
@@ -426,6 +438,8 @@ class ModulePlayer extends Component
         $progress_service->completeModule($this->user(), $this->module, $this->averageScore());
 
         $this->module_completed = true;
+
+        app(ActivityTrackerInterface::class)->track(ActivityName::ModuleCompleted, ['module_id' => $this->module->id], $this->user());
 
         $this->dispatch('toast', variant: 'success', text: __('Modul selesai! Modul berikutnya sudah terbuka.'));
     }
