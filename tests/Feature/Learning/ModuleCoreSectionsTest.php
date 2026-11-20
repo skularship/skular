@@ -34,6 +34,37 @@ test('pahami shows every core column with its subtitle, in order, after the intr
         ->assertDontSee('Teks inti materi lama.');
 });
 
+test('pahami renders the core material as one document with parts, a table of contents and an end marker', function () {
+    ModuleCoreSection::factory()->for($this->module)->html()->create([
+        'subtitle' => 'Bagian berformat HTML',
+        'body' => '<h2>Key Points</h2><p><span class="color" data-color="merah">Penting</span></p>',
+        'ordering' => 2,
+    ]);
+    ModuleCoreSection::factory()->for($this->module)->create(['subtitle' => 'Bagian Markdown', 'body' => 'Isi **tebal**.', 'ordering' => 1]);
+
+    Livewire::actingAs($this->mentee)
+        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'pahami'])
+        ->assertSeeHtml('data-test="inti-materi"')
+        ->assertSeeHtml('data-test="inti-materi-daftar-isi"')
+        ->assertSeeHtml('data-test="inti-materi-selesai"')
+        ->assertSeeHtml('data-test="pahami-header"')
+        ->assertSeeHtml('data-test="next-section"')
+        ->assertSeeInOrder(['Bagian 1 dari 2', 'Bagian Markdown', 'Bagian 2 dari 2', 'Bagian berformat HTML', 'Kamu sudah sampai di akhir inti materi.'])
+        ->assertSeeHtml('<h6 class="sk-h2">Key Points</h6>')
+        ->assertSeeHtml('<span data-color="merah" style="color: #b91c1c">Penting</span>')
+        ->assertSeeHtml('<strong>tebal</strong>');
+});
+
+test('a single core column has no table of contents or part label', function () {
+    ModuleCoreSection::factory()->for($this->module)->create(['subtitle' => 'Satu-satunya', 'body' => 'Isi.', 'ordering' => 1]);
+
+    Livewire::actingAs($this->mentee)
+        ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'pahami'])
+        ->assertSeeHtml('data-test="inti-materi-kolom"')
+        ->assertDontSeeHtml('data-test="inti-materi-daftar-isi"')
+        ->assertDontSee('Bagian 1 dari 1');
+});
+
 test('an html column without visible text is treated as empty', function () {
     ModuleCoreSection::factory()->for($this->module)->html()->create(['subtitle' => 'Kosong', 'body' => '<p></p>', 'ordering' => 1]);
     ModuleCoreSection::factory()->for($this->module)->html()->create(['subtitle' => 'Spasi saja', 'body' => '<p>&nbsp;</p><p> </p>', 'ordering' => 2]);

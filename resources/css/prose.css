@@ -1,143 +1,231 @@
 /*
- * .sk-prose: brand style for curriculum material rendered from Markdown
- * (x-learning.rich-content / RichContentRenderer).
+ * .sk-prose: brand style for curriculum material (x-learning.rich-content /
+ * RichContentRenderer): Markdown material and the Inti Materi HTML written
+ * in the admin rich editor. Reads like a document: one column, generous
+ * white space, colored headings, airy paragraphs.
  *
  * Plain CSS with literal brand colors so the same file styles the mentee app
- * (imported by app.css) and the Filament module preview (loaded through a
- * panel render hook), which does not ship the Tailwind theme tokens.
+ * (imported by app.css) and the Filament panel (loaded through a render
+ * hook), which does not ship the Tailwind theme tokens.
  *
- * Headings: # = .sk-h1 (teal, required by the brand guideline),
- * ## = .sk-h2 (ink with an orange marker), ### = .sk-h3 (bold ink).
- * Contrast on white: teal #277c93 4.9:1, ink #1b1b18 17:1, body #3f3f46 10:1 (WCAG AA).
+ * Every rule also targets the content area of the admin Inti Materi editor
+ * (.sk-material-editor .fi-fo-rich-editor-content), where headings are raw
+ * <h1>-<h3> instead of .sk-h1-.sk-h3, so the editor is truly WYSIWYG.
+ * The selectors outrank Filament's .fi-prose (0,2,x against 0,1,x).
+ *
+ * Headings: .sk-h1 = teal (brand rule "#" = teal), .sk-h2 = deep teal,
+ * .sk-h3 = bold ink. Contrast on white (WCAG AA): body #3f3f46 10:1,
+ * ink #1b1b18 17:1, teal #277c93 4.9:1, deep teal #1c5f73 7.4:1.
  */
-.sk-prose {
+.sk-prose,
+.sk-material-editor .fi-fo-rich-editor-content {
     --sk-prose-teal: #277c93;
     --sk-prose-teal-deep: #1c5f73;
-    --sk-prose-orange: #f2994a;
+    --sk-prose-teal-soft: #d8ebef;
     --sk-prose-amber: #f2c94c;
     --sk-prose-amber-soft: #fdf1cd;
+    --sk-prose-mark: #fcf3cf;
     --sk-prose-ink: #1b1b18;
     --sk-prose-body: #3f3f46;
+    --sk-prose-line: #e4e4e7;
 
-    max-width: 70ch;
     color: var(--sk-prose-body);
-    font-size: 0.9375rem;
-    line-height: 1.75;
+    font-size: 1.0625rem;
+    line-height: 1.8;
     overflow-wrap: anywhere;
 }
 
-.sk-prose > * + * {
-    margin-top: 0.9em;
+.sk-prose {
+    max-width: 68ch;
 }
 
-.sk-prose > :first-child {
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) > * + * {
+    margin-top: 1em;
+}
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) > :first-child {
     margin-top: 0;
 }
 
-.sk-prose p {
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) p {
     margin-bottom: 0;
 }
 
-.sk-prose .sk-h1,
-.sk-prose .sk-h2,
-.sk-prose .sk-h3 {
+/* Headings */
+
+:is(.sk-prose .sk-h1, .sk-prose .sk-h2, .sk-prose .sk-h3, .sk-material-editor .fi-fo-rich-editor-content :is(h1, h2, h3, h4, h5, h6)) {
     line-height: 1.35;
     letter-spacing: -0.01em;
 }
 
-.sk-prose .sk-h1 {
-    margin-top: 1.6em;
+:is(.sk-prose .sk-h1, .sk-material-editor .fi-fo-rich-editor-content h1) {
+    margin-top: 1.8em;
     color: var(--sk-prose-teal);
-    font-size: 1.25em;
+    font-size: 1.5em;
     font-weight: 800;
 }
 
-.sk-prose .sk-h2 {
-    margin-top: 1.4em;
-    padding-inline-start: 0.65rem;
-    border-inline-start: 4px solid var(--sk-prose-orange);
-    color: var(--sk-prose-ink);
-    font-size: 1.1em;
+:is(.sk-prose .sk-h2, .sk-material-editor .fi-fo-rich-editor-content h2) {
+    margin-top: 2em;
+    color: var(--sk-prose-teal-deep);
+    font-size: 1.25em;
     font-weight: 700;
 }
 
-.sk-prose .sk-h3 {
-    margin-top: 1.2em;
+:is(.sk-prose .sk-h3, .sk-material-editor .fi-fo-rich-editor-content :is(h3, h4, h5, h6)) {
+    margin-top: 1.6em;
     color: var(--sk-prose-ink);
-    font-size: 1em;
+    font-size: 1.05em;
     font-weight: 700;
 }
 
-.sk-prose .sk-h1 + *,
-.sk-prose .sk-h2 + *,
-.sk-prose .sk-h3 + * {
-    margin-top: 0.45em;
+:is(.sk-prose :is(.sk-h1, .sk-h2, .sk-h3), .sk-material-editor .fi-fo-rich-editor-content :is(h1, h2, h3, h4, h5, h6)) + * {
+    margin-top: 0.5em;
 }
 
-.sk-prose strong,
-.sk-prose b {
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) > :is(.sk-h1, .sk-h2, .sk-h3, h1, h2, h3):first-child {
+    margin-top: 0;
+}
+
+/* Inline text */
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) :is(strong, b) {
     color: var(--sk-prose-ink);
     font-weight: 650;
 }
 
-.sk-prose em {
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) em {
     font-style: italic;
 }
 
-.sk-prose ul,
-.sk-prose ol {
-    padding-inline-start: 1.35rem;
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) u {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
 }
 
-.sk-prose ul {
-    list-style: disc;
-}
-
-.sk-prose ol {
-    list-style: decimal;
-}
-
-.sk-prose li + li {
-    margin-top: 0.4em;
-}
-
-.sk-prose li::marker {
-    color: var(--sk-prose-teal);
-    font-weight: 700;
-}
-
-.sk-prose li > ul,
-.sk-prose li > ol {
-    margin-top: 0.4em;
-}
-
-.sk-prose blockquote {
-    padding: 0.75rem 1rem;
-    border-inline-start: 3px solid var(--sk-prose-amber);
-    border-radius: 0 0.75rem 0.75rem 0;
-    background-color: var(--sk-prose-amber-soft);
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) mark {
+    padding: 0.05em 0.25em;
+    border-radius: 0.3em;
+    background-color: var(--sk-prose-mark);
     color: var(--sk-prose-ink);
+    box-decoration-break: clone;
 }
 
-.sk-prose a {
+/* A whitelisted text color keeps its weight when it is also bold. */
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) span[data-color] :is(strong, b),
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) :is(strong, b) span[data-color] {
+    color: inherit;
+}
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) a {
     color: var(--sk-prose-teal);
     font-weight: 600;
     text-decoration: underline;
     text-underline-offset: 2px;
 }
 
-.sk-prose a:hover {
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) a:hover {
     color: var(--sk-prose-teal-deep);
 }
 
-.sk-prose hr {
-    border: 0;
-    border-top: 1px solid color-mix(in oklab, var(--sk-prose-teal) 20%, transparent);
-}
-
-.sk-prose code {
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) code {
     padding: 0.1em 0.35em;
     border-radius: 0.35rem;
     background-color: color-mix(in oklab, var(--sk-prose-teal) 10%, white);
     font-size: 0.9em;
+}
+
+/* Lists: hanging indent so wrapped lines align with the text, not the marker. */
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) :is(ul, ol) {
+    padding-inline-start: 1.5rem;
+    list-style-position: outside;
+}
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) ul {
+    list-style-type: disc;
+}
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) ol {
+    list-style-type: decimal;
+}
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) li {
+    padding-inline-start: 0.25rem;
+}
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) li + li {
+    margin-top: 0.6em;
+}
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) li::marker {
+    color: var(--sk-prose-teal);
+    font-weight: 700;
+}
+
+/* The rich editor wraps list item text in <p>. */
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) li > p {
+    margin: 0;
+}
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) li > p + p,
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) li > :is(ul, ol) {
+    margin-top: 0.6em;
+}
+
+/* "Catatan penting" */
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) blockquote {
+    margin-inline: 0;
+    padding: 0.9rem 1.1rem;
+    border-inline-start: 4px solid var(--sk-prose-amber);
+    border-radius: 0.25rem 0.875rem 0.875rem 0.25rem;
+    background-color: var(--sk-prose-amber-soft);
+    color: var(--sk-prose-ink);
+    font-style: normal;
+}
+
+/* Filament's .fi-prose adds typographic quotes around blockquotes; mentees do not see them. */
+.sk-material-editor .fi-fo-rich-editor-content blockquote p::before,
+.sk-material-editor .fi-fo-rich-editor-content blockquote p::after {
+    content: none;
+}
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) blockquote > * + * {
+    margin-top: 0.6em;
+}
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) hr {
+    margin-block: 2em;
+    border: 0;
+    border-top: 1px solid var(--sk-prose-line);
+}
+
+/* Tables scroll sideways on small screens instead of widening the page. */
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: 0.9375em;
+    line-height: 1.6;
+}
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) :is(th, td) {
+    min-width: 8rem;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid var(--sk-prose-line);
+    text-align: start;
+    vertical-align: top;
+}
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) th {
+    background-color: var(--sk-prose-teal-soft);
+    color: var(--sk-prose-ink);
+    font-weight: 700;
+}
+
+:is(.sk-prose, .sk-material-editor .fi-fo-rich-editor-content) :is(th, td) > p {
+    margin: 0;
 }

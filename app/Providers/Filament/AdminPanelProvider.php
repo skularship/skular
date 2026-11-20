@@ -50,9 +50,10 @@ class AdminPanelProvider extends PanelProvider
             // admin URLs (/admin/users/...) and 404'd. Same icon as the public
             // layouts (resources/views/partials/head.blade.php).
             ->favicon('/favicon.png')
-            // The module preview renders curriculum Markdown exactly like the
-            // mentee view, so it needs the same .sk-prose stylesheet.
-            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => Blade::render("@vite('resources/css/prose.css')"))
+            // The module preview and the Inti Materi rich editor render curriculum
+            // material exactly like the mentee view, so they need the same .sk-prose
+            // stylesheet and the self-hosted material fonts (config/content.php).
+            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => Blade::render("@fonts(['plus-jakarta-sans', 'nunito', 'lora'])\n@vite('resources/css/prose.css')"))
             ->colors([
                 // Skular amber-to-orange primary palette.
                 'primary' => [

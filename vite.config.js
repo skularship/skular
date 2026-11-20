@@ -17,6 +17,21 @@ export default defineConfig({
                 bunny('Rubik', {
                     weights: [400, 500, 600, 700, 800],
                 }),
+                // Optional Inti Materi fonts (config/content.php). Self-hosted and
+                // not preloaded: the browser only downloads them when material uses them.
+                bunny('Plus Jakarta Sans', {
+                    weights: [400, 700],
+                    preload: false,
+                }),
+                bunny('Nunito', {
+                    weights: [400, 700],
+                    preload: false,
+                }),
+                bunny('Lora', {
+                    weights: [400, 700],
+                    styles: ['normal', 'italic'],
+                    preload: false,
+                }),
             ],
         }),
         tailwindcss(),

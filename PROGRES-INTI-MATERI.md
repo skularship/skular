@@ -9,7 +9,7 @@ Catatan kerja untuk perubahan editor Inti Materi (Filament RichEditor) dan tampi
 | A | Data: `module_core_sections.body_format`, model, factory, helper body kosong | Selesai |
 | B | Renderer: jalur HTML tersanitasi, prop `format`, test keamanan | Selesai |
 | C | Admin: RichEditor, whitelist warna, plugin font, konversi Markdown, Pratinjau | Selesai |
-| D | Frontend: lembar dokumen di Pahami, `prose.css` baru, daftar isi sticky | Belum |
+| D | Frontend: lembar dokumen di Pahami, `prose.css` baru, daftar isi sticky | Selesai |
 | E | Finishing: build aset, dokumentasi, `composer test` | Belum |
 
 ## Keputusan teknis
@@ -49,6 +49,16 @@ Catatan kerja untuk perubahan editor Inti Materi (Filament RichEditor) dan tampi
 - **Bug yang ditemukan saat uji browser:** menyimpan modul dengan kolom berisi daftar/tabel menghasilkan 500 `MaxNestingDepthExceededException` (batas payload Livewire 10). `config/livewire.php` diterbitkan dan `payload.max_nesting_depth` dinaikkan ke 32 sesuai dokumentasi Filament. Test Livewire tidak menangkap ini karena `fillForm` tidak melewati payload HTTP; ada test penjaga config.
 - Uji browser (Edge headless, server sandbox SQLite): font Lora diterapkan lewat dropdown dan tersimpan, modal warna hanya menampilkan 6 warna, warna Teal tersimpan, notifikasi "Perubahan modul tersimpan", tanpa error konsol.
 
+### Tahap D
+
+- Inti Materi di Pahami menjadi satu "lembar dokumen" (`article` putih, border halus, `px-5 py-8` / `sm:px-10 sm:py-12`, konten maks 68ch). Header: label "INTI MATERI" + judul modul + "N bagian · ± M menit baca" (200 kata/menit).
+- Tiap kolom adalah satu bagian: "Bagian X dari N", subjudul `h4` 24px/800 teal tua, pemisah tipis + `mt-12`. Label bagian dan daftar isi disembunyikan bila hanya satu kolom. Penanda akhir "Kamu sudah sampai di akhir inti materi." sebelum Ringkasan.
+- Daftar isi: chip horizontal di mobile; bar chip sticky di `lg`; daftar vertikal sticky di kiri pada `xl`. Daftar kiri dipindah ke `xl` karena di `lg` sidebar aplikasi (288px) menyisakan kolom baca ~430px. Item aktif mengikuti scroll lewat Alpine + IntersectionObserver (observer dilepas di `destroy()`).
+- `prose.css` versi baru: 17px / 1.8, heading teal/teal tua/ink, list hanging indent dengan marker teal, blockquote amber, tabel dengan header `#d8ebef` dan scroll horizontal, `mark` lembut. Aturan yang sama dipasang ke area konten editor admin (`.sk-material-editor .fi-fo-rich-editor-content`); tanda kutip otomatis Filament di blockquote dimatikan di editor.
+- Font tambahan (Plus Jakarta Sans, Nunito 400/700; Lora 400/700 normal+italic) di-host sendiri lewat `bunny()` dengan `preload: false`, sehingga hanya diunduh bila materi memakainya. Tidak ada request ke pihak ketiga, jadi Kebijakan Privasi/Cookie tidak berubah. Panel admin memuat ketiga font ini lewat `@fonts([...])` di render hook.
+- Semua hook `data-test` dipertahankan (`inti-materi`, `inti-materi-kolom`, `rich-content`, `pahami-header`, `next-section`); hook baru: `inti-materi-daftar-isi`, `inti-materi-selesai`. Product Tour tidak menargetkan blok ini.
+- Uji browser (sandbox): 360px tanpa scroll horizontal, `lg` bar sticky, `xl` daftar kiri sticky di 24px dan item aktif berpindah saat scroll; editor admin dan Pratinjau tampil sama dengan mentee; tanpa error konsol.
+
 ## Risiko
 
 - `composer audit` menemukan 18 advisory di 11 paket yang terkunci (antara lain `livewire/livewire` medium, `symfony/mime` medium, `symfony/http-foundation`, `symfony/html-sanitizer`). Advisory html-sanitizer (srcset, meta refresh, `allowLinkHosts`) tidak mengenai konfigurasi kita. Pembaruan dependensi di luar lingkup tugas ini.
@@ -58,4 +68,4 @@ Catatan kerja untuk perubahan editor Inti Materi (Filament RichEditor) dan tampi
 
 ## Sisa pekerjaan
 
-Tahap D dan E.
+Tahap E.
