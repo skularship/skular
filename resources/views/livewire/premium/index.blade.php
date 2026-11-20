@@ -28,17 +28,18 @@
         ['icon' => 'bell-alert', 'tone' => 'bg-brand-mint-soft text-emerald-700', 'when' => __('Jelang deadline'), 'text' => __('Pengingat masuk ke email. Nggak ada yang kelewat.')],
     ];
 
-    // true = check mark, false = locked, string = shown as is.
+    // [feature, free, pro, coming soon]; true = check mark, false = locked, string = shown as is.
+    // Pro is a check everywhere except the two AI quotas, which differ per plan.
     $compare = [
         [__('Info semua beasiswa'), true, true, false],
         [__('Profiling, rekomendasi, dan roadmap belajar'), true, true, false],
-        [__('Vault dokumen'), false, __('Sampai :n dokumen', ['n' => config('plans.vault.max_files')]), false],
-        [__('Checklist berkas per beasiswa'), false, __('Semua beasiswa pilihanmu'), false],
-        [__('Reminder deadline lewat email (H-7, H-3, H-1)'), __('1 beasiswa'), __('Semua beasiswa pilihanmu'), false],
+        [__('Vault dokumen'), false, true, false],
+        [__('Checklist berkas per beasiswa'), false, true, false],
+        [__('Reminder deadline lewat email (H-7, H-3, H-1)'), __('1 beasiswa'), true, false],
         [__('Review esai dan CV oleh AI'), __('1 per bulan'), __('5/bln (1 bulan), 10/bln (12 bulan)'), true],
         [__('Latihan wawancara AI'), __('1 sesi pratinjau'), __('3/bln (1 bulan), 6/bln (12 bulan)'), true],
         [__('Video pembelajaran'), __('1 pratinjau'), true, true],
-        [__('Live class dan rekaman'), __('1 rekaman pratinjau'), __('Semua (sesekali, jadwal diumumkan)'), true],
+        [__('Live class dan rekaman'), __('1 rekaman pratinjau'), true, true],
         [__('Template dokumen'), __('1 contoh'), true, true],
     ];
 
@@ -394,31 +395,32 @@
     </section>
 
     {{-- Free vs Pro --}}
-    <section class="mx-auto w-full max-w-3xl px-4 pb-12 sm:px-6">
+    <section class="mx-auto w-full max-w-4xl px-4 pb-12 sm:px-6">
         <h2 class="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">{{ __('Gratis vs Pro') }}</h2>
 
-        <div class="mt-6 overflow-hidden rounded-[1.75rem] border border-zinc-200 bg-white shadow-[0_18px_30px_-24px_rgb(27_27_24/0.4)]">
-            <table class="w-full table-fixed text-sm">
+        {{-- The whole Pro column carries a tint from header to last row --}}
+        <div class="mt-6 overflow-hidden rounded-4xl border border-zinc-200 bg-white shadow-[0_24px_40px_-28px_rgb(27_27_24/0.4)]">
+            <table class="w-full table-fixed">
                 <thead>
                     <tr class="border-b border-zinc-100">
-                        <th class="px-4 py-4 text-start font-bold text-zinc-900 sm:px-5">{{ __('Fitur') }}</th>
-                        <th class="w-24 px-2 py-4 text-center font-bold text-zinc-900 sm:w-36">{{ __('Gratis') }}</th>
-                        <th class="w-28 bg-brand-teal-soft/50 px-2 py-4 text-center font-bold text-brand-teal-deep sm:w-48">{{ __('Pro') }}</th>
+                        <th class="px-4 py-5 text-start text-sm font-bold text-zinc-900 sm:px-6 sm:text-base">{{ __('Fitur') }}</th>
+                        <th class="w-22 px-2 py-5 text-center text-sm font-bold text-zinc-900 sm:w-36 sm:text-base">{{ __('Gratis') }}</th>
+                        <th class="w-28 bg-brand-teal-soft/50 px-2 py-5 text-center text-sm font-bold text-brand-teal-deep sm:w-52 sm:text-base">{{ __('Pro') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-100">
                     @foreach ($compare as [$feature, $free, $pro, $soon])
                         <tr>
-                            <td class="px-4 py-3.5 text-zinc-800 sm:px-5">
+                            <td class="px-4 py-5 text-sm text-zinc-800 sm:px-6 sm:text-base">
                                 {{ $feature }}
                                 @if ($soon)
                                     <x-ui.pill variant="peach" class="ms-1">{{ __('Coming Soon') }}</x-ui.pill>
                                 @endif
                             </td>
                             @foreach ([$free, $pro] as $index => $value)
-                                <td @class(['px-2 py-3.5 text-center text-xs sm:text-sm', 'bg-brand-teal-soft/50 font-semibold text-zinc-800' => $index === 1, 'text-zinc-500' => $index === 0])>
+                                <td @class(['px-2 py-5 text-center', 'bg-brand-teal-soft/50 text-xs font-semibold text-zinc-800 sm:text-sm' => $index === 1, 'text-sm text-zinc-500' => $index === 0])>
                                     @if ($value === true)
-                                        <x-icons.app-icon name="check" class="mx-auto size-5 text-brand-ink" />
+                                        <x-icons.app-icon name="check" class="mx-auto size-6 text-brand-ink" />
                                         <span class="sr-only">{{ __('Ya') }}</span>
                                     @elseif ($value === false)
                                         {{ __('Terkunci') }}

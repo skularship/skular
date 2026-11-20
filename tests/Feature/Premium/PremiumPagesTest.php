@@ -46,6 +46,16 @@ test('after launching the Premium page shows the normal price and a proven strik
         ->assertDontSee('Promo berakhir');
 });
 
+test('the Premium page shows the Skular logo and a plain Pro check for the document vault', function () {
+    config(['pricing.enabled' => true, 'pricing.launching_until' => null]);
+
+    $this->get(route('premium'))->assertOk()
+        ->assertSee('skular-logo.png', false)
+        ->assertSee('Vault dokumen')
+        ->assertDontSee('Sampai 50 dokumen')
+        ->assertSee('5/bln (1 bulan), 10/bln (12 bulan)');
+});
+
 test('the landing page shows the same prices as the Premium page when Premium is on', function () {
     config(['pricing.enabled' => true, 'pricing.launching_until' => null]);
 
