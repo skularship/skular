@@ -112,13 +112,13 @@ test('rich editor html keeps headings, emphasis, lists, quotes and tables', func
 
 test('whitelisted text colors and fonts survive as generated inline styles', function () {
     $html = richEditorHtml(
-        '<p><span class="color" data-color="teal" style="--color: #277c93; --dark-color: #277c93">teal</span> '
+        '<p><span class="color" data-color="teal-brand" style="--color: #277c93; --dark-color: #277c93">teal</span> '
         .'<span data-font="lora" style="font-family: \'Lora\', serif">lora</span> '
         .'<span style="color: #B91C1C; font-family: Nunito">tempelan</span></p>',
     );
 
     expect($html)
-        ->toContain('<span data-color="teal" style="color: #277c93">teal</span>')
+        ->toContain('<span data-color="teal-brand" style="color: #277c93">teal</span>')
         ->toContain('data-font="lora" style="font-family: &#039;Lora&#039;, ui-serif, Georgia, serif"')
         ->toContain('data-color="merah" data-font="nunito"')
         ->not->toContain('--color');
@@ -220,6 +220,7 @@ test('the admin preview renders material exactly like the mentee view', function
     $this->actingAs($admin)
         ->get(ModuleResource::getUrl('preview', ['record' => $module]))
         ->assertOk()
-        ->assertSee(richHtml("## Subjudul Pratinjau\n\nIsi dengan **tebal**."), false)
+        // Core columns render one level deeper, under the column subtitle, like the mentee view.
+        ->assertSee(richHtml("## Subjudul Pratinjau\n\nIsi dengan **tebal**.", 5), false)
         ->assertSee('prose', false);
 });

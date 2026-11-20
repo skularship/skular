@@ -3,17 +3,24 @@
 namespace App\Filament\Resources\Modules\Schemas;
 
 use App\Contracts\ModuleReadinessServiceInterface;
+use App\Contracts\RichContentRendererInterface;
 use App\Data\ModuleReadinessCheckData;
 use App\Enums\BrainstormQuestionType;
+use App\Enums\MaterialFormat;
 use App\Enums\ModuleCategory;
 use App\Enums\ModuleType;
+use App\Filament\RichEditor\FontFamilyPlugin;
 use App\Filament\Schemas\ListRepeater;
 use App\Models\Module;
+use App\Models\ModuleCoreSection;
 use App\Services\BrainstormingConfigService;
+use App\Support\MaterialStyles;
 use Closure;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\RichEditor\TextColor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -61,6 +68,63 @@ class ModuleForm
             ])
             ->fileAttachments(false)
             ->columnSpanFull();
+    }
+
+    /**
+     * Build the WYSIWYG editor for one Inti Materi column body.
+     *
+     * Stores sanitizable HTML. Text colors and fonts are limited to the
+     * whitelist in config/content.php (no custom colors, no uploads), and the
+     * content area uses the mentee .sk-prose style through the
+     * "sk-material-editor" wrapper class, so the admin sees what mentees see.
+     * A legacy Markdown body is converted to HTML only in the form state; the
+     * database keeps it unchanged until the module is saved.
+     *
+     * @return RichEditor The configured editor.
+     */
+    private static function coreSectionEditor(): RichEditor
+    {
+        $text_colors = [];
+
+        foreach (MaterialStyles::textColors() as $key => $color) {
+            $text_colors[$key] = TextColor::make($color['label'], $color['color']);
+        }
+
+        return RichEditor::make('body')
+            ->label('Isi')
+            ->placeholder('Tulis dengan sapaan "kamu" dan kalimat sederhana.')
+            ->required()
+            ->toolbarButtons([
+                ['undo', 'redo'],
+                ['h2', 'h3'],
+                ['bold', 'italic', 'underline'],
+                ['bulletList', 'orderedList'],
+                ['highlight', 'textColor', FontFamilyPlugin::toolbarGroup()],
+                ['blockquote', 'horizontalRule', 'table', 'link'],
+                ['clearFormatting'],
+            ])
+            ->textColors($text_colors)
+            ->customTextColors(false)
+            ->plugins([FontFamilyPlugin::make()])
+            ->linkProtocols(['http', 'https', 'mailto'])
+            ->extraInputAttributes(['class' => 'sk-material-editor'])
+            ->minHeight('14rem')
+            ->formatStateUsing(fn (mixed $state, mixed $record): mixed => $record instanceof ModuleCoreSection && $record->body_format === MaterialFormat::Markdown
+                ? app(RichContentRendererInterface::class)->markdownToEditorHtml($record->body)
+                : $state)
+            ->helperText('Pakai Subjudul (H2/H3) untuk memecah bagian. Tebalkan label di awal poin, contoh "Label: penjelasan". Warna dan jenis huruf hanya untuk penekanan, jangan untuk seluruh paragraf.')
+            ->columnSpanFull();
+    }
+
+    /**
+     * Record that a column body was saved from the rich editor.
+     *
+     * @param  array<string, mixed>  $data  Repeater item data.
+     * @return array<string, mixed> Item data with body_format set to html.
+     */
+    private static function markAsHtml(array $data): array
+    {
+        return [...$data, 'body_format' => MaterialFormat::Html->value];
     }
 
     /**
@@ -249,13 +313,10 @@ class ModuleForm
                                     ->required()
                                     ->maxLength(255)
                                     ->columnSpanFull(),
-                                self::materialEditor('body')
-                                    ->label('Isi')
-                                    ->placeholder('Tulis dengan sapaan "kamu" dan kalimat sederhana.')
-                                    ->required()
-                                    ->minHeight('12rem')
-                                    ->helperText(self::MARKDOWN_HINT),
+                                self::coreSectionEditor(),
                             ])
+                            ->mutateRelationshipDataBeforeCreateUsing(self::markAsHtml(...))
+                            ->mutateRelationshipDataBeforeSaveUsing(self::markAsHtml(...))
                             ->itemLabel(fn (array $state): string => filled($state['subtitle'] ?? null)
                                 ? Str::limit((string) $state['subtitle'], 70)
                                 : 'Kolom baru')

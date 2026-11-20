@@ -12,6 +12,8 @@
 |
 | Colors keep WCAG AA contrast on white. Keys are stored in the HTML
 | (data-color / data-font), so do not rename a key once it is in use.
+| Color keys must not equal a Filament palette name (red, teal, ...):
+| Filament would store its own shade for such a key.
 |
 */
 
@@ -22,7 +24,7 @@ return [
         'text_colors' => [
             'hitam' => ['label' => 'Hitam', 'color' => '#1b1b18'],
             'abu' => ['label' => 'Abu', 'color' => '#3f3f46'],
-            'teal' => ['label' => 'Teal', 'color' => '#277c93'],
+            'teal-brand' => ['label' => 'Teal', 'color' => '#277c93'],
             'teal-tua' => ['label' => 'Teal tua', 'color' => '#1c5f73'],
             'oranye-tua' => ['label' => 'Oranye tua', 'color' => '#b45309'],
             'merah' => ['label' => 'Merah', 'color' => '#b91c1c'],

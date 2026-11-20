@@ -105,6 +105,7 @@ Contoh nyata: kuota AI Mentor = migration `create_module_mentor_usages_table` â†
 - Provider error diklasifikasikan `App\Enums\AiFailureReason` (configuration / rate_limited / timeout / unavailable) dan dicatat dengan key `reason`.
 - Blaze mengompilasi `resources/views/components`; setelah mengubah `BLAZE_ENABLED`/config Blaze jalankan `php artisan view:clear` (view basi melempar `Undefined variable $__blaze`).
 - `.npmrc` memakai `ignore-scripts=true`. `public/build` di-commit.
+- Editor Inti Materi (RichEditor) memakai plugin `App\Filament\RichEditor\FontFamilyPlugin`; mark JS-nya di `resources/js/filament/rich-content-plugins/font-family.js` (memakai TipTap milik Filament, tanpa bundler). Setelah mengubah file itu jalankan `php artisan filament:assets` dan commit `public/js/app/rich-content-plugins/`. `config/livewire.php` menaikkan `payload.max_nesting_depth` ke 32 karena dokumen TipTap di dalam Repeater melebihi batas bawaan 10 (gejala: error 500 `MaxNestingDepthExceededException` saat menyimpan modul).
 
 <laravel-boost-guidelines>
 === foundation rules ===

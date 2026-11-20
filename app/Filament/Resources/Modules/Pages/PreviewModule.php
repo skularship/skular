@@ -7,6 +7,7 @@ use App\Contracts\ModuleReadinessServiceInterface;
 use App\Contracts\RichContentRendererInterface;
 use App\Data\ModuleReadinessCheckData;
 use App\Data\PracticeFieldData;
+use App\Enums\MaterialFormat;
 use App\Enums\PracticeFieldType;
 use App\Filament\Actions\PublishModuleAction;
 use App\Filament\Actions\UnpublishModuleAction;
@@ -258,7 +259,7 @@ class PreviewModule extends Page
 
             foreach ($core_sections as $core_section) {
                 $schema[] = Text::make($core_section->subtitle)->weight('semibold')->icon('heroicon-m-bookmark');
-                $schema[] = $this->paragraph($core_section->body);
+                $schema[] = $this->paragraph($core_section->body, $core_section->body_format, 5);
             }
         } elseif (filled($module->inti_material)) {
             $schema[] = Text::make('Inti materi')->weight('bold')->size('sm');
@@ -382,9 +383,10 @@ class PreviewModule extends Page
      *
      * Uses the same RichContentRenderer and .sk-prose stylesheet (loaded in
      * the panel head) as x-learning.rich-content, so headings, bold text and
-     * lists look identical to the mentee view.
+     * lists look identical to the mentee view. Inti Materi columns pass their
+     * body_format and heading level 5 (nested under the column subtitle).
      */
-    private function paragraph(?string $text): Text|Html
+    private function paragraph(?string $text, MaterialFormat $format = MaterialFormat::Markdown, int $heading_level = 4): Text|Html
     {
         if (! filled($text)) {
             return Text::make('Kata pengantar belum diisi — bagian ini tidak tampil untuk mentee.')
@@ -393,7 +395,7 @@ class PreviewModule extends Page
                 ->size('sm');
         }
 
-        $html = app(RichContentRendererInterface::class)->toHtml($text);
+        $html = app(RichContentRendererInterface::class)->toHtmlFromFormat($text, $format, $heading_level);
 
         return Html::make(new HtmlString('<div class="sk-prose" data-test="preview-rich-content">'.$html.'</div>'));
     }

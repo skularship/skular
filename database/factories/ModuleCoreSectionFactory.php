@@ -34,8 +34,6 @@ class ModuleCoreSectionFactory extends Factory
 
     /**
      * A column written in the admin rich editor (HTML body).
-     *
-     * @return $this
      */
     public function html(): static
     {

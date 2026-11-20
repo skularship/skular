@@ -39,6 +39,7 @@ use App\Contracts\SubscriptionServiceInterface;
 use App\Contracts\SupportTicketServiceInterface;
 use App\Contracts\TwibbonServiceInterface;
 use App\Contracts\VaultServiceInterface;
+use App\Filament\RichEditor\FontFamilyPlugin;
 use App\Services\ActivityTracker;
 use App\Services\AiFeedbackService;
 use App\Services\BrainstormingSessionService;
@@ -76,7 +77,10 @@ use App\Services\SubscriptionService;
 use App\Services\SupportTicketService;
 use App\Services\TwibbonService;
 use App\Services\VaultService;
+use App\Support\MaterialStyles;
 use Carbon\CarbonImmutable;
+use Filament\Support\Assets\Js;
+use Filament\Support\Facades\FilamentAsset;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Support\Facades\Date;
@@ -110,6 +114,25 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->registerPerformanceInstrumentation();
         $this->optimizeBladeComponents();
+        $this->registerFilamentAssets();
+    }
+
+    /**
+     * Register the Inti Materi font family mark for the Filament rich editor.
+     *
+     * The script is loaded on request by FontFamilyPlugin; the font stacks are
+     * shared as window.filamentData.skularMaterialFonts so the JS mark renders
+     * the same whitelist as the server (config/content.php).
+     */
+    protected function registerFilamentAssets(): void
+    {
+        FilamentAsset::register([
+            Js::make(FontFamilyPlugin::SCRIPT_ID, resource_path('js/filament/rich-content-plugins/font-family.js'))->loadedOnRequest(),
+        ]);
+
+        FilamentAsset::registerScriptData([
+            'skularMaterialFonts' => array_map(fn (array $font): string => $font['stack'], MaterialStyles::fonts()),
+        ], package: 'app');
     }
 
     /**

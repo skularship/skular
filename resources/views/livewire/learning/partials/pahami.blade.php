@@ -86,7 +86,7 @@
                             </h4>
 
                             {{-- Markdown body: "#" nests under this column's <h4> subtitle, so it starts at <h5>. --}}
-                            <x-learning.rich-content :content="$core_section->body" :level="5" class="mt-3 sm:ps-10" />
+                            <x-learning.rich-content :content="$core_section->body" :format="$core_section->body_format" :level="5" class="mt-3 sm:ps-10" />
                         </li>
                     @endforeach
                 </ol>
