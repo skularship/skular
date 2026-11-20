@@ -2,6 +2,7 @@
 
 use App\Contracts\RichContentRendererInterface;
 use App\Enums\AdminRole;
+use App\Enums\MaterialFormat;
 use App\Filament\Resources\Modules\ModuleResource;
 use App\Livewire\Learning\ModulePlayer;
 use App\Models\Fase;
@@ -71,6 +72,114 @@ test('legacy plain text keeps its paragraphs and line breaks', function () {
 test('blank material renders nothing', function () {
     expect(richHtml(null))->toBe('')
         ->and(richHtml("   \n "))->toBe('');
+});
+
+/**
+ * Render rich editor HTML through the bound renderer.
+ */
+function richEditorHtml(?string $html, int $level = 4): string
+{
+    return app(RichContentRendererInterface::class)->toHtmlFromFormat($html, MaterialFormat::Html, $level);
+}
+
+test('the markdown format renders exactly like before', function () {
+    $markdown = "# Judul\n\n- **Label:** penjelasan\n- dua";
+
+    expect(app(RichContentRendererInterface::class)->toHtmlFromFormat($markdown, 'markdown'))->toBe(richHtml($markdown))
+        ->and(app(RichContentRendererInterface::class)->toHtmlFromFormat($markdown, 'tidak-dikenal'))->toBe(richHtml($markdown));
+});
+
+test('rich editor html keeps headings, emphasis, lists, quotes and tables', function () {
+    $html = richEditorHtml(
+        '<h2>Brief Overview</h2><h3>Detail</h3><p><strong>Label:</strong> <em>miring</em> <u>garis</u> <mark>sorot</mark></p>'
+        .'<ol><li><p>pertama</p></li></ol><blockquote><p>Catatan penting</p></blockquote><hr>'
+        .'<table><tbody><tr><th colspan="1"><p>Kepala</p></th></tr><tr><td><p>Isi</p></td></tr></tbody></table>',
+        5,
+    );
+
+    expect($html)
+        ->toContain('<h6 class="sk-h2">Brief Overview</h6>')
+        ->toContain('<h6 class="sk-h3">Detail</h6>')
+        ->toContain('<strong>Label:</strong>')
+        ->toContain('<em>miring</em>')
+        ->toContain('<u>garis</u>')
+        ->toContain('<mark>sorot</mark>')
+        ->toContain('<ol><li><p>pertama</p></li></ol>')
+        ->toContain('<blockquote>')
+        ->toContain('<th colspan="1">')
+        ->toContain('<td><p>Isi</p></td>');
+});
+
+test('whitelisted text colors and fonts survive as generated inline styles', function () {
+    $html = richEditorHtml(
+        '<p><span class="color" data-color="teal" style="--color: #277c93; --dark-color: #277c93">teal</span> '
+        .'<span data-font="lora" style="font-family: \'Lora\', serif">lora</span> '
+        .'<span style="color: #B91C1C; font-family: Nunito">tempelan</span></p>',
+    );
+
+    expect($html)
+        ->toContain('<span data-color="teal" style="color: #277c93">teal</span>')
+        ->toContain('data-font="lora" style="font-family: &#039;Lora&#039;, ui-serif, Georgia, serif"')
+        ->toContain('data-color="merah" data-font="nunito"')
+        ->not->toContain('--color');
+});
+
+test('unsafe html, links, styles, colors and fonts are removed', function () {
+    $html = richEditorHtml(
+        '<p>Halo<script>alert(1)</script><img src="x" onerror="alert(1)"></p>'
+        .'<p onclick="alert(1)"><a href="javascript:alert(1)">jahat</a> <a href="data:text/html,x">data</a></p>'
+        .'<p><span style="position: fixed; top: 0; background: url(https://evil.test/x.png)">posisi</span></p>'
+        .'<p><span data-color="pink" style="color: #ff00ff">warna liar</span> <span style="font-family: Comic Sans MS">font liar</span></p>'
+        .'<iframe src="https://evil.test"></iframe><style>body{display:none}</style><div>teks div tetap</div>',
+    );
+
+    expect($html)
+        ->not->toContain('<script')
+        ->not->toContain('alert')
+        ->not->toContain('<img')
+        ->not->toContain('onerror')
+        ->not->toContain('onclick')
+        ->not->toContain('javascript:')
+        ->not->toContain('data:text')
+        ->not->toContain('position')
+        ->not->toContain('evil.test')
+        ->not->toContain('#ff00ff')
+        ->not->toContain('pink')
+        ->not->toContain('Comic Sans')
+        ->not->toContain('<iframe')
+        ->not->toContain('display:none')
+        ->not->toContain('<div')
+        ->toContain('<span>posisi</span>')
+        ->toContain('<span>warna liar</span>')
+        ->toContain('teks div tetap');
+});
+
+test('rich editor links keep only safe schemes and external links open safely', function () {
+    $html = richEditorHtml(
+        '<p><a href="https://contoh.org/info" target="_self" onclick="x()">Sumber</a> '
+        .'<a href="mailto:tim@contoh.org">Surel</a> <a href="/relatif">Relatif</a></p>',
+    );
+
+    expect($html)
+        ->toContain('<a href="https://contoh.org/info" rel="noopener noreferrer" target="_blank">Sumber</a>')
+        ->toContain('<a href="mailto:tim@contoh.org">Surel</a>')
+        ->not->toContain('/relatif')
+        ->not->toContain('_self')
+        ->not->toContain('onclick');
+});
+
+test('rich editor html without visible text renders nothing', function () {
+    expect(richEditorHtml('<p></p><p>&nbsp;</p>'))->toBe('')
+        ->and(richEditorHtml(null))->toBe('');
+});
+
+test('markdown converts to editor html without shifting headings', function () {
+    $html = app(RichContentRendererInterface::class)->markdownToEditorHtml("# Judul\n\nTeks **tebal**.\n\n<script>x</script>");
+
+    expect($html)
+        ->toContain('<h1>Judul</h1>')
+        ->toContain('<strong>tebal</strong>')
+        ->not->toContain('<script');
 });
 
 test('the pahami step renders core material with the brand prose style', function () {
