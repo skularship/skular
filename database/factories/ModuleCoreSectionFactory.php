@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\MaterialFormat;
 use App\Models\Module;
 use App\Models\ModuleCoreSection;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -26,7 +27,21 @@ class ModuleCoreSectionFactory extends Factory
                 'Contoh yang bisa kamu tiru',
             ]),
             'body' => fake()->paragraphs(2, true),
+            'body_format' => MaterialFormat::Markdown,
             'ordering' => 0,
         ];
+    }
+
+    /**
+     * A column written in the admin rich editor (HTML body).
+     *
+     * @return $this
+     */
+    public function html(): static
+    {
+        return $this->state(fn (): array => [
+            'body' => '<h2>Poin utama</h2><p><strong>Label:</strong> '.fake()->sentence().'</p>',
+            'body_format' => MaterialFormat::Html,
+        ]);
     }
 }

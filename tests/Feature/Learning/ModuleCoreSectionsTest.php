@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\AdminRole;
+use App\Enums\MaterialFormat;
 use App\Filament\Resources\Modules\Pages\EditModule;
 use App\Livewire\Learning\ModulePlayer;
 use App\Models\Fase;
@@ -31,6 +32,21 @@ test('pahami shows every core column with its subtitle, in order, after the intr
         ->test(ModulePlayer::class, ['module' => $this->module, 'section' => 'pahami'])
         ->assertSeeInOrder(['Pengantar modul ini.', 'Inti Materi', 'Langkah pertama', 'Isi pertama.', 'Langkah kedua', 'Isi kedua.'])
         ->assertDontSee('Teks inti materi lama.');
+});
+
+test('an html column without visible text is treated as empty', function () {
+    ModuleCoreSection::factory()->for($this->module)->html()->create(['subtitle' => 'Kosong', 'body' => '<p></p>', 'ordering' => 1]);
+    ModuleCoreSection::factory()->for($this->module)->html()->create(['subtitle' => 'Spasi saja', 'body' => '<p>&nbsp;</p><p> </p>', 'ordering' => 2]);
+    ModuleCoreSection::factory()->for($this->module)->html()->create(['subtitle' => 'Berisi', 'body' => '<p>Ada isinya.</p>', 'ordering' => 3]);
+
+    expect($this->module->filledCoreSections()->pluck('subtitle')->all())->toBe(['Berisi']);
+});
+
+test('a new column defaults to the markdown format', function () {
+    $section = ModuleCoreSection::factory()->for($this->module)->create(['body' => '**Tebal**']);
+
+    expect($section->fresh()->body_format)->toBe(MaterialFormat::Markdown)
+        ->and($section->hasBody())->toBeTrue();
 });
 
 test('a module without core columns still shows its legacy core text', function () {

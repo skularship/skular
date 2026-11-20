@@ -444,7 +444,7 @@ class Module extends Model
         $sections = $this->relationLoaded('coreSections') ? $this->coreSections : $this->coreSections()->get();
 
         return $sections
-            ->filter(fn (ModuleCoreSection $section): bool => filled($section->subtitle) && filled($section->body))
+            ->filter(fn (ModuleCoreSection $section): bool => filled($section->subtitle) && $section->hasBody())
             ->sortBy([['ordering', 'asc'], ['id', 'asc']])
             ->values();
     }

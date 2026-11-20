@@ -50,7 +50,7 @@ Role & permission memakai tabel spatie/laravel-permission: `roles`, `permissions
 | `scholarship_applications` | Pilihan beasiswa mentee: maks 5 per user (`ScholarshipApplicationService::MAX_SELECTIONS`), unique `(user_id, scholarship_id)`, satu `is_primary`. Status `selected → submitted → result_reported` + `result`. Bukti pendaftaran di disk `local` (privat). |
 | `fases` | Pengelompokan modul; urutan fase menentukan roadmap. Menolak `delete()` bila salah satu modulnya punya histori mentee. |
 | `modules` | Tiga atribut berbeda: `type` (format penyajian, kolom lama), `category` (`inti`/`template`/`perpustakaan`), `content_status` (`draft`/`published`). `scholarship_id` hanya untuk `template` (dikosongkan otomatis untuk kategori lain). JSON: `insights` (list string), `brainstorming_questions`, `mentor_suggestions` (`[{question, answer|null}]`, maks 5). `inti_material` = teks Inti Materi lama (fallback bila belum ada `module_core_sections`). `ai_knowledge` = rubrik/basis pengetahuan untuk AI. Menolak `delete()` bila punya checkpoint/jawaban praktik. |
-| `module_core_sections` | Kolom Inti Materi (subjudul + isi), urut `ordering`. Dikelola lewat Repeater di editor modul. |
+| `module_core_sections` | Kolom Inti Materi (subjudul + isi), urut `ordering`. Dikelola lewat Repeater di editor modul. `body_format` (`App\Enums\MaterialFormat`): `markdown` untuk data lama, `html` setelah disimpan dari editor WYSIWYG (RichEditor). Body HTML tanpa teks (`<p></p>`) dianggap kosong (`ModuleCoreSection::hasBody()`). |
 | `quick_questions` | Pernyataan Benar/Salah (`answer` boolean) + `explanation`, dikoreksi sistem di langkah Quick Question. |
 | `practice_forms` | Latihan praktik. `fields` = skema JSON pertanyaan (`name`, `label`, `type`, `required`, `placeholder`, `help_text`, `options`). `include_in_cv` + `cv_ordering` untuk halaman CV. |
 | `user_practice_responses` | Jawaban praktik, **satu baris per (user, practice_form)** (unique). Resubmit memperbarui baris dan menambah `attempts`. `ai_status` (`pending`/`processing`/`completed`/`failed`), `ai_feedback` (JSON), `ai_score` (0–100, hanya untuk admin; mentee melihat label), `ai_error`. |
@@ -218,6 +218,7 @@ FK: `role_id` → `roles.id` (on delete cascade)
 | `module_id` | integer |  |  |
 | `subtitle` | varchar |  |  |
 | `body` | text |  |  |
+| `body_format` | varchar |  | 'markdown' |
 | `ordering` | integer |  | '0' |
 | `created_at` | datetime | ya |  |
 | `updated_at` | datetime | ya |  |

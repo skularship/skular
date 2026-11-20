@@ -5,6 +5,7 @@ use App\Data\ModuleReadinessCheckData;
 use App\Enums\ModuleCategory;
 use App\Enums\ModuleType;
 use App\Models\Module;
+use App\Models\ModuleCoreSection;
 use App\Models\PracticeForm;
 use App\Models\QuickQuestion;
 use App\Models\Scholarship;
@@ -58,6 +59,21 @@ test('a module without any material is blocked before publishing', function () {
 
     expect(readinessBlockers($module))->toContain('material')
         ->and(readinessService()->isReady($module))->toBeFalse();
+});
+
+test('a core column holding only empty rich editor html does not count as material', function () {
+    $module = Module::factory()->create([
+        'summary_material' => null,
+        'inti_material' => null,
+        'insights' => null,
+    ]);
+    ModuleCoreSection::factory()->for($module)->html()->create(['body' => '<p></p><p>&nbsp; </p>']);
+
+    expect(readinessBlockers($module->fresh()))->toContain('material');
+
+    ModuleCoreSection::factory()->for($module)->html()->create();
+
+    expect(readinessBlockers($module->fresh()))->not->toContain('material');
 });
 
 test('a template module needs a scholarship before it can be published', function () {
