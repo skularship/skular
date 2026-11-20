@@ -160,7 +160,7 @@ public/build/              # Aset Vite hasil build (DI-COMMIT)
 | Dashboard | `/dashboard` | `app/Livewire/Dashboard.php`, `app/Services/ProgressService.php`, `LearningPathService.php` |
 | Roadmap Belajar (fase aktif + modul; fase terkunci hanya nama, ditutup awan) | `/roadmap` | `app/Livewire/Roadmap.php`, `ProgressService::focusRoadmap()`, `app/Data/FocusedRoadmapData.php` |
 | Module player (Pembukaan → Pahami → Quick Question → Praktik → Checkpoint) | `/modules/{module}?section=...` | `app/Livewire/Learning/ModulePlayer.php`, `resources/views/livewire/learning/partials/*`, `app/Services/ModuleOutlineService.php` |
-| Pengantar + Inti Materi multi-kolom (Markdown: `#` hijau, `##`, `###`, **tebal**, daftar, kutipan; teks lama tetap tampil) | (di langkah Pahami) | `app/Models/ModuleCoreSection.php`, `partials/pahami.blade.php`, `components/learning/rich-content.blade.php`, `RichContentRenderer.php`, `resources/css/prose.css` |
+| Pengantar (Markdown) + Inti Materi multi-kolom bergaya dokumen: tiap kolom = "Bagian X dari N", daftar isi sticky, editor WYSIWYG di admin dengan 6 warna teks dan 4 jenis huruf dari `config/content.php`; HTML dirender lewat sanitizer allowlist, kolom lama berformat Markdown tetap tampil | (di langkah Pahami) | `app/Models/ModuleCoreSection.php` (`body_format`), `partials/pahami.blade.php`, `components/learning/rich-content.blade.php`, `RichContentRenderer.php`, `app/Filament/RichEditor/`, `resources/css/prose.css` |
 | Quick Question (benar/salah, dikoreksi sistem) | (di langkah Quick) | `app/Models/QuickQuestion.php`, `partials/quick.blade.php` |
 | Praktik + penilaian AI sinkron di request (label, bukan skor) | (di langkah Praktik) | `app/Services/PracticeSubmissionService.php`, `app/Services/AiFeedbackService.php`, `app/Enums/AiScoreLabel.php` |
 | AI Mentor (saran pertanyaan admin + kuota 5/modul) | (di langkah Praktik) | `app/Livewire/Learning/MentorChat.php`, `app/Services/ModuleMentorService.php`, `MentorQuotaService.php` |
@@ -195,7 +195,7 @@ Detail lengkap: [`AGENTS.md`](AGENTS.md) dan [`docs/architecture.md`](docs/archi
 ### Alur kerja penyusun kurikulum (admin)
 
 1. Buat modul (selalu tersimpan sebagai **Draf**).
-2. Isi informasi dasar, kata pengantar, materi Pahami (ringkasan, poin penting, **kolom Inti Materi**, link video YouTube opsional — link tonton/youtu.be/shorts otomatis diubah jadi pemutar, modul tanpa link menampilkan "Tidak ada materi video"; kata pengantar, ringkasan, dan isi kolom memakai editor Markdown dengan panduan format singkat, cek hasilnya di *Pratinjau*), pertanyaan brainstorming, **saran pertanyaan AI Mentor** (jawaban tim opsional), dan rubrik AI.
+2. Isi informasi dasar, kata pengantar, materi Pahami (ringkasan, poin penting, **kolom Inti Materi**, link video YouTube opsional — link tonton/youtu.be/shorts otomatis diubah jadi pemutar, modul tanpa link menampilkan "Tidak ada materi video"; kata pengantar dan ringkasan memakai editor Markdown; isi kolom Inti Materi memakai editor WYSIWYG (subjudul H2/H3, tebal, daftar, sorot, warna teks, jenis huruf, kutipan, tabel, link) yang tampil sama dengan halaman mentee; modul lama dikonversi otomatis saat disimpan; cek hasilnya di *Pratinjau*), pertanyaan brainstorming, **saran pertanyaan AI Mentor** (jawaban tim opsional), dan rubrik AI.
 3. Tambah Quick Question dan Latihan praktik dari tabel di halaman modul.
 4. Buka **Pratinjau**, perbaiki item merah di checklist kelengkapan, lalu **Terbitkan**.
 

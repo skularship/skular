@@ -10,7 +10,7 @@ Catatan kerja untuk perubahan editor Inti Materi (Filament RichEditor) dan tampi
 | B | Renderer: jalur HTML tersanitasi, prop `format`, test keamanan | Selesai |
 | C | Admin: RichEditor, whitelist warna, plugin font, konversi Markdown, Pratinjau | Selesai |
 | D | Frontend: lembar dokumen di Pahami, `prose.css` baru, daftar isi sticky | Selesai |
-| E | Finishing: build aset, dokumentasi, `composer test` | Belum |
+| E | Finishing: build aset, dokumentasi, `composer test` | Selesai |
 
 ## Keputusan teknis
 
@@ -59,13 +59,20 @@ Catatan kerja untuk perubahan editor Inti Materi (Filament RichEditor) dan tampi
 - Semua hook `data-test` dipertahankan (`inti-materi`, `inti-materi-kolom`, `rich-content`, `pahami-header`, `next-section`); hook baru: `inti-materi-daftar-isi`, `inti-materi-selesai`. Product Tour tidak menargetkan blok ini.
 - Uji browser (sandbox): 360px tanpa scroll horizontal, `lg` bar sticky, `xl` daftar kiri sticky di 24px dan item aktif berpindah saat scroll; editor admin dan Pratinjau tampil sama dengan mentee; tanpa error konsol.
 
+### Tahap E
+
+- `npm run build`: `public/build` (CSS baru + file font Plus Jakarta Sans, Nunito, Lora) di-commit.
+- README: baris fitur Inti Materi dan alur editor modul diperbarui. AGENTS.md dan `docs/database.md` sudah diperbarui di Tahap B, C, dan A.
+- `composer test` lulus: Pint, PHPStan level 7 (0 error), 854 test Pest.
+- Tidak ada `migrate`/`seed` ke DB `.env` (produksi). Migration diuji di SQLite sandbox (scratchpad) lewat override env proses.
+
 ## Risiko
 
 - `composer audit` menemukan 18 advisory di 11 paket yang terkunci (antara lain `livewire/livewire` medium, `symfony/mime` medium, `symfony/http-foundation`, `symfony/html-sanitizer`). Advisory html-sanitizer (srcset, meta refresh, `allowLinkHosts`) tidak mengenai konfigurasi kita. Pembaruan dependensi di luar lingkup tugas ini.
-
 - Span yang di-paste tanpa `class="color"` kehilangan warnanya saat disimpan dari editor (parser PHP Filament mensyaratkan kelas itu). Warna yang diberi lewat tombol editor selalu punya kelas itu.
 - `payload.max_size` Livewire tetap 1 MB. Dokumen TipTap JSON lebih boros daripada HTML; modul dengan sangat banyak kolom panjang bisa mendekati batas ini.
 
 ## Sisa pekerjaan
 
-Tahap E.
+- Jalankan migration di production saat deploy (`php artisan migrate`, additive).
+- Setelah deploy, buka satu modul lama di admin dan simpan untuk memastikan konversi Markdown ke HTML sesuai harapan tim kurikulum.
