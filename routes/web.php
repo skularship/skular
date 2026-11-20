@@ -32,16 +32,16 @@ use App\Livewire\Twibbon\Generator;
 use App\Livewire\Vault\Index as VaultIndex;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'welcome')->name('home');
+// Under construction switch (UNDER_CONSTRUCTION, config/app.php). Read once
+// when the routes load, so `php artisan optimize` is required after changing it.
+// The affected routes stay registered under their own names (route('home'),
+// route('dashboard') keep resolving); they only gain the under.construction
+// middleware. Health, legal pages, Google sign-in, Fortify, Filament (/admin),
+// /up and the Midtrans webhook (routes/payments.php) are never wrapped.
+$under_construction = (bool) config('app.under_construction');
+$under_construction_middleware = $under_construction ? ['under.construction'] : [];
 
 Route::get('health', HealthCheckController::class)->name('health');
-
-// Only pages reachable without authenticating are listed. Scholarship and
-// module pages sit behind auth + verified, so crawlers would only see a login
-// redirect; listing them would waste crawl budget and leak no value.
-Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
-
-Route::livewire('faq', FaqIndex::class)->name('faq.index');
 
 // Legal pages: static Blade views (changes go through commits), always public,
 // also while PREMIUM_ENABLED is false. Texts read config/legal.php.
@@ -49,42 +49,54 @@ foreach (LegalDocument::cases() as $legalDocument) {
     Route::view($legalDocument->path(), $legalDocument->view())->name($legalDocument->routeName());
 }
 
-// Public price page; returns 404 until PREMIUM_ENABLED is true.
-Route::livewire('premium', PremiumIndex::class)->name('premium');
-
 Route::middleware('throttle:30,1')->group(function () {
     Route::get('auth/google/redirect', [GoogleAuthController::class, 'redirect'])->name('auth.google.redirect');
     Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 });
 
-// Consent screen for mentees without consent to the current Terms/Privacy
-// (first Google sign-in, accounts from before the consent log, new versions).
-Route::livewire('persetujuan', LegalConsent::class)->middleware('auth')->name('legal.consent');
+// Public and mentee pages: show the under construction page while the switch is on.
+Route::middleware($under_construction_middleware)->group(function () {
+    Route::view('/', 'welcome')->name('home');
 
-Route::middleware(['auth', 'verified', 'legal.consent'])->group(function () {
-    Route::livewire('profiling', Wizard::class)->name('profiling');
-    Route::livewire('profiling/recommendation', Recommendation::class)->name('profiling.recommendation');
-    Route::livewire('dashboard', Dashboard::class)->name('dashboard');
-    Route::livewire('roadmap', Roadmap::class)->name('roadmap.show');
-    Route::livewire('modules/{module}', ModulePlayer::class)->name('modules.show');
-    Route::livewire('akses-gratis', FeedbackCommitment::class)->name('feedback.commitment');
-    Route::livewire('library', Library::class)->name('library.index');
-    Route::livewire('scholarships', ScholarshipsIndex::class)->name('scholarships.index');
-    Route::livewire('scholarships/saya', Tracker::class)->name('scholarships.tracker');
-    Route::livewire('scholarships/{application}/twibbon', Generator::class)->name('twibbon.show');
-    Route::livewire('scholarships/{scholarship}', ScholarshipShow::class)->name('scholarships.show');
-    Route::livewire('cv', CvShow::class)->name('cv.show');
-    Route::livewire('bantuan', Help::class)->name('support.index');
-    Route::livewire('pembayaran', PremiumBilling::class)->name('payment.index');
-    Route::livewire('pembayaran/{order}', PremiumStatus::class)->name('payment.status');
-    Route::livewire('vault', VaultIndex::class)->name('vault.index');
-    Route::get('vault/{document}/unduh', VaultDownloadController::class)->name('vault.download');
-    Route::livewire('scholarships/{application}/checklist', ChecklistShow::class)->name('checklist.show');
-    Route::livewire('panduan', Guide::class)->name('guide.index');
-    Route::livewire('event', EventsIndex::class)->name('events.index');
-    Route::livewire('event/{event}', EventShow::class)->name('events.show');
-    Route::get('event/{event}/kalender', EventCalendarController::class)->name('events.calendar');
-    Route::get('scholarships/{application}/proof', [SubmissionProofController::class, 'show'])->name('applications.proof');
+    // Only pages reachable without authenticating are listed. Scholarship and
+    // module pages sit behind auth + verified, so crawlers would only see a login
+    // redirect; listing them would waste crawl budget and leak no value.
+    Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
+
+    Route::livewire('faq', FaqIndex::class)->name('faq.index');
+
+    // Public price page; returns 404 until PREMIUM_ENABLED is true.
+    Route::livewire('premium', PremiumIndex::class)->name('premium');
+
+    // Consent screen for mentees without consent to the current Terms/Privacy
+    // (first Google sign-in, accounts from before the consent log, new versions).
+    Route::livewire('persetujuan', LegalConsent::class)->middleware('auth')->name('legal.consent');
+
+    Route::middleware(['auth', 'verified', 'legal.consent'])->group(function () {
+        Route::livewire('profiling', Wizard::class)->name('profiling');
+        Route::livewire('profiling/recommendation', Recommendation::class)->name('profiling.recommendation');
+        Route::livewire('dashboard', Dashboard::class)->name('dashboard');
+        Route::livewire('roadmap', Roadmap::class)->name('roadmap.show');
+        Route::livewire('modules/{module}', ModulePlayer::class)->name('modules.show');
+        Route::livewire('akses-gratis', FeedbackCommitment::class)->name('feedback.commitment');
+        Route::livewire('library', Library::class)->name('library.index');
+        Route::livewire('scholarships', ScholarshipsIndex::class)->name('scholarships.index');
+        Route::livewire('scholarships/saya', Tracker::class)->name('scholarships.tracker');
+        Route::livewire('scholarships/{application}/twibbon', Generator::class)->name('twibbon.show');
+        Route::livewire('scholarships/{scholarship}', ScholarshipShow::class)->name('scholarships.show');
+        Route::livewire('cv', CvShow::class)->name('cv.show');
+        Route::livewire('bantuan', Help::class)->name('support.index');
+        Route::livewire('pembayaran', PremiumBilling::class)->name('payment.index');
+        Route::livewire('pembayaran/{order}', PremiumStatus::class)->name('payment.status');
+        Route::livewire('vault', VaultIndex::class)->name('vault.index');
+        Route::get('vault/{document}/unduh', VaultDownloadController::class)->name('vault.download');
+        Route::livewire('scholarships/{application}/checklist', ChecklistShow::class)->name('checklist.show');
+        Route::livewire('panduan', Guide::class)->name('guide.index');
+        Route::livewire('event', EventsIndex::class)->name('events.index');
+        Route::livewire('event/{event}', EventShow::class)->name('events.show');
+        Route::get('event/{event}/kalender', EventCalendarController::class)->name('events.calendar');
+        Route::get('scholarships/{application}/proof', [SubmissionProofController::class, 'show'])->name('applications.proof');
+    });
+
+    require __DIR__.'/settings.php';
 });
-
-require __DIR__.'/settings.php';

@@ -69,6 +69,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Under construction switch
+    |--------------------------------------------------------------------------
+    |
+    | Off by default. While true (UNDER_CONSTRUCTION=true), the public and
+    | mentee pages answer with the "Skular sedang diperbarui" page (503 +
+    | Retry-After). Health checks, the Midtrans webhook, the admin panel, the
+    | legal pages and the Fortify/Google sign-in routes keep working. The
+    | condition is applied in routes/web.php when the routes load, so run
+    | `php artisan optimize` after changing it (config and route cache).
+    |
+    */
+
+    'under_construction' => (bool) env('UNDER_CONSTRUCTION', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

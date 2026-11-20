@@ -2,6 +2,8 @@
 
 use App\Http\Middleware\EnsureLegalConsent;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\ShowUnderConstruction;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -27,7 +29,15 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'legal.consent' => EnsureLegalConsent::class,
+            'under.construction' => ShowUnderConstruction::class,
         ]);
+
+        // Run the under construction page before auth, so guests opening a
+        // mentee page see it directly instead of a redirect to the login form.
+        $middleware->prependToPriorityList(
+            before: AuthenticatesRequests::class,
+            prepend: ShowUnderConstruction::class,
+        );
 
         // Keep the readiness endpoint reachable while the app is in
         // maintenance mode; the liveness route (/up) is excluded by Laravel.
