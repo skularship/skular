@@ -110,18 +110,34 @@ test('rich editor html keeps headings, emphasis, lists, quotes and tables', func
         ->toContain('<td><p>Isi</p></td>');
 });
 
-test('whitelisted text colors and fonts survive as generated inline styles', function () {
+test('whitelisted text colors, fonts and sizes survive as generated inline styles', function () {
     $html = richEditorHtml(
         '<p><span class="color" data-color="teal-brand" style="--color: #277c93; --dark-color: #277c93">teal</span> '
         .'<span data-font="lora" style="font-family: \'Lora\', serif">lora</span> '
-        .'<span style="color: #B91C1C; font-family: Nunito">tempelan</span></p>',
+        .'<span data-size="besar" style="font-size: 1.25em">besar</span> '
+        .'<span style="color: #B91C1C; font-family: Nunito; font-size: 0.875em">tempelan</span></p>',
     );
 
     expect($html)
         ->toContain('<span data-color="teal-brand" style="color: #277c93">teal</span>')
         ->toContain('data-font="lora" style="font-family: &#039;Lora&#039;, ui-serif, Georgia, serif"')
-        ->toContain('data-color="merah" data-font="nunito"')
+        ->toContain('<span data-size="besar" style="font-size: 1.25em">besar</span>')
+        ->toContain('data-color="merah" data-font="nunito" data-size="kecil"')
         ->not->toContain('--color');
+});
+
+test('font sizes outside the whitelist are removed', function () {
+    $html = richEditorHtml(
+        '<p><span data-size="raksasa" style="font-size: 72px">raksasa</span> '
+        .'<span style="font-size: calc(100vw)">lebar</span></p>',
+    );
+
+    expect($html)
+        ->toContain('<span>raksasa</span>')
+        ->toContain('<span>lebar</span>')
+        ->not->toContain('72px')
+        ->not->toContain('"raksasa"')
+        ->not->toContain('100vw');
 });
 
 test('unsafe html, links, styles, colors and fonts are removed', function () {

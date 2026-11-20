@@ -40,7 +40,7 @@ class RichContentRenderer implements RichContentRendererInterface
         'a' => ['href'],
         'table' => [], 'thead' => [], 'tbody' => [], 'tr' => [],
         'th' => ['colspan', 'rowspan'], 'td' => ['colspan', 'rowspan'],
-        'span' => ['data-color', 'data-font', 'style'],
+        'span' => ['data-color', 'data-font', 'data-size', 'style'],
     ];
 
     /**
@@ -177,7 +177,7 @@ class RichContentRenderer implements RichContentRendererInterface
     }
 
     /**
-     * Build a <span> that only carries a whitelisted color and font.
+     * Build a <span> that only carries a whitelisted color, font and font size.
      *
      * Stored inline styles are never echoed: Filament writes CSS variables and
      * pasted text can carry anything, so the style is generated here.
@@ -192,6 +192,8 @@ class RichContentRenderer implements RichContentRendererInterface
             ?? MaterialStyles::colorKey($declarations['color'] ?? null);
         $font_key = MaterialStyles::fontKey($attributes['data-font'] ?? null)
             ?? MaterialStyles::fontKey($declarations['font-family'] ?? null);
+        $size_key = MaterialStyles::fontSizeKey($attributes['data-size'] ?? null)
+            ?? MaterialStyles::fontSizeKey($declarations['font-size'] ?? null);
 
         $output = [];
         $style = [];
@@ -204,6 +206,11 @@ class RichContentRenderer implements RichContentRendererInterface
         if ($font_key !== null) {
             $output[] = 'data-font="'.e($font_key).'"';
             $style[] = 'font-family: '.MaterialStyles::fonts()[$font_key]['stack'];
+        }
+
+        if ($size_key !== null) {
+            $output[] = 'data-size="'.e($size_key).'"';
+            $style[] = 'font-size: '.MaterialStyles::fontSizes()[$size_key]['size'];
         }
 
         if ($style !== []) {

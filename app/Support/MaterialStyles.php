@@ -3,13 +3,18 @@
 namespace App\Support;
 
 /**
- * Typed access to the allowed Inti Materi text colors and fonts (config/content.php).
+ * Typed access to the allowed Inti Materi text colors, fonts and font sizes (config/content.php).
  *
- * Used by the admin rich editor, the font family plugin and the HTML
- * sanitizer so the three always agree on the same whitelist.
+ * Used by the admin rich editor, the font family and font size plugins and
+ * the HTML sanitizer so they always agree on the same whitelist.
  */
 final class MaterialStyles
 {
+    /**
+     * Font size key that equals the body text; the editor never stores it.
+     */
+    public const DEFAULT_FONT_SIZE = 'normal';
+
     /**
      * Get the allowed text colors keyed by their stored key.
      *
@@ -34,6 +39,19 @@ final class MaterialStyles
         $fonts = config('content.material.fonts', []);
 
         return $fonts;
+    }
+
+    /**
+     * Get the allowed font sizes keyed by their stored key.
+     *
+     * @return array<string, array{label: string, size: string}>
+     */
+    public static function fontSizes(): array
+    {
+        /** @var array<string, array{label: string, size: string}> $sizes */
+        $sizes = config('content.material.font_sizes', []);
+
+        return $sizes;
     }
 
     /**
@@ -77,6 +95,31 @@ final class MaterialStyles
 
         foreach (self::fonts() as $key => $font) {
             if ($first === $key || $first === strtolower($font['family'])) {
+                return $key;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Find the font size key of a stored data-size key or a pasted CSS font-size.
+     *
+     * Only exact whitelisted values match ("1.25em"); pixel sizes are dropped.
+     *
+     * @param  string|null  $value  A key such as "besar" or a value such as "1.25em".
+     * @return string|null The whitelisted key, or null when the size is not allowed.
+     */
+    public static function fontSizeKey(?string $value): ?string
+    {
+        $value = strtolower(trim((string) $value));
+
+        if ($value === '') {
+            return null;
+        }
+
+        foreach (self::fontSizes() as $key => $size) {
+            if ($value === $key || $value === strtolower($size['size'])) {
                 return $key;
             }
         }

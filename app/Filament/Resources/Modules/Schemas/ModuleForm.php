@@ -10,6 +10,7 @@ use App\Enums\MaterialFormat;
 use App\Enums\ModuleCategory;
 use App\Enums\ModuleType;
 use App\Filament\RichEditor\FontFamilyPlugin;
+use App\Filament\RichEditor\FontSizePlugin;
 use App\Filament\Schemas\ListRepeater;
 use App\Models\Module;
 use App\Models\ModuleCoreSection;
@@ -99,20 +100,20 @@ class ModuleForm
                 ['h2', 'h3'],
                 ['bold', 'italic', 'underline'],
                 ['bulletList', 'orderedList'],
-                ['highlight', 'textColor', FontFamilyPlugin::toolbarGroup()],
+                [FontSizePlugin::toolbarGroup(), FontFamilyPlugin::toolbarGroup(), 'textColor', 'highlight'],
                 ['blockquote', 'horizontalRule', 'table', 'link'],
                 ['clearFormatting'],
             ])
             ->textColors($text_colors)
             ->customTextColors(false)
-            ->plugins([FontFamilyPlugin::make()])
+            ->plugins([FontFamilyPlugin::make(), FontSizePlugin::make()])
             ->linkProtocols(['http', 'https', 'mailto'])
             ->extraInputAttributes(['class' => 'sk-material-editor'])
             ->minHeight('14rem')
             ->formatStateUsing(fn (mixed $state, mixed $record): mixed => $record instanceof ModuleCoreSection && $record->body_format === MaterialFormat::Markdown
                 ? app(RichContentRendererInterface::class)->markdownToEditorHtml($record->body)
                 : $state)
-            ->helperText('Pakai Subjudul (H2/H3) untuk memecah bagian. Tebalkan label di awal poin, contoh "Label: penjelasan". Warna dan jenis huruf hanya untuk penekanan, jangan untuk seluruh paragraf.')
+            ->helperText('Pakai Subjudul (H2/H3) untuk memecah bagian. Tebalkan label di awal poin, contoh "Label: penjelasan". Ukuran huruf, jenis huruf, dan warna ada di toolbar; pakai untuk penekanan, jangan untuk seluruh paragraf.')
             ->columnSpanFull();
     }
 

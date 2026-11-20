@@ -27,7 +27,16 @@ export default defineConfig({
                     weights: [400, 700],
                     preload: false,
                 }),
+                bunny('Poppins', {
+                    weights: [400, 700],
+                    preload: false,
+                }),
                 bunny('Lora', {
+                    weights: [400, 700],
+                    styles: ['normal', 'italic'],
+                    preload: false,
+                }),
+                bunny('Merriweather', {
                     weights: [400, 700],
                     styles: ['normal', 'italic'],
                     preload: false,

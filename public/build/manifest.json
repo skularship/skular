@@ -1,7 +1,7 @@
 {
-  "_fonts-BJoCl3WS.css": {
-    "file": "assets/fonts-BJoCl3WS.css",
-    "src": "_fonts-BJoCl3WS.css"
+  "_fonts-B_UnqWRS.css": {
+    "file": "assets/fonts-B_UnqWRS.css",
+    "src": "_fonts-B_UnqWRS.css"
   },
   "_lora-400-italic-DYjZp4sZ.woff2": {
     "file": "assets/lora-400-italic-DYjZp4sZ.woff2",
@@ -35,6 +35,38 @@
     "file": "assets/lora-700-normal-Yfa97ytg.woff",
     "src": "_lora-700-normal-Yfa97ytg.woff"
   },
+  "_merriweather-400-italic-Cq-nJhum.woff": {
+    "file": "assets/merriweather-400-italic-Cq-nJhum.woff",
+    "src": "_merriweather-400-italic-Cq-nJhum.woff"
+  },
+  "_merriweather-400-italic-CuD3zK4B.woff2": {
+    "file": "assets/merriweather-400-italic-CuD3zK4B.woff2",
+    "src": "_merriweather-400-italic-CuD3zK4B.woff2"
+  },
+  "_merriweather-400-normal-CvqO63Ah.woff": {
+    "file": "assets/merriweather-400-normal-CvqO63Ah.woff",
+    "src": "_merriweather-400-normal-CvqO63Ah.woff"
+  },
+  "_merriweather-400-normal-G4kZaoXi.woff2": {
+    "file": "assets/merriweather-400-normal-G4kZaoXi.woff2",
+    "src": "_merriweather-400-normal-G4kZaoXi.woff2"
+  },
+  "_merriweather-700-italic-CBHFNGAk.woff": {
+    "file": "assets/merriweather-700-italic-CBHFNGAk.woff",
+    "src": "_merriweather-700-italic-CBHFNGAk.woff"
+  },
+  "_merriweather-700-italic-D8D7WEYy.woff2": {
+    "file": "assets/merriweather-700-italic-D8D7WEYy.woff2",
+    "src": "_merriweather-700-italic-D8D7WEYy.woff2"
+  },
+  "_merriweather-700-normal-D4-nzrAh.woff": {
+    "file": "assets/merriweather-700-normal-D4-nzrAh.woff",
+    "src": "_merriweather-700-normal-D4-nzrAh.woff"
+  },
+  "_merriweather-700-normal-DoUP8Ce-.woff2": {
+    "file": "assets/merriweather-700-normal-DoUP8Ce-.woff2",
+    "src": "_merriweather-700-normal-DoUP8Ce-.woff2"
+  },
   "_nunito-400-normal-DKg4f3fz.woff": {
     "file": "assets/nunito-400-normal-DKg4f3fz.woff",
     "src": "_nunito-400-normal-DKg4f3fz.woff"
@@ -66,6 +98,22 @@
   "_plus-jakarta-sans-700-normal-DqEcQeE5.woff": {
     "file": "assets/plus-jakarta-sans-700-normal-DqEcQeE5.woff",
     "src": "_plus-jakarta-sans-700-normal-DqEcQeE5.woff"
+  },
+  "_poppins-400-normal-BOb3E3N0.woff": {
+    "file": "assets/poppins-400-normal-BOb3E3N0.woff",
+    "src": "_poppins-400-normal-BOb3E3N0.woff"
+  },
+  "_poppins-400-normal-cpxAROuN.woff2": {
+    "file": "assets/poppins-400-normal-cpxAROuN.woff2",
+    "src": "_poppins-400-normal-cpxAROuN.woff2"
+  },
+  "_poppins-700-normal-BVuQR_eA.woff": {
+    "file": "assets/poppins-700-normal-BVuQR_eA.woff",
+    "src": "_poppins-700-normal-BVuQR_eA.woff"
+  },
+  "_poppins-700-normal-Qrb0O0WB.woff2": {
+    "file": "assets/poppins-700-normal-Qrb0O0WB.woff2",
+    "src": "_poppins-700-normal-Qrb0O0WB.woff2"
   },
   "_rubik-400-normal-BV1Ho3GG.woff": {
     "file": "assets/rubik-400-normal-BV1Ho3GG.woff",

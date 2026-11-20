@@ -53,7 +53,7 @@ class AdminPanelProvider extends PanelProvider
             // The module preview and the Inti Materi rich editor render curriculum
             // material exactly like the mentee view, so they need the same .sk-prose
             // stylesheet and the self-hosted material fonts (config/content.php).
-            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => Blade::render("@fonts(['plus-jakarta-sans', 'nunito', 'lora'])\n@vite('resources/css/prose.css')"))
+            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => Blade::render("@fonts(['plus-jakarta-sans', 'nunito', 'poppins', 'lora', 'merriweather'])\n@vite('resources/css/prose.css')"))
             ->colors([
                 // Skular amber-to-orange primary palette.
                 'primary' => [

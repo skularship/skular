@@ -66,6 +66,15 @@ Catatan kerja untuk perubahan editor Inti Materi (Filament RichEditor) dan tampi
 - `composer test` lulus: Pint, PHPStan level 7 (0 error), 854 test Pest.
 - Tidak ada `migrate`/`seed` ke DB `.env` (produksi). Migration diuji di SQLite sandbox (scratchpad) lewat override env proses.
 
+### Lanjutan: ukuran huruf, warna, dan jenis huruf tambahan
+
+- Dropdown baru "Ukuran huruf" (Kecil 0.875em, Normal, Besar 1.25em, Sangat besar 1.5em). Polanya sama dengan plugin font: `FontSizePlugin` + `FontSizeMark` + `font-size.js`, menyimpan key whitelist (`data-size="besar"`). "Normal (bawaan)" menghapus format. Ukuran relatif (em) agar mengikuti teks 17px di semua layar.
+- Warna teks bertambah: Biru `#1d4ed8`, Hijau `#15803d`, Ungu `#6d28d9` (semua kontras AA di latar putih). Total 9 warna.
+- Jenis huruf bertambah: Poppins dan Merriweather (di-host sendiri lewat `bunny()`, `preload: false`). Total 6.
+- Toolbar dikelompokkan: Ukuran huruf | Jenis huruf | Warna teks | Sorot.
+- Sanitizer menerima `data-size` dan `font-size` yang persis ada di whitelist; ukuran lain (px, `calc()`) dibuang.
+- Uji browser (sandbox): ukuran Besar + Poppins diterapkan dari toolbar, tersimpan, dan tampil di halaman mentee (21,25px, Poppins termuat); tanpa scroll horizontal di 390px, tanpa error konsol.
+
 ## Risiko
 
 - `composer audit` menemukan 18 advisory di 11 paket yang terkunci (antara lain `livewire/livewire` medium, `symfony/mime` medium, `symfony/http-foundation`, `symfony/html-sanitizer`). Advisory html-sanitizer (srcset, meta refresh, `allowLinkHosts`) tidak mengenai konfigurasi kita. Pembaruan dependensi di luar lingkup tugas ini.

@@ -31,7 +31,7 @@ test('a curriculum admin creates and edits core columns as html with whitelisted
                 [
                     'subtitle' => 'Kenali penilai',
                     'body' => '<h2>Brief Overview</h2><p><strong>Label:</strong> <span data-font="lora">cerita</span> '
-                        .'<span class="color" data-color="teal-brand">penekanan</span></p>',
+                        .'<span class="color" data-color="teal-brand">penekanan</span> <span data-size="sangat-besar">besar</span></p>',
                 ],
             ],
         ])
@@ -45,7 +45,8 @@ test('a curriculum admin creates and edits core columns as html with whitelisted
         ->toContain('<h2>Brief Overview</h2>')
         ->toContain('<strong>Label:</strong>')
         ->toContain('data-font="lora"')
-        ->toContain('data-color="teal-brand"');
+        ->toContain('data-color="teal-brand"')
+        ->toContain('data-size="sangat-besar"');
 
     Livewire::actingAs($this->curriculum_admin)
         ->test(EditModule::class, ['record' => $this->module->getRouteKey()])
@@ -62,12 +63,12 @@ test('a curriculum admin creates and edits core columns as html with whitelisted
         ->body_format->toBe(MaterialFormat::Html);
 });
 
-test('a font outside the whitelist is not stored', function () {
+test('a font or font size outside the whitelist is not stored', function () {
     Livewire::actingAs($this->curriculum_admin)
         ->test(EditModule::class, ['record' => $this->module->getRouteKey()])
         ->fillForm([
             'coreSections' => [
-                ['subtitle' => 'Font liar', 'body' => '<p><span data-font="comic-sans">teks</span></p>'],
+                ['subtitle' => 'Font liar', 'body' => '<p><span data-font="comic-sans">teks</span> <span data-size="raksasa">ukuran</span></p>'],
             ],
         ])
         ->call('save')
@@ -75,7 +76,20 @@ test('a font outside the whitelist is not stored', function () {
 
     expect($this->module->coreSections()->sole()->body)
         ->toContain('teks')
-        ->not->toContain('comic-sans');
+        ->toContain('ukuran')
+        ->not->toContain('comic-sans')
+        ->not->toContain('raksasa');
+});
+
+test('the editor toolbar offers font size, font family and text color', function () {
+    ModuleCoreSection::factory()->for($this->module)->html()->create(['subtitle' => 'Kolom', 'body' => '<p>Isi</p>']);
+
+    Livewire::actingAs($this->curriculum_admin)
+        ->test(EditModule::class, ['record' => $this->module->getRouteKey()])
+        ->assertSeeHtml('aria-label="Ukuran huruf"')
+        ->assertSeeHtml('aria-label="Jenis huruf"')
+        ->assertSeeHtml('aria-label="Sangat besar"')
+        ->assertSeeHtml('aria-label="Merriweather"');
 });
 
 test('opening a legacy markdown column does not touch the database until it is saved', function () {
