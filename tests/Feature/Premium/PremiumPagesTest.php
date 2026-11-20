@@ -26,7 +26,7 @@ test('the Premium page shows the launching prices and the honest Coming Soon lab
     ]);
 
     $this->get(route('premium'))->assertOk()
-        ->assertSee('Daftar banyak beasiswa, sekali isi.')
+        ->assertSeeText('Daftar banyak beasiswa, sekali isi.')
         ->assertSee('Rp6.208')
         ->assertSee('Rp74.500')
         ->assertSee('Hemat 50%')

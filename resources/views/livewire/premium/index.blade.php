@@ -1,6 +1,9 @@
-{{-- Public Premium page (App\Livewire\Premium\Index). One centred column: hero, plan picker with checkout (the "price card"),
-     illustrated Pro features, journey timeline, how-it-works example, Free vs Pro, FAQ, closing call, and a bottom bar
-     that appears once the price card has scrolled away. Pro features not built yet carry a "Coming Soon" badge and are never sold as available. --}}
+{{-- Public Premium page (App\Livewire\Premium\Index). Top section is a two-column grid on desktop: left = headline, the Skular
+     logo in a halo with a speech bubble (no mascot), then "Yang kebuka di Pro" as a list with small illustrations; right = the
+     price card (plan picker, referral code, checkout, WhatsApp, consent), sticky on tall desktop screens. On phones the same DOM
+     stacks as headline → logo → price card → feature list. Below: journey timeline, how-it-works example, Free vs Pro, FAQ,
+     closing call, and a bottom bar that appears once the price card has scrolled away.
+     Pro features not built yet carry a "Coming Soon" badge and are never sold as available. --}}
 @use('App\Support\Rupiah')
 
 @php
@@ -96,153 +99,164 @@
     "
     class="bg-warm-cream pb-36"
 >
-    {{-- Hero + plan picker --}}
-    <section class="relative overflow-hidden bg-linear-180 from-brand-amber/20 via-warm-cream to-warm-cream pt-10 pb-8 sm:pt-14">
-        <div class="mx-auto w-full max-w-2xl px-4 sm:px-6">
-            <div class="flex items-center gap-3">
-                <span class="clay-sm flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand-teal text-white">
-                    <x-icons.app-icon name="sparkles" class="size-6" />
-                </span>
-                <p class="relative rounded-2xl rounded-bl-md border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-xs">
-                    {{ __('Isi datanya sekali, sisanya Skular yang rapikan.') }}
-                </p>
+    {{-- Top: two columns on desktop (hero + logo + feature list | price card); one column on phones in DOM order --}}
+    <section class="relative bg-linear-180 from-brand-amber/20 via-warm-cream to-warm-cream pt-10 pb-12 sm:pt-14 lg:pb-16">
+        <div class="mx-auto grid w-full max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_26rem] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-12">
+            {{-- Hero: headline, promises and the logo illustration --}}
+            <div class="lg:col-start-1 lg:row-start-1">
+                <h1 class="text-[2rem] leading-[1.12] font-extrabold tracking-tight text-zinc-900 sm:text-5xl lg:text-[3.5rem]">
+                    {{ __('Daftar banyak beasiswa,') }} <span class="rounded-xl bg-brand-teal-soft px-2 box-decoration-clone">{{ __('sekali isi.') }}</span>
+                </h1>
+
+                <ul class="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm text-zinc-600">
+                    @foreach ([__('Info beasiswa tetap gratis'), __('Sekali bayar'), __('Tanpa auto-renew')] as $point)
+                        <li class="flex items-center gap-1.5">
+                            <x-icons.app-icon name="check" class="size-4 text-brand-teal" />
+                            {{ $point }}
+                        </li>
+                    @endforeach
+                </ul>
+
+                {{-- Logo in a halo with a speech bubble; the small bubbles around it are decoration only --}}
+                <div class="relative mx-auto mt-6 flex w-full max-w-md justify-center pt-16 pb-4 sm:pt-14 lg:mt-8">
+                    <div class="relative">
+                        <span class="pointer-events-none absolute -inset-4 rounded-full border-2 border-dashed border-brand-teal-light/40 sm:-inset-5" aria-hidden="true"></span>
+
+                        <div class="relative flex size-44 items-center justify-center rounded-full bg-radial from-brand-amber-soft from-40% to-warm-cream shadow-[inset_0_0_0_1px_rgb(242_201_76/0.25)] sm:size-56 lg:size-64">
+                            <img src="{{ asset('skular-logo.png') }}" width="530" height="222" alt="Skular" decoding="async" class="h-auto w-[66%]" />
+                        </div>
+
+                        <span class="absolute top-6 -start-9 flex size-11 items-center justify-center rounded-full border border-zinc-200 bg-white text-brand-teal shadow-xs sm:-start-11 sm:size-12" aria-hidden="true">
+                            <x-icons.app-icon name="document-text" class="size-5" />
+                        </span>
+                        <span class="absolute bottom-3 -start-6 flex size-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-brand-orange shadow-xs sm:-start-8 sm:size-11" aria-hidden="true">
+                            <x-icons.app-icon name="bell-alert" class="size-5" />
+                        </span>
+                        <span class="absolute -end-8 bottom-8 flex size-11 items-center justify-center rounded-full border border-zinc-200 bg-white text-brand-teal-deep shadow-xs sm:-end-10 sm:size-12" aria-hidden="true">
+                            <x-icons.app-icon name="academic-cap" class="size-5" />
+                        </span>
+                        <span class="absolute -top-3 start-6 size-3 rounded-full bg-brand-amber" aria-hidden="true"></span>
+                        <span class="absolute -end-3 top-1/2 size-2.5 rounded-full bg-brand-teal-light" aria-hidden="true"></span>
+                        <span class="absolute -bottom-4 start-1/2 size-2 rounded-full bg-brand-orange/70" aria-hidden="true"></span>
+                    </div>
+
+                    <p class="absolute top-0 end-0 max-w-[11.5rem] rounded-2xl rounded-bl-md border border-zinc-200 bg-white px-3.5 py-2 text-xs leading-snug font-medium text-zinc-700 shadow-xs sm:max-w-[14rem] sm:px-4 sm:text-sm">
+                        {{ __('Isi datanya sekali, sisanya Skular yang rapikan.') }}
+                    </p>
+                </div>
             </div>
 
-            <h1 class="mt-5 text-[2rem] leading-[1.08] font-extrabold tracking-tight text-zinc-900 sm:text-5xl">
-                {{ __('Daftar banyak beasiswa, sekali isi.') }}
-            </h1>
-            <svg class="mt-1 h-2.5 w-40 text-brand-teal sm:w-56" viewBox="0 0 200 10" fill="none" preserveAspectRatio="none" aria-hidden="true">
-                <path d="M2 7 C 50 2, 120 2, 198 6" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
-            </svg>
-
-            <ul class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-zinc-600">
-                @foreach ([__('Info beasiswa tetap gratis'), __('Sekali bayar'), __('Tanpa auto-renew')] as $point)
-                    <li class="flex items-center gap-1.5">
-                        <x-icons.app-icon name="check" class="size-4 text-brand-teal" />
-                        {{ $point }}
-                    </li>
-                @endforeach
-            </ul>
-
-            @if ($has_pro && $pro_until)
-                <p class="mt-5 flex items-start gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-                    <x-icons.app-icon name="check" class="mt-0.5 size-4" />
-                    {{ __('Pro kamu aktif sampai :date. Membeli lagi menyambung dari tanggal itu.', ['date' => $pro_until->translatedFormat('j F Y')]) }}
-                </p>
-            @endif
-
-            {{-- Price card: plan picker, referral code, checkout and consent --}}
-            <div class="mt-7" x-ref="priceCard" data-test="premium-price-card">
-                <p class="text-sm font-bold text-zinc-500">{{ __('Paket Pro Skular') }}</p>
-
-                <div class="mt-4 flex flex-col gap-5" role="radiogroup" aria-label="{{ __('Pilih paket') }}">
-                    @foreach ([$year, $month] as $quote)
-                        @continue($quote === null)
-                        @php($is_year = $quote->months > 1)
-                        @php($is_selected = $quote->code === $current?->code)
-                        @php($has_ticket = $quote->is_launching && $quote->launching_until)
-
-                        <button
-                            type="button"
-                            role="radio"
-                            aria-checked="{{ $is_selected ? 'true' : 'false' }}"
-                            wire:click="select('{{ $quote->code }}')"
-                            data-test="plan-{{ $quote->code }}"
-                            @class([
-                                'relative w-full rounded-[1.75rem] border-2 bg-white text-start transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal',
-                                'border-brand-teal-light ring-4 ring-brand-teal-soft' => $is_selected,
-                                'border-zinc-200 hover:border-brand-teal-light/60' => ! $is_selected,
-                            ])
-                        >
-                            @if ($is_year)
-                                <span class="absolute -top-3.5 start-5 rounded-full bg-brand-ink px-3 py-1 text-[0.7rem] font-bold tracking-wide text-white">{{ __('PALING POPULER') }}</span>
-                            @endif
-
-                            <span class="block p-5 sm:p-6">
-                                <span class="flex items-center justify-between gap-3">
-                                    <span class="flex items-center gap-3 text-lg font-bold text-zinc-900">
-                                        <span @class(['flex size-6 items-center justify-center rounded-full border-2', 'border-brand-ink' => $is_selected, 'border-zinc-300' => ! $is_selected])>
-                                            @if ($is_selected)
-                                                <span class="size-3 rounded-full bg-brand-ink"></span>
-                                            @endif
-                                        </span>
-                                        {{ $quote->months }} {{ __('bulan') }}
-                                    </span>
-
-                                    @if ($quote->saving_percent)
-                                        <span class="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">{{ __('Hemat :percent%', ['percent' => $quote->saving_percent]) }}</span>
-                                    @endif
-                                </span>
-
-                                <span class="mt-3 block ps-9">
-                                    <span class="block text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-[2.75rem]">
-                                        {{ Rupiah::format($quote->monthly) }}<span class="text-base font-semibold text-zinc-500">/bln</span>
-                                    </span>
-
-                                    @if ($quote->strike_monthly)
-                                        <span class="block text-sm text-zinc-400 line-through">{{ Rupiah::format($quote->strike_monthly) }}/bln</span>
-                                    @endif
-
-                                    <span class="mt-1 block text-sm text-zinc-600">
-                                        {{ __('Sekali bayar') }} <strong class="font-bold text-zinc-900">{{ Rupiah::format($quote->amount) }}</strong> {{ __('untuk :months bulan', ['months' => $quote->months]) }}
-                                    </span>
-
-                                    @if ($is_year)
-                                        <span class="mt-4 flex items-center gap-2 border-t border-dashed border-zinc-200 pt-3 text-sm font-semibold text-brand-teal-deep">
-                                            <x-icons.app-icon name="receipt-percent" class="size-4" />
-                                            {{ __('Harga per bulan paling hemat') }}
-                                        </span>
-                                    @endif
-                                </span>
-                            </span>
-
-                            {{-- Launch promo as a torn ticket stub --}}
-                            @if ($has_ticket)
-                                <span class="relative block rounded-b-[1.6rem] border-t-2 border-dashed border-brand-orange/50 bg-brand-peach-soft/70 px-6 py-3 text-center">
-                                    <span @class(['absolute -top-2.5 -start-3.5 size-5 rounded-full border-2 bg-warm-cream', 'border-brand-teal-light' => $is_selected, 'border-zinc-200' => ! $is_selected]) aria-hidden="true"></span>
-                                    <span @class(['absolute -top-2.5 -end-3.5 size-5 rounded-full border-2 bg-warm-cream', 'border-brand-teal-light' => $is_selected, 'border-zinc-200' => ! $is_selected]) aria-hidden="true"></span>
-                                    <span class="inline-flex items-start gap-2 text-start">
-                                        <x-icons.app-icon name="gift" class="mt-0.5 size-5 text-brand-orange" />
-                                        <span>
-                                            <strong class="block text-sm text-zinc-900">{{ __('Amankan semua fitur masa depan sebelum harga normal') }}</strong>
-                                            <span class="block text-xs text-zinc-600">{{ __('Promo berakhir :date', ['date' => $quote->launching_until->translatedFormat('j F Y')]) }}</span>
-                                        </span>
-                                    </span>
-                                </span>
-                            @endif
-                        </button>
-                    @endforeach
-                </div>
-
-                @auth
-                    @if ($current?->code === 'pro_12bln' && $current->is_launching)
-                        <div class="mt-5 rounded-3xl border border-zinc-200 bg-white p-4" data-test="premium-promo">
-                            <label for="promo" class="text-sm font-semibold text-zinc-700">{{ __('Punya kode referral?') }}</label>
-                            <input id="promo" type="text" wire:model.live.debounce.500ms="promo" maxlength="20" autocomplete="off" placeholder="{{ __('Contoh: K7M2QPX') }}" class="mt-1.5 w-full rounded-2xl border border-zinc-200 bg-warm-cream px-4 py-2.5 uppercase focus:border-brand-teal focus:ring-brand-teal" />
-                            @if ($promo_error)
-                                <p class="mt-1.5 text-sm text-red-600" data-test="promo-error">{{ $promo_error }}</p>
-                            @elseif ($promo_discount > 0)
-                                <p class="mt-1.5 text-sm font-semibold text-brand-teal" data-test="promo-ok">{{ __('Diskon :amount. Total jadi :total.', ['amount' => Rupiah::format($promo_discount), 'total' => Rupiah::format($current->amount - $promo_discount)]) }}</p>
-                            @endif
-                        </div>
-                    @endif
-                @endauth
-
-                @if ($error)
-                    <p class="mt-4 rounded-2xl bg-red-50 px-4 py-2 text-sm text-red-700" role="alert">{{ $error }}</p>
+            {{-- Price column: Pro status, the price card, then the billing link --}}
+            <div class="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start lg:[@media(min-height:58rem)]:sticky lg:[@media(min-height:58rem)]:top-24">
+                @if ($has_pro && $pro_until)
+                    <p class="mb-5 flex items-start gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                        <x-icons.app-icon name="check" class="mt-0.5 size-4" />
+                        {{ __('Pro kamu aktif sampai :date. Membeli lagi menyambung dari tanggal itu.', ['date' => $pro_until->translatedFormat('j F Y')]) }}
+                    </p>
                 @endif
 
-                <div class="mt-5 flex items-center gap-3">
-                    <a
-                        href="{{ $whatsapp_url }}"
-                        target="_blank"
-                        rel="noopener"
-                        aria-label="{{ __('Tanya lewat WhatsApp') }}"
-                        title="{{ __('Tanya lewat WhatsApp') }}"
-                        class="flex size-13 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-emerald-600 transition hover:border-emerald-500"
-                    >
-                        <x-icons.app-icon name="chat-bubble-oval-left-ellipsis" class="size-6" />
-                    </a>
+                {{-- Price card: plan picker, referral code, checkout and consent --}}
+                <div class="rounded-4xl border border-zinc-200 bg-white p-5 shadow-[0_28px_50px_-30px_rgb(27_27_24/0.45)]" x-ref="priceCard" data-test="premium-price-card">
+                    <p class="text-sm font-bold text-zinc-500">{{ __('Paket Pro Skular') }}</p>
+
+                    <div class="mt-6 flex flex-col gap-5" role="radiogroup" aria-label="{{ __('Pilih paket') }}">
+                        @foreach ([$year, $month] as $quote)
+                            @continue($quote === null)
+                            @php($is_year = $quote->months > 1)
+                            @php($is_selected = $quote->code === $current?->code)
+                            @php($has_ticket = $quote->is_launching && $quote->launching_until)
+
+                            <button
+                                type="button"
+                                role="radio"
+                                aria-checked="{{ $is_selected ? 'true' : 'false' }}"
+                                wire:click="select('{{ $quote->code }}')"
+                                data-test="plan-{{ $quote->code }}"
+                                @class([
+                                    'relative w-full rounded-3xl border-2 bg-white text-start transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal',
+                                    'border-brand-teal-light ring-4 ring-brand-teal-soft' => $is_selected,
+                                    'border-zinc-200 hover:border-brand-teal-light/60' => ! $is_selected,
+                                ])
+                            >
+                                @if ($is_year)
+                                    <span class="absolute -top-3 start-4 rounded-full bg-brand-ink px-3 py-1 text-[0.65rem] font-bold tracking-wide text-white">{{ __('PALING POPULER') }}</span>
+                                @endif
+
+                                <span class="block px-4 pt-5 pb-4">
+                                    <span class="flex items-center justify-between gap-3">
+                                        <span class="flex items-center gap-3 text-base font-bold text-zinc-900">
+                                            <span @class(['flex size-5 items-center justify-center rounded-full border-2', 'border-brand-ink' => $is_selected, 'border-zinc-300' => ! $is_selected])>
+                                                @if ($is_selected)
+                                                    <span class="size-2.5 rounded-full bg-brand-ink"></span>
+                                                @endif
+                                            </span>
+                                            {{ $quote->months }} {{ __('bulan') }}
+                                        </span>
+
+                                        @if ($quote->saving_percent)
+                                            <span class="rounded-full bg-red-600 px-2.5 py-1 text-xs font-bold text-white">{{ __('Hemat :percent%', ['percent' => $quote->saving_percent]) }}</span>
+                                        @endif
+                                    </span>
+
+                                    <span class="mt-2 block ps-8">
+                                        <span class="block text-[2rem] leading-tight font-extrabold tracking-tight text-zinc-900">
+                                            {{ Rupiah::format($quote->monthly) }}<span class="text-sm font-semibold text-zinc-500">/bln</span>
+                                        </span>
+
+                                        @if ($quote->strike_monthly)
+                                            <span class="block text-sm text-zinc-400 line-through">{{ Rupiah::format($quote->strike_monthly) }}/bln</span>
+                                        @endif
+
+                                        <span class="mt-1 block text-sm text-zinc-600">
+                                            {{ __('Sekali bayar') }} <strong class="font-bold text-zinc-900">{{ Rupiah::format($quote->amount) }}</strong> {{ __('untuk :months bulan', ['months' => $quote->months]) }}
+                                        </span>
+
+                                        @if ($is_year && ! $has_ticket)
+                                            <span class="mt-3 flex items-center gap-2 border-t border-dashed border-zinc-200 pt-2.5 text-sm font-semibold text-brand-teal-deep">
+                                                <x-icons.app-icon name="receipt-percent" class="size-4" />
+                                                {{ __('Harga per bulan paling hemat') }}
+                                            </span>
+                                        @endif
+                                    </span>
+                                </span>
+
+                                {{-- Launch promo as a torn ticket stub along the bottom of the option --}}
+                                @if ($has_ticket)
+                                    <span class="relative block rounded-b-[1.4rem] border-t-2 border-dashed border-brand-orange/50 bg-brand-peach-soft/70 px-4 py-2.5">
+                                        <span @class(['absolute -top-2 -start-3 size-4 rounded-full border-2 bg-white', 'border-brand-teal-light' => $is_selected, 'border-zinc-200' => ! $is_selected]) aria-hidden="true"></span>
+                                        <span @class(['absolute -top-2 -end-3 size-4 rounded-full border-2 bg-white', 'border-brand-teal-light' => $is_selected, 'border-zinc-200' => ! $is_selected]) aria-hidden="true"></span>
+                                        <span class="flex items-start gap-2 text-start">
+                                            <x-icons.app-icon name="gift" class="mt-0.5 size-4 text-brand-orange" />
+                                            <span>
+                                                <strong class="block text-xs leading-snug text-zinc-900">{{ __('Amankan semua fitur masa depan sebelum harga normal') }}</strong>
+                                                <span class="block text-xs text-zinc-600">{{ __('Promo berakhir :date', ['date' => $quote->launching_until->translatedFormat('j F Y')]) }}</span>
+                                            </span>
+                                        </span>
+                                    </span>
+                                @endif
+                            </button>
+                        @endforeach
+                    </div>
+
+                    @auth
+                        @if ($current?->code === 'pro_12bln' && $current->is_launching)
+                            <div class="mt-4 rounded-2xl border border-zinc-200 bg-warm-cream/60 p-3.5" data-test="premium-promo">
+                                <label for="promo" class="text-sm font-semibold text-zinc-700">{{ __('Punya kode referral?') }}</label>
+                                <input id="promo" type="text" wire:model.live.debounce.500ms="promo" maxlength="20" autocomplete="off" placeholder="{{ __('Contoh: K7M2QPX') }}" class="mt-1.5 w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2 uppercase focus:border-brand-teal focus:ring-brand-teal" />
+                                @if ($promo_error)
+                                    <p class="mt-1.5 text-sm text-red-600" data-test="promo-error">{{ $promo_error }}</p>
+                                @elseif ($promo_discount > 0)
+                                    <p class="mt-1.5 text-sm font-semibold text-brand-teal" data-test="promo-ok">{{ __('Diskon :amount. Total jadi :total.', ['amount' => Rupiah::format($promo_discount), 'total' => Rupiah::format($current->amount - $promo_discount)]) }}</p>
+                                @endif
+                            </div>
+                        @endif
+                    @endauth
+
+                    @if ($error)
+                        <p class="mt-4 rounded-2xl bg-red-50 px-4 py-2 text-sm text-red-700" role="alert">{{ $error }}</p>
+                    @endif
+
+                    <x-pricing.payment-methods class="mt-5 justify-center" />
 
                     <button
                         type="button"
@@ -251,60 +265,68 @@
                         x-on:click="loading = true"
                         x-on:livewire:error.window="loading = false"
                         data-test="premium-checkout"
-                        class="clay-sm clay-press inline-flex min-h-13 flex-1 items-center justify-center gap-2 rounded-full bg-brand-amber px-6 text-base font-bold text-brand-ink transition-colors hover:bg-brand-gold disabled:opacity-60"
+                        class="clay-sm clay-press mt-3 inline-flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-brand-amber px-6 text-base font-bold text-brand-ink transition-colors hover:bg-brand-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal disabled:opacity-60"
                     >
                         {{ __('Ambil :months bulan', ['months' => $current?->months]) }}
                         <x-icons.app-icon name="arrow-right" class="size-4" />
                     </button>
+
+                    <a
+                        href="{{ $whatsapp_url }}"
+                        target="_blank"
+                        rel="noopener"
+                        class="mt-2.5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-zinc-200 bg-white px-6 text-sm font-bold text-zinc-800 transition hover:border-emerald-500 hover:text-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-teal"
+                    >
+                        <x-icons.app-icon name="chat-bubble-oval-left-ellipsis" class="size-5 text-emerald-600" />
+                        {{ __('Tanya lewat WhatsApp') }}
+                    </a>
+
+                    <p class="mt-3 text-center text-xs leading-relaxed text-zinc-500" data-test="premium-consent">
+                        {{ __('Dengan membayar, kamu menyetujui') }}
+                        <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2">{{ __('Syarat & Ketentuan') }}</a>
+                        {{ __('dan') }}
+                        <a href="{{ route('legal.refund') }}" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2">{{ __('Kebijakan Pengembalian Dana') }}</a>.
+                    </p>
                 </div>
 
-                <x-pricing.payment-methods class="mt-3 justify-center" />
-
-                <p class="mt-2 text-center text-xs leading-relaxed text-zinc-500" data-test="premium-consent">
-                    {{ __('Dengan membayar, kamu menyetujui') }}
-                    <a href="{{ route('legal.terms') }}" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2">{{ __('Syarat & Ketentuan') }}</a>
-                    {{ __('dan') }}
-                    <a href="{{ route('legal.refund') }}" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2">{{ __('Kebijakan Pengembalian Dana') }}</a>.
-                </p>
-
                 @auth
-                    <a href="{{ route('payment.index') }}" wire:navigate class="mx-auto mt-5 flex w-fit items-center gap-2 rounded-full border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition hover:border-brand-teal hover:text-brand-teal">
+                    <a href="{{ route('payment.index') }}" wire:navigate class="mx-auto mt-4 flex w-fit items-center gap-2 rounded-full border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition hover:border-brand-teal hover:text-brand-teal">
                         <x-icons.app-icon name="receipt-percent" class="size-4" />
                         {{ __('Riwayat Transaksi') }}
                     </a>
                 @endauth
             </div>
-        </div>
-    </section>
 
-    {{-- What Pro unlocks: illustrated cards, swipeable on phones --}}
-    <section class="mx-auto w-full max-w-5xl py-10 sm:px-6 sm:py-14">
-        <div class="px-4 sm:px-0">
-            <h2 class="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">{{ __('Yang kebuka di Pro') }}</h2>
-            <p class="mt-1 text-sm text-zinc-600">{{ __('Fitur berlabel Coming Soon belum rilis, dan langsung terbuka saat rilis selama paketmu aktif.') }}</p>
-        </div>
+            {{-- What Pro unlocks: one card, one row per feature with its illustration as a thumbnail --}}
+            <div class="lg:col-start-1 lg:row-start-2">
+                <h2 class="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">{{ __('Yang kebuka di Pro') }}</h2>
+                <p class="mt-1 text-sm text-zinc-600">{{ __('Fitur berlabel Coming Soon belum rilis, dan langsung terbuka saat rilis selama paketmu aktif.') }}</p>
 
-        <div class="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-3 [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-3">
-            @foreach ($benefits as $benefit)
-                <article class="w-[78%] shrink-0 snap-start sm:w-auto">
-                    <img
-                        src="{{ asset('images/pro/'.$benefit['image'].'.webp') }}"
-                        alt=""
-                        width="600"
-                        height="380"
-                        loading="lazy"
-                        decoding="async"
-                        class="aspect-[600/380] w-full rounded-3xl object-cover shadow-[0_18px_30px_-20px_rgb(27_27_24/0.45)]"
-                    />
-                    <h3 class="mt-3 flex flex-wrap items-center gap-2 text-lg font-bold text-zinc-900">
-                        {{ $benefit['title'] }}
-                        @if ($benefit['soon'])
-                            <x-ui.pill variant="peach">{{ __('Coming Soon') }}</x-ui.pill>
-                        @endif
-                    </h3>
-                    <p class="mt-1 text-sm leading-relaxed text-zinc-600">{{ $benefit['text'] }}</p>
-                </article>
-            @endforeach
+                <ul class="mt-5 divide-y divide-zinc-100 rounded-3xl border border-zinc-200 bg-white">
+                    @foreach ($benefits as $benefit)
+                        <li class="flex items-start gap-4 p-4 sm:items-center sm:gap-5 sm:px-5">
+                            <img
+                                src="{{ asset('images/pro/'.$benefit['image'].'.webp') }}"
+                                alt=""
+                                width="600"
+                                height="380"
+                                loading="lazy"
+                                decoding="async"
+                                class="aspect-[600/380] w-20 shrink-0 rounded-xl object-cover sm:w-24"
+                            />
+                            <div class="min-w-0">
+                                <h3 class="flex flex-wrap items-center gap-x-2 gap-y-1 text-base font-bold text-zinc-900">
+                                    {{ $benefit['title'] }}
+                                    @if ($benefit['soon'])
+                                        <x-ui.pill variant="peach">{{ __('Coming Soon') }}</x-ui.pill>
+                                    @endif
+                                </h3>
+                                <p class="mt-0.5 text-sm leading-relaxed text-zinc-600">{{ $benefit['text'] }}</p>
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
         </div>
     </section>
 
