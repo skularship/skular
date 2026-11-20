@@ -34,6 +34,19 @@ Skular adalah aplikasi **Livewire server-rendered**, bukan API JSON. Aksi di hal
 | `/admin/**` | Panel admin Filament | Admin (Shield) |
 | `/admin/modules/{record}/preview` | Pratinjau modul seperti dilihat mentee (read-only) | Admin |
 
+## 1a. Mode under construction
+
+Saat `UNDER_CONSTRUCTION=true` (`config('app.under_construction')`, berlaku setelah `php artisan optimize`), `routes/web.php` menambahkan middleware `under.construction` (`App\Http\Middleware\ShowUnderConstruction`) ke grup route publik/mentee. Nama, path, dan middleware asli tidak berubah, jadi `route('home')`, `route('dashboard')`, dst. tetap bisa di-resolve. Middleware ini berjalan sebelum `auth` (daftar prioritas di `bootstrap/app.php`) dan mengembalikan view `under-construction` dengan status 503 + `Retry-After: 3600`, atau JSON 503 untuk request JSON.
+
+| Terdampak (halaman "Skular sedang diperbarui") | Tetap normal |
+|---|---|
+| `/`, `/faq`, `/premium`, `/sitemap.xml` | `/up`, `/health` |
+| `/persetujuan` | `POST /payments/midtrans/notification` (`routes/payments.php`) |
+| Seluruh grup `auth` + `verified` + `legal.consent` (dashboard, profiling, roadmap, modul, beasiswa, cv, vault, event, pembayaran, dll.) | Panel Filament `/admin/**` termasuk `/admin/login` |
+| `routes/settings.php` (`/settings/*`, `/.well-known/passkey-endpoints`) | Empat halaman legal |
+| | Route Fortify (login, daftar, reset password, verifikasi email) dan `/auth/google/*` |
+| | Endpoint Livewire `POST /livewire-*/update` (dipakai Filament; tab mentee yang sudah terbuka masih bisa mengirim aksi) |
+
 ## 2. Halaman mentee & publik
 
 | Method | URL | Nama route | Handler | Middleware |

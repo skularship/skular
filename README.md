@@ -97,6 +97,7 @@ Nilai rahasia tidak pernah ditulis di dokumentasi. Daftar lengkap ada di [`.env.
 | `QUEUE_CONNECTION` (worker) | Pembayaran dan reminder (termasuk pengingat event) berjalan di antrean. Production wajib menjalankan `php artisan queue:work --queue=payments,reminders,default` (Supervisor) dan scheduler (`schedule:run` tiap menit) | Wajib bila `PREMIUM_ENABLED=true` atau ada event terbit |
 | `SUPPORT_WHATSAPP_NUMBER` | Nomor WhatsApp untuk tombol bantuan di `/bantuan` dan `/premium` | Opsional |
 | `PREMIUM_ENABLED` | Saklar fitur Premium (`/premium`, bagian Harga di landing, kartu paket di dashboard). Default `false` | Opsional |
+| `UNDER_CONSTRUCTION` | Mode "Skular sedang diperbarui": halaman publik & mentee menjawab 503 + `Retry-After`; admin, `/health`, `/up`, halaman legal, login, dan webhook Midtrans tetap jalan. Default `false`. Wajib `php artisan optimize` setelah diubah | Opsional |
 | `PRICING_LAUNCHING_UNTIL` | Akhir promo launching (ISO 8601). Kosong atau lewat = harga normal | Opsional |
 | `BLAZE_ENABLED` | Default `true`. `false` hanya untuk debugging komponen Blade, lalu `php artisan view:clear` | Opsional |
 | `PERFORMANCE_LOG_SLOW_REQUESTS`, `PERFORMANCE_SLOW_REQUEST_MS`, `PERFORMANCE_LOG_SLOW_QUERIES`, `PERFORMANCE_SLOW_QUERY_MS` | Log request/query lambat (`config/performance.php`) | Opsional |
@@ -262,6 +263,21 @@ php artisan filament:optimize
 php artisan legal:check                        # production: gagal bila halaman legal masih ada [ISI]
 php artisan up
 ```
+
+### Mode under construction (`UNDER_CONSTRUCTION`)
+
+Untuk pembaruan yang membuat halaman mentee belum layak dibuka, tapi tim tetap harus bisa bekerja di `/admin`:
+
+1. Ubah `UNDER_CONSTRUCTION=true` di `.env` server.
+2. Jalankan `php artisan optimize`. **Wajib**: config dan route di-cache, dan kondisi dibaca di `routes/web.php` saat route dimuat. Tanpa langkah ini perubahan env tidak terbaca.
+3. Reload PHP-FPM bila OPcache `validate_timestamps=0`.
+4. Untuk mematikan: `UNDER_CONSTRUCTION=false`, lalu `php artisan optimize` (dan reload PHP-FPM bila perlu).
+
+Saat aktif, `/`, `/faq`, `/premium`, `/sitemap.xml`, `/persetujuan`, `/settings/*`, dan seluruh halaman mentee menampilkan halaman "Skular sedang diperbarui" (503, `Retry-After: 3600`, `noindex`; request JSON mendapat JSON 503). Yang tetap jalan: `/up`, `/health`, webhook Midtrans, panel `/admin`, empat halaman legal, login/daftar/reset password, dan login Google (setelah login mentee mendarat di halaman pemeliharaan).
+
+Bedanya dengan `php artisan down`: mode bawaan Laravel memblokir **semua** request, termasuk admin dan webhook Midtrans (kecuali `/up` dan `/health`), dan tidak memakai env. Pakai `down` untuk jeda singkat saat deploy; pakai `UNDER_CONSTRUCTION` untuk pemeliharaan yang lebih lama.
+
+Risiko yang tersisa: tab yang sudah terbuka sebelum mode aktif masih bisa mengirim aksi Livewire (`POST /livewire-*/update`, mis. menyimpan jawaban praktik), karena endpoint itu juga dipakai panel admin dan tidak diblokir.
 
 ### Kebutuhan runtime
 
