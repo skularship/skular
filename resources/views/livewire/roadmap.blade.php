@@ -123,8 +123,8 @@
                             <x-icons.app-icon name="chevron-down" class="size-4 text-zinc-400 transition group-open:rotate-180" />
                         </summary>
 
-                        <div class="border-t border-emerald-100 px-5 py-5">
-                            @include('livewire.roadmap.partials.fase-modules', ['fase' => $fase])
+                        <div class="border-t border-emerald-100 px-4 py-5 sm:px-5">
+                            @include('livewire.roadmap.partials.fase-modules', ['fase' => $fase, 'compact' => true])
                         </div>
                     </details>
                 @endforeach
@@ -136,7 +136,7 @@
             @php $fase = $roadmap->active; @endphp
 
             <x-ui.card padding="none" class="overflow-hidden ring-2 ring-brand-teal/20" data-test="roadmap-active-fase">
-                <div class="flex flex-wrap items-center justify-between gap-3 bg-linear-to-r from-brand-teal/10 to-brand-amber/10 px-5 py-4">
+                <div class="flex flex-wrap items-end justify-between gap-3 border-b border-brand-teal/10 bg-linear-to-r from-brand-teal/10 to-brand-amber/10 px-5 py-4 sm:px-6">
                     <div class="min-w-0">
                         <x-ui.pill variant="info" icon="play">{{ __('Fase aktif') }}</x-ui.pill>
                         <h2 class="mt-2 text-lg font-bold break-words text-zinc-900">{{ $fase->title }}</h2>
@@ -145,15 +145,15 @@
                         @endif
                     </div>
 
-                    <div class="flex min-w-[9rem] flex-col gap-1.5">
-                        <span class="text-xs font-semibold text-zinc-600">
-                            {{ __(':done/:total modul', ['done' => $fase->completed_modules, 'total' => $fase->total_modules]) }}
+                    <div class="flex w-full min-w-[11rem] flex-col gap-1.5 sm:w-auto sm:items-end" data-test="roadmap-active-count">
+                        <span class="text-sm font-semibold text-zinc-700">
+                            {{ __(':done dari :total modul selesai', ['done' => $fase->completed_modules, 'total' => $fase->total_modules]) }}
                         </span>
-                        <x-ui.progress :value="$fase->percentage" :showValue="false" size="sm" />
+                        <x-ui.progress :value="$fase->percentage" :showValue="false" size="sm" class="w-full sm:w-44" />
                     </div>
                 </div>
 
-                <div class="p-5">
+                <div class="px-4 py-6 sm:px-6 md:py-8">
                     @include('livewire.roadmap.partials.fase-modules', ['fase' => $fase])
                 </div>
             </x-ui.card>

@@ -693,6 +693,311 @@
     }
 }
 
+/* Roadmap path (livewire/roadmap/partials/fase-modules). Mobile and the compact
+   variant: a vertical rail on the left with cards on the right. From md up: a
+   winding path where nodes zig-zag around the centre and an SVG bezier per item
+   joins each node to the next. The node centre sits 2.5rem below the item top;
+   rails and curves run from that point to the same point of the next item. */
+.sk-path {
+    --sk-path-node: 3rem;
+    --sk-path-node-center: 2.5rem;
+    --sk-path-offset: 3.25rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.sk-path__item {
+    position: relative;
+    padding-bottom: 1.25rem;
+}
+
+.sk-path__item:last-child {
+    padding-bottom: 0;
+}
+
+/* Numbered node: 48px touch-friendly circle. */
+.sk-path__node {
+    position: absolute;
+    top: calc(var(--sk-path-node-center) - var(--sk-path-node) / 2);
+    left: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--sk-path-node);
+    height: var(--sk-path-node);
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    font-size: 1.0625rem;
+    font-weight: 800;
+    box-shadow: 0 3px 0 rgb(27 27 24 / 0.08);
+}
+
+.sk-path__node--done {
+    background-image: linear-gradient(135deg, var(--color-brand-amber), var(--color-brand-orange));
+    color: var(--color-brand-ink);
+}
+
+.sk-path__node--current {
+    background-color: var(--color-brand-orange);
+    color: var(--color-brand-ink);
+    box-shadow:
+        0 0 0 6px color-mix(in oklab, var(--color-brand-orange) 22%, transparent),
+        0 4px 0 color-mix(in oklab, var(--color-brand-orange) 70%, black);
+}
+
+.sk-path__node--open {
+    border-color: var(--color-brand-teal);
+    background-color: white;
+    color: var(--color-brand-teal);
+}
+
+.sk-path__node--locked {
+    border-color: var(--color-zinc-200);
+    background-color: var(--color-zinc-100);
+    color: var(--color-zinc-400);
+    box-shadow: none;
+}
+
+.sk-path__node-lock {
+    position: absolute;
+    right: -0.25rem;
+    bottom: -0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    background-color: white;
+    color: var(--color-zinc-500);
+    box-shadow: 0 1px 3px rgb(27 27 24 / 0.15);
+}
+
+/* Straight connector (mobile + compact). Finished stretches use the brand gradient. */
+.sk-path__rail {
+    position: absolute;
+    top: var(--sk-path-node-center);
+    bottom: calc(-1 * var(--sk-path-node-center));
+    left: calc(var(--sk-path-node) / 2 - 1.5px);
+    z-index: 1;
+    width: 3px;
+    border-radius: 9999px;
+    background-color: var(--color-zinc-200);
+}
+
+.sk-path__rail--done {
+    background-image: linear-gradient(180deg, var(--color-brand-amber), var(--color-brand-orange));
+}
+
+.sk-path__rail--locked {
+    background-color: transparent;
+    background-image: linear-gradient(180deg, var(--color-zinc-300) 55%, transparent 55%);
+    background-size: 3px 10px;
+}
+
+/* Bezier connector (desktop only). */
+.sk-path__curve {
+    display: none;
+    position: absolute;
+    /* An absolute SVG does not stretch between top and bottom; 100% of the item
+       starting at the node centre ends exactly at the next node centre. */
+    top: var(--sk-path-node-center);
+    left: calc(50% - var(--sk-path-offset));
+    z-index: 1;
+    width: calc(2 * var(--sk-path-offset));
+    height: 100%;
+    overflow: visible;
+}
+
+.sk-path__curve-line {
+    fill: none;
+    stroke: var(--color-zinc-200);
+    stroke-width: 4px;
+    stroke-linecap: round;
+}
+
+.sk-path__curve-line--locked {
+    stroke: var(--color-zinc-300);
+    stroke-dasharray: 6 8;
+}
+
+/* Module card. */
+.sk-path__card {
+    position: relative;
+    margin-left: calc(var(--sk-path-node) + 1rem);
+    padding: 1rem 1.125rem;
+    border: 1px solid color-mix(in oklab, var(--color-zinc-200) 80%, transparent);
+    border-radius: 1.5rem;
+    background-color: white;
+    box-shadow: var(--shadow-soft);
+}
+
+.sk-path__card--current {
+    border-color: color-mix(in oklab, var(--color-brand-orange) 55%, transparent);
+    background-image: linear-gradient(150deg, color-mix(in oklab, var(--color-brand-amber) 14%, white 86%), white 55%, color-mix(in oklab, var(--color-brand-teal) 7%, white 93%));
+    box-shadow:
+        0 0 0 3px color-mix(in oklab, var(--color-brand-orange) 14%, transparent),
+        var(--shadow-soft);
+}
+
+.sk-path__card--locked {
+    border-style: dashed;
+    background-color: color-mix(in oklab, var(--color-zinc-50) 70%, white);
+    box-shadow: none;
+}
+
+.sk-path--compact .sk-path__item {
+    padding-bottom: 1rem;
+}
+
+.sk-path--compact .sk-path__card {
+    padding: 0.875rem 1rem;
+    box-shadow: none;
+}
+
+/* Raised ("3D") action button: thick bottom shadow, sinks 2px when pressed. */
+.sk-path-btn {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    min-height: 2.75rem;
+    padding: 0 1.125rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    white-space: nowrap;
+    transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        filter 0.12s ease;
+}
+
+.sk-path-btn:focus-visible {
+    outline: 2px solid var(--color-brand-teal);
+    outline-offset: 2px;
+}
+
+.sk-path-btn--primary {
+    background-image: linear-gradient(135deg, var(--color-brand-amber), var(--color-brand-orange));
+    color: var(--color-brand-ink);
+    box-shadow: 0 4px 0 color-mix(in oklab, var(--color-brand-orange) 70%, black);
+}
+
+.sk-path-btn--primary:hover {
+    filter: brightness(1.04);
+}
+
+.sk-path-btn--done {
+    border: 2px solid color-mix(in oklab, var(--color-brand-teal) 30%, white);
+    background-color: white;
+    color: var(--color-brand-teal-deep);
+    box-shadow: 0 4px 0 color-mix(in oklab, var(--color-brand-teal) 30%, white);
+}
+
+.sk-path-btn--primary:active,
+.sk-path-btn--done:active {
+    transform: translate3d(0, 2px, 0);
+}
+
+.sk-path-btn--primary:active {
+    box-shadow: 0 2px 0 color-mix(in oklab, var(--color-brand-orange) 70%, black);
+}
+
+.sk-path-btn--done:active {
+    box-shadow: 0 2px 0 color-mix(in oklab, var(--color-brand-teal) 30%, white);
+}
+
+.sk-path-btn--locked {
+    background-color: var(--color-zinc-100);
+    color: var(--color-zinc-600);
+    box-shadow: 0 4px 0 var(--color-zinc-200);
+    cursor: not-allowed;
+}
+
+/* Desktop winding path (not in the compact variant). */
+@media (width >= 48rem) {
+    .sk-path:not(.sk-path--compact) .sk-path__item {
+        padding-bottom: 1.75rem;
+    }
+
+    .sk-path:not(.sk-path--compact) .sk-path__item:last-child {
+        padding-bottom: 0;
+    }
+
+    .sk-path:not(.sk-path--compact) .sk-path__rail {
+        display: none;
+    }
+
+    .sk-path:not(.sk-path--compact) .sk-path__curve {
+        display: block;
+    }
+
+    .sk-path:not(.sk-path--compact) .sk-path__node {
+        left: calc(50% - var(--sk-path-offset));
+        transform: translateX(-50%);
+    }
+
+    .sk-path:not(.sk-path--compact) .sk-path__item--right .sk-path__node {
+        left: calc(50% + var(--sk-path-offset));
+    }
+
+    /* The card sits on the outer side of its node, leaving the middle free for the curve. */
+    .sk-path:not(.sk-path--compact) .sk-path__card {
+        width: calc(50% - var(--sk-path-offset) - var(--sk-path-node) / 2 - 1rem);
+        margin-left: 0;
+    }
+
+    .sk-path:not(.sk-path--compact) .sk-path__item--right .sk-path__card {
+        margin-left: auto;
+    }
+}
+
+@keyframes skular-path-pulse {
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 6px color-mix(in oklab, var(--color-brand-orange) 22%, transparent),
+            0 4px 0 color-mix(in oklab, var(--color-brand-orange) 70%, black);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 11px color-mix(in oklab, var(--color-brand-orange) 10%, transparent),
+            0 4px 0 color-mix(in oklab, var(--color-brand-orange) 70%, black);
+    }
+}
+
+/* Motion only when the mentee has not asked for less of it. */
+@media (prefers-reduced-motion: no-preference) {
+    .sk-path__node--current {
+        animation: skular-path-pulse 2.4s ease-in-out infinite;
+    }
+
+    .sk-path__card--open,
+    .sk-path__card--current {
+        transition:
+            transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+            box-shadow 0.2s ease;
+    }
+
+    .sk-path__card--open:hover,
+    .sk-path__card--current:hover {
+        transform: translate3d(0, -2px, 0);
+        box-shadow: var(--shadow-lift);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sk-path-btn,
+    .sk-path-btn:active {
+        transform: none;
+        transition: none;
+    }
+}
+
 /* Onboarding product tour (x-onboarding.tour-overlay). The spotlight is a
    transparent box whose huge box-shadow dims everything around the target. */
 .sk-tour {
