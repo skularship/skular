@@ -6,6 +6,7 @@ use App\Enums\AdminRole;
 use App\Enums\EventAudience;
 use App\Enums\EventRegistrationStatus;
 use App\Filament\Resources\Events\Pages\EditEvent;
+use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\RelationManagers\RegistrationsRelationManager;
 use App\Livewire\Dashboard;
 use App\Livewire\Events\Index;
@@ -238,4 +239,103 @@ test('admins mark participants as attended in bulk and it is tracked once', func
 
     expect($registration->refresh()->status)->toBe(EventRegistrationStatus::Attended)
         ->and(ActivityLog::query()->where('name', ActivityName::EventAttended)->count())->toBe(1);
+});
+
+test('a Gratis mentee watches only the Pro recording marked as free preview and sees the rest locked', function () {
+    config(['pricing.enabled' => true]);
+
+    $preview = Event::factory()->freePreviewRecording()->create(['title' => 'Kelas Pro Pratinjau']);
+    $locked = Event::factory()->past()->create([
+        'title' => 'Kelas Pro Terkunci',
+        'audience' => EventAudience::Pro,
+        'recording_url' => 'https://www.youtube.com/watch?v=terkunci',
+    ]);
+    $upcoming_pro = Event::factory()->create(['title' => 'Live Class Pro Mendatang', 'audience' => EventAudience::Pro]);
+
+    expect($this->events->recordings($this->mentee)->pluck('id')->all())->toBe([$preview->id])
+        ->and($this->events->lockedRecordings($this->mentee)->pluck('id')->all())->toBe([$locked->id])
+        ->and($this->events->canWatchRecording($this->mentee, $locked))->toBeFalse()
+        ->and($this->events->upcoming($this->mentee))->toBeEmpty()
+        ->and(fn () => $this->events->register($this->mentee, $upcoming_pro))->toThrow(ValidationException::class);
+
+    Livewire::actingAs($this->mentee)
+        ->test(Index::class)
+        ->set('tab', 'rekaman')
+        ->assertSee('Kelas Pro Pratinjau')
+        ->assertSeeHtml('data-test="free-preview-pill"')
+        ->assertSee('Kelas Pro Terkunci')
+        ->assertSeeHtml('data-test="locked-recording"')
+        ->assertSee('Buka dengan Pro')
+        ->assertDontSee('https://www.youtube.com/watch?v=terkunci');
+
+    $this->actingAs($this->mentee)->get(route('events.show', $preview))->assertOk()
+        ->assertSee('https://www.youtube.com/watch?v=pratinjau')
+        ->assertSeeHtml('data-test="free-preview-note"')
+        ->assertDontSeeHtml('data-test="register-event"');
+
+    $this->actingAs($this->mentee)->get(route('events.show', $locked))->assertNotFound();
+});
+
+test('a Pro mentee watches every Pro recording without locks or preview notes', function () {
+    config(['pricing.enabled' => true]);
+    Subscription::query()->create(['user_id' => $this->mentee->id, 'plan' => 'pro_12bln', 'active_until' => now()->addMonths(6)]);
+
+    $preview = Event::factory()->freePreviewRecording()->create();
+    $other = Event::factory()->past()->create(['audience' => EventAudience::Pro, 'recording_url' => 'https://www.youtube.com/watch?v=pro']);
+
+    expect($this->events->recordings($this->mentee)->pluck('id')->sort()->values()->all())->toBe([$preview->id, $other->id])
+        ->and($this->events->lockedRecordings($this->mentee))->toBeEmpty();
+
+    Livewire::actingAs($this->mentee)
+        ->test(Index::class)
+        ->set('tab', 'rekaman')
+        ->assertDontSeeHtml('data-test="locked-recording"')
+        ->assertDontSeeHtml('data-test="free-preview-pill"');
+
+    $this->actingAs($this->mentee)->get(route('events.show', $preview))->assertOk()
+        ->assertDontSeeHtml('data-test="free-preview-note"');
+});
+
+test('the free preview needs a published, ended Pro event with a recording', function () {
+    $not_pro = Event::factory()->past()->create([
+        'audience' => EventAudience::Undangan,
+        'invite_tag' => 'alumni',
+        'recording_url' => 'https://www.youtube.com/watch?v=undangan',
+        'is_free_preview' => true,
+    ]);
+    $draft = Event::factory()->freePreviewRecording()->draft()->create();
+    $no_recording = Event::factory()->freePreviewRecording()->create(['recording_url' => null]);
+    $not_ended = Event::factory()->create(['audience' => EventAudience::Pro, 'recording_url' => 'https://www.youtube.com/watch?v=x', 'is_free_preview' => true]);
+
+    foreach ([$not_pro, $draft, $no_recording, $not_ended] as $event) {
+        expect($this->events->canWatchRecording($this->mentee, $event->refresh()))->toBeFalse();
+    }
+});
+
+test('only one event is the free preview, and duplicating it never moves the mark', function () {
+    $this->seed(RoleSeeder::class);
+    $admin = User::factory()->create();
+    $admin->assignRole(AdminRole::CoAdmin->value);
+
+    $first = Event::factory()->freePreviewRecording()->create();
+    $second = Event::factory()->freePreviewRecording()->create();
+
+    expect($first->refresh()->is_free_preview)->toBeFalse()
+        ->and($second->refresh()->is_free_preview)->toBeTrue();
+
+    Livewire::actingAs($admin)
+        ->test(ListEvents::class)
+        ->callAction(TestAction::make('replicate')->table($second))
+        ->assertHasNoActionErrors();
+
+    expect(Event::query()->where('is_free_preview', true)->pluck('id')->all())->toBe([$second->id]);
+
+    Livewire::actingAs($admin)
+        ->test(EditEvent::class, ['record' => $first->getRouteKey()])
+        ->assertFormFieldVisible('is_free_preview')
+        ->fillForm(['is_free_preview' => true])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect(Event::query()->where('is_free_preview', true)->pluck('id')->all())->toBe([$first->id]);
 });

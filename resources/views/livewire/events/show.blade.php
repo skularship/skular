@@ -1,4 +1,5 @@
-{{-- Event detail (App\Livewire\Events\Show): poster, WIB time, Markdown description, one main action ("Daftar sekarang" → short questions → done), the meeting link from H-1 for registered mentees only, "Tambah ke kalender" (.ics), and the 1-5 feedback card after the event. --}}
+{{-- Event detail (App\Livewire\Events\Show): poster, WIB time, Markdown description, one main action ("Daftar sekarang" → short questions → done), the meeting link from H-1 for registered mentees only, "Tambah ke kalender" (.ics), and the 1-5 feedback card after the event.
+     A Gratis mentee opening the Pro free-preview recording ($is_free_preview) sees a short note with a link to Pro. --}}
 @php
     $has_ended = $event->hasEnded();
     $has_started = $event->hasStarted();
@@ -38,6 +39,13 @@
                         <x-actions.link-button :href="$event->recording_url" target="_blank" rel="noopener" size="lg" icon="play" class="w-full sm:w-auto">
                             {{ __('Tonton rekaman') }}
                         </x-actions.link-button>
+
+                        @if ($is_free_preview)
+                            <p class="mt-4 text-base text-zinc-700" data-test="free-preview-note">
+                                {{ __('Ini rekaman pratinjau gratis dari acara khusus Pro. Rekaman Pro lainnya terbuka saat kamu pakai Pro.') }}
+                                <a href="{{ route('premium') }}" wire:navigate class="font-semibold text-brand-teal hover:underline">{{ __('Lihat paket Pro') }}</a>
+                            </p>
+                        @endif
                     @else
                         <p class="text-base text-zinc-700 dark:text-zinc-300">{{ __('Acara ini sudah selesai.') }}</p>
                     @endif

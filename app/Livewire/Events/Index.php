@@ -14,6 +14,8 @@ use Livewire\Component;
 /**
  * "Event" page (route events.index): upcoming webinars, intensive classes and
  * personal mentoring the mentee may join, and a "Rekaman" tab with recordings.
+ * Gratis also sees the one Pro recording marked as free preview, and the other
+ * Pro recordings locked with a link to the Premium page.
  */
 #[Title('Event')]
 class Index extends Component
@@ -40,7 +42,9 @@ class Index extends Component
 
         return view('livewire.events.index', [
             'events' => $list,
+            'locked_recordings' => $show_recordings ? $events->lockedRecordings($user) : collect(),
             'show_recordings' => $show_recordings,
+            'is_pro' => $user->hasPro(),
             'registered_ids' => $user->eventRegistrations()
                 ->whereIn('status', [EventRegistrationStatus::Registered, EventRegistrationStatus::Attended])
                 ->pluck('event_id')

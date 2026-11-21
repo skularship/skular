@@ -12,6 +12,7 @@ use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -103,6 +104,11 @@ class EventForm
                             ->helperText('Isi setelah acara; tampil di tab Rekaman.')
                             ->url()
                             ->maxLength(255)
+                            ->columnSpanFull(),
+                        Toggle::make('is_free_preview')
+                            ->label('Pratinjau gratis')
+                            ->helperText('Rekaman event khusus Pro ini bisa ditonton mentee Gratis sebagai contoh (1 rekaman pratinjau). Hanya satu event yang bisa ditandai: menandai event ini akan melepas tanda di event lain.')
+                            ->visible(fn (Get $get): bool => $get('audience') === EventAudience::Pro->value || $get('audience') === EventAudience::Pro)
                             ->columnSpanFull(),
                     ])
                     ->columns(2),

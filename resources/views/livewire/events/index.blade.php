@@ -1,4 +1,6 @@
-{{-- Event list (App\Livewire\Events\Index): tabs "Akan datang" / "Rekaman", one large card per event (poster, title, WIB time, one main button). Data: events, show_recordings, registered_ids. --}}
+{{-- Event list (App\Livewire\Events\Index): tabs "Akan datang" / "Rekaman", one large card per event (poster, title, WIB time, one main button).
+     On "Rekaman", Gratis sees the Pro free-preview recording with a "Pratinjau gratis" pill and the other Pro recordings locked (link to Premium).
+     Data: events, locked_recordings, show_recordings, is_pro, registered_ids. --}}
 <div class="mx-auto flex w-full max-w-5xl flex-col gap-6">
     <x-ui.section-heading
         :eyebrow="__('Webinar, kelas, mentoring')"
@@ -26,7 +28,7 @@
         @endforeach
     </div>
 
-    @if ($events->isEmpty())
+    @if ($events->isEmpty() && $locked_recordings->isEmpty())
         <x-ui.empty-state
             icon="calendar-days"
             :title="$show_recordings ? __('Belum ada rekaman') : __('Belum ada acara terdekat')"
@@ -60,6 +62,9 @@
                             @if ($is_registered)
                                 <x-ui.pill variant="success" icon="check-badge">{{ __('Terdaftar') }}</x-ui.pill>
                             @endif
+                            @if ($show_recordings && ! $is_pro && $event->audience === \App\Enums\EventAudience::Pro && $event->is_free_preview)
+                                <x-ui.pill variant="peach" icon="sparkles" data-test="free-preview-pill">{{ __('Pratinjau gratis') }}</x-ui.pill>
+                            @endif
                         </div>
 
                         <h2 class="text-xl font-extrabold text-zinc-900 dark:text-white">{{ $event->title }}</h2>
@@ -87,6 +92,41 @@
                                     {{ __('Daftar') }}
                                 </x-actions.link-button>
                             @endif
+                        </div>
+                    </div>
+                </x-ui.card>
+            @endforeach
+
+            @foreach ($locked_recordings as $event)
+                <x-ui.card padding="none" class="flex flex-col overflow-hidden" wire:key="locked-event-{{ $event->id }}" data-test="locked-recording">
+                    <div class="relative aspect-video w-full overflow-hidden bg-brand-teal/10">
+                        @if ($event->image_url)
+                            <img src="{{ $event->image_url }}" alt="" class="size-full object-cover opacity-60 grayscale" loading="lazy">
+                        @endif
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="flex size-16 items-center justify-center rounded-full bg-white/90 shadow-soft">
+                                <x-icons.app-icon name="lock-closed" class="size-8 text-zinc-700" />
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-1 flex-col gap-3 p-6">
+                        <div class="flex flex-wrap gap-2">
+                            <x-ui.pill variant="info" :icon="$event->type->icon()">{{ $event->type->label() }}</x-ui.pill>
+                            <x-ui.pill variant="peach" icon="lock-closed">{{ __('Khusus Pro') }}</x-ui.pill>
+                        </div>
+
+                        <h2 class="text-xl font-extrabold text-zinc-900">{{ $event->title }}</h2>
+
+                        <p class="flex items-start gap-2 text-base text-zinc-700">
+                            <x-icons.app-icon name="calendar-days" class="mt-0.5 size-5 shrink-0 text-brand-teal" />
+                            {{ $event->startsAtLabel() }}
+                        </p>
+
+                        <div class="mt-auto pt-2">
+                            <x-actions.link-button :href="route('premium')" wire:navigate size="lg" icon="lock-open" class="w-full">
+                                {{ __('Buka dengan Pro') }}
+                            </x-actions.link-button>
                         </div>
                     </div>
                 </x-ui.card>

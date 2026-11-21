@@ -47,10 +47,11 @@ class Show extends Component
 
     /**
      * Show the event; drafts, cancelled events and events outside the mentee's audience return 404.
+     * A Gratis mentee may still open the ended Pro event marked as free preview to watch its recording.
      */
     public function mount(Event $event, EventServiceInterface $events): void
     {
-        abort_unless($events->canSee($this->user(), $event), 404);
+        abort_unless($events->canSee($this->user(), $event) || $events->canWatchRecording($this->user(), $event), 404);
 
         $this->event = $event;
 
@@ -137,6 +138,7 @@ class Show extends Component
             'is_full' => $events->isFull($this->event),
             'can_see_link' => $events->canSeeLink($this->user(), $this->event),
             'questions' => $this->event->questions(),
+            'is_free_preview' => ! $events->canSee($this->user(), $this->event),
         ]);
     }
 }

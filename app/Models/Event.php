@@ -39,6 +39,7 @@ use LogicException;
  * @property array<int, string>|null $registration_questions Up to 3 short questions answered when registering.
  * @property EventStatus $status
  * @property string|null $recording_url Filled after the event.
+ * @property bool $is_free_preview Pro event whose recording Gratis mentees may watch; at most one event has it.
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read string|null $image_url
@@ -60,6 +61,7 @@ use LogicException;
     'registration_questions',
     'status',
     'recording_url',
+    'is_free_preview',
 ])]
 class Event extends Model
 {
@@ -98,6 +100,7 @@ class Event extends Model
             'ends_at' => 'immutable_datetime',
             'capacity' => 'integer',
             'registration_questions' => 'array',
+            'is_free_preview' => 'boolean',
         ];
     }
 
@@ -109,6 +112,13 @@ class Event extends Model
         static::deleting(function (Event $event): void {
             if ($event->registrations()->exists()) {
                 throw new LogicException('Event yang sudah punya pendaftar tidak bisa dihapus. Ubah statusnya menjadi Dibatalkan.');
+            }
+        });
+
+        // Gratis gets one preview recording: marking an event unmarks every other one.
+        static::saved(function (Event $event): void {
+            if ($event->is_free_preview && ($event->wasRecentlyCreated || $event->wasChanged('is_free_preview'))) {
+                static::query()->whereKeyNot($event->id)->where('is_free_preview', true)->update(['is_free_preview' => false]);
             }
         });
     }

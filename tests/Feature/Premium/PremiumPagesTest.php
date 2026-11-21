@@ -19,7 +19,7 @@ test('while Premium is off the page, the status page and the landing price secti
         ->assertDontSee('dashboard-premium', false);
 });
 
-test('the Premium page shows the launching prices and the honest Coming Soon labels', function () {
+test('the Premium page shows the launching prices and sells only Pro features that exist', function () {
     config([
         'pricing.enabled' => true,
         'pricing.launching_until' => now()->addDays(10)->toIso8601String(),
@@ -31,9 +31,15 @@ test('the Premium page shows the launching prices and the honest Coming Soon lab
         ->assertSee('Rp74.500')
         ->assertSee('Hemat 50%')
         ->assertSee('Rp50.000')
-        ->assertSee('Coming Soon')
+        ->assertSee('Live class khusus Pro dan rekamannya')
+        ->assertSee('1 rekaman pratinjau')
+        ->assertDontSee('Coming Soon')
         ->assertDontSee('Segera')
-        ->assertSee('Review AI adalah saran, bukan jaminan lolos.');
+        ->assertDontSee('Review esai')
+        ->assertDontSee('wawancara AI')
+        ->assertDontSee('Template dokumen')
+        ->assertDontSee('Video pembelajaran')
+        ->assertDontSee('Kuota AI');
 });
 
 test('after launching the Premium page shows the normal price and a proven strike price', function () {
@@ -52,8 +58,7 @@ test('the Premium page shows the Skular logo and a plain Pro check for the docum
     $this->get(route('premium'))->assertOk()
         ->assertSee('skular-logo.png', false)
         ->assertSee('Vault dokumen')
-        ->assertDontSee('Sampai 50 dokumen')
-        ->assertSee('5/bln (1 bulan), 10/bln (12 bulan)');
+        ->assertDontSee('Sampai 50 dokumen');
 });
 
 test('the landing page shows the same prices as the Premium page when Premium is on', function () {
@@ -63,7 +68,12 @@ test('the landing page shows the same prices as the Premium page when Premium is
         ->assertSee('id="harga"', false)
         ->assertSee('href="#harga"', false)
         ->assertSee('Rp12.417')
-        ->assertSee('Mulai gratis');
+        ->assertSee('Mulai gratis')
+        ->assertSee('Live class khusus Pro dan semua rekamannya')
+        ->assertDontSee('Review esai')
+        ->assertDontSee('wawancara AI')
+        ->assertDontSee('Template dokumen')
+        ->assertDontSee('Tiap fitur Pro bisa dicoba sedikit');
 });
 
 test('the dashboard card offers Pro to Gratis mentees and shows the end date to Pro mentees', function () {

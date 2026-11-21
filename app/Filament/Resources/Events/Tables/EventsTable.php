@@ -8,6 +8,7 @@ use App\Models\Event;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ReplicateAction;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -58,6 +59,12 @@ class EventsTable
                 TextColumn::make('seated_registrations_count')
                     ->label('Terdaftar / kapasitas')
                     ->formatStateUsing(fn (int $state, Event $record): string => $state.' / '.($record->capacity ?? '∞')),
+                IconColumn::make('is_free_preview')
+                    ->label('Pratinjau gratis')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-sparkles')
+                    ->falseIcon('heroicon-o-minus')
+                    ->toggleable(),
                 TextColumn::make('status')
                     ->label('Status')
                     ->formatStateUsing(fn (EventStatus $state): string => $state->getLabel())
@@ -82,6 +89,7 @@ class EventsTable
                         $data['slug'] = Str::slug((string) $data['title']).'-'.Str::lower(Str::random(4));
                         $data['status'] = EventStatus::Draft->value;
                         $data['recording_url'] = null;
+                        $data['is_free_preview'] = false;
 
                         return $data;
                     })
@@ -89,6 +97,8 @@ class EventsTable
                         $replica->slug = Str::slug($replica->title).'-'.Str::lower(Str::random(4));
                         $replica->status = EventStatus::Draft;
                         $replica->recording_url = null;
+                        // A copy must never take the free-preview mark away from the original.
+                        $replica->is_free_preview = false;
                     })
                     ->successNotificationTitle('Event diduplikat sebagai draf. Ubah tanggalnya sebelum diterbitkan.'),
                 DeleteAction::make()

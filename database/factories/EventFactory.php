@@ -39,7 +39,20 @@ class EventFactory extends Factory
             'registration_questions' => null,
             'status' => EventStatus::Published,
             'recording_url' => null,
+            'is_free_preview' => false,
         ];
+    }
+
+    /**
+     * A Pro event that already ended, has a recording, and is the Gratis preview.
+     */
+    public function freePreviewRecording(): static
+    {
+        return $this->past()->state(fn (array $attributes) => [
+            'audience' => EventAudience::Pro,
+            'recording_url' => 'https://www.youtube.com/watch?v=pratinjau',
+            'is_free_preview' => true,
+        ]);
     }
 
     /**

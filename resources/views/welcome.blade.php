@@ -664,16 +664,12 @@
                     $pro_features = [
                         [__('Vault dokumen dan checklist berkas tiap beasiswa'), false],
                         [__('Pengingat deadline email untuk semua beasiswa pilihanmu'), false],
-                        [__('Review esai/CV dan latihan wawancara AI'), true],
-                        [__('Video, live class, dan template dokumen'), true],
+                        [__('Live class khusus Pro dan semua rekamannya'), false],
                     ];
                     $pro_peek = [
                         ['isi-sekali', __('Isi sekali, daftar banyak')],
                         ['tracker', __('Tracker beasiswa')],
-                        ['review-esai', __('Review esai AI')],
-                        ['wawancara', __('Latihan wawancara AI')],
-                        ['video-live', __('Video & live class')],
-                        ['template', __('Template dokumen')],
+                        ['video-live', __('Live class & rekaman')],
                     ];
                 @endphp
 
@@ -697,7 +693,7 @@
                                 <p class="mt-1 text-sm text-zinc-600">{{ __('Selamanya, tanpa kartu.') }}</p>
 
                                 <ul class="mt-5 flex flex-col gap-2.5 border-t border-dashed border-zinc-200 pt-5 text-sm text-zinc-700">
-                                    @foreach ([__('Info semua beasiswa'), __('Profiling, rekomendasi, dan roadmap belajar'), __('Tiap fitur Pro bisa dicoba sedikit')] as $point)
+                                    @foreach ([__('Info semua beasiswa'), __('Profiling, rekomendasi, dan roadmap belajar'), __('Pengingat deadline untuk 1 beasiswa')] as $point)
                                         <li class="flex items-start gap-2">
                                             <x-icons.app-icon name="check" class="mt-0.5 size-4 text-brand-teal" />
                                             {{ $point }}
@@ -736,7 +732,7 @@
                                 <a href="{{ route('premium') }}" class="text-sm font-semibold text-brand-teal hover:underline">{{ __('Lihat semua manfaat dan perbandingan') }} &rarr;</a>
                             </div>
 
-                            <div class="-mx-4 mt-5 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 lg:grid-cols-6">
+                            <div class="-mx-4 mt-5 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
                                 @foreach ($pro_peek as [$image, $label])
                                     <a href="{{ route('premium') }}" class="group w-40 shrink-0 snap-start sm:w-auto">
                                         <img src="{{ asset('images/pro/'.$image.'.webp') }}" alt="" width="600" height="380" loading="lazy" decoding="async" class="aspect-[600/380] w-full rounded-2xl object-cover transition group-hover:-translate-y-1" />

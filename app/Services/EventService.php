@@ -59,21 +59,51 @@ class EventService implements EventServiceInterface
     }
 
     /**
-     * Ended published events with a recording the mentee may see, newest first.
+     * Ended published events with a recording the mentee may watch, newest first.
+     * For Gratis this includes the one Pro recording marked as free preview.
      *
      * @return Collection<int, Event>
      */
     public function recordings(User $user): Collection
     {
-        return Event::query()
-            ->published()
-            ->where('ends_at', '<=', now())
-            ->whereNotNull('recording_url')
-            ->orderByDesc('starts_at')
-            ->get()
-            ->filter(fn (Event $event): bool => $this->allowedByAudience($user, $event))
-            ->values()
-            ->toBase();
+        return $this->endedWithRecording()
+            ->filter(fn (Event $event): bool => $this->canWatchRecording($user, $event))
+            ->values();
+    }
+
+    /**
+     * Ended Pro recordings the mentee may not watch yet, shown locked with a link to Pro.
+     * Empty for Pro mentees and while Premium is switched off.
+     *
+     * @return Collection<int, Event>
+     */
+    public function lockedRecordings(User $user): Collection
+    {
+        if (! config('pricing.enabled') || $user->hasPro()) {
+            return collect();
+        }
+
+        return $this->endedWithRecording()
+            ->filter(fn (Event $event): bool => $event->audience === EventAudience::Pro && ! $this->canWatchRecording($user, $event))
+            ->values();
+    }
+
+    /**
+     * Whether the mentee may open the event page to watch its recording: the event is
+     * published, ended and has a recording, and the mentee is allowed by its audience,
+     * registered for it, or it is the Pro recording marked as free preview.
+     */
+    public function canWatchRecording(User $user, Event $event): bool
+    {
+        if ($event->status !== EventStatus::Published || ! $event->hasEnded() || blank($event->recording_url)) {
+            return false;
+        }
+
+        if ($event->audience === EventAudience::Pro && $event->is_free_preview) {
+            return true;
+        }
+
+        return $this->canSee($user, $event);
     }
 
     /**
@@ -317,6 +347,22 @@ class EventService implements EventServiceInterface
         ];
 
         return implode("\r\n", $lines)."\r\n";
+    }
+
+    /**
+     * Ended published events that have a recording, newest first.
+     *
+     * @return Collection<int, Event>
+     */
+    private function endedWithRecording(): Collection
+    {
+        return Event::query()
+            ->published()
+            ->where('ends_at', '<=', now())
+            ->whereNotNull('recording_url')
+            ->orderByDesc('starts_at')
+            ->get()
+            ->toBase();
     }
 
     /**

@@ -23,11 +23,25 @@ interface EventServiceInterface
     public function upcoming(User $user): Collection;
 
     /**
-     * Ended published events with a recording the mentee may see, newest first.
+     * Ended published events with a recording the mentee may watch, newest first.
+     * For Gratis this includes the one Pro recording marked as free preview.
      *
      * @return Collection<int, Event>
      */
     public function recordings(User $user): Collection;
+
+    /**
+     * Ended Pro recordings the mentee may not watch yet, shown locked with a link to Pro.
+     * Empty for Pro mentees and while Premium is switched off.
+     *
+     * @return Collection<int, Event>
+     */
+    public function lockedRecordings(User $user): Collection;
+
+    /**
+     * Whether the mentee may open the event page to watch its recording.
+     */
+    public function canWatchRecording(User $user, Event $event): bool;
 
     /**
      * The nearest upcoming event for the dashboard card (a registered one first).

@@ -3,7 +3,7 @@
      price card (plan picker, referral code, checkout, WhatsApp, consent), sticky on tall desktop screens. On phones the same DOM
      stacks as headline → logo → price card → feature list. Below: journey timeline, how-it-works example, Free vs Pro, FAQ,
      closing call, and a bottom bar that appears once the price card has scrolled away.
-     Pro features not built yet carry a "Coming Soon" badge and are never sold as available. --}}
+     Only Pro features that exist in the code are listed; a future one may carry a "Coming Soon" badge ('soon' => true) and is never sold as available. --}}
 @use('App\Support\Rupiah')
 
 @php
@@ -16,11 +16,9 @@
     $benefits = [
         ['image' => 'isi-sekali', 'title' => __('Isi sekali, daftar banyak'), 'text' => __('Satu profil dan satu tempat dokumen untuk semua beasiswa pilihanmu. Kamu tetap mengirim aplikasi di situs penyelenggara.'), 'soon' => false],
         ['image' => 'tracker', 'title' => __('Tracker dan pengingat deadline'), 'text' => __('Checklist berkas tiap beasiswa, plus pengingat email H-7, H-3, dan H-1.'), 'soon' => false],
-        ['image' => 'review-esai', 'title' => __('Review esai dan CV oleh AI'), 'text' => __('Masukan konkret dalam hitungan detik. Review AI adalah saran, bukan jaminan lolos.'), 'soon' => true],
-        ['image' => 'wawancara', 'title' => __('Latihan wawancara dengan AI'), 'text' => __('Simulasi pertanyaan wawancara beasiswa, lalu umpan balik untuk jawabanmu.'), 'soon' => true],
-        ['image' => 'video-live', 'title' => __('Video dan live class'), 'text' => __('Video pendek per langkah, plus live class dan rekamannya. Live class diadakan sesekali, jadwal diumumkan.'), 'soon' => true],
-        ['image' => 'template', 'title' => __('Template dokumen'), 'text' => __('CV, motivation letter, dan surat lain. Tinggal isi, tidak mulai dari kosong.'), 'soon' => true],
+        ['image' => 'video-live', 'title' => __('Live class dan rekaman'), 'text' => __('Ikut live class khusus Pro dan tonton semua rekamannya. Live class diadakan sesekali, jadwal diumumkan di halaman Event.'), 'soon' => false],
     ];
+    $has_coming_soon = collect($benefits)->contains('soon', true);
 
     $journey = [
         ['icon' => 'folder-open', 'tone' => 'bg-brand-teal-soft text-brand-teal', 'when' => __('Hari ini'), 'text' => __('Profil dan berkas penting tersimpan di satu tempat.')],
@@ -29,28 +27,24 @@
     ];
 
     // [feature, free, pro, coming soon]; true = check mark, false = locked, string = shown as is.
-    // Pro is a check everywhere except the two AI quotas, which differ per plan.
+    // Only features that exist in the code are listed (each row is enforced on the server).
     $compare = [
         [__('Info semua beasiswa'), true, true, false],
         [__('Profiling, rekomendasi, dan roadmap belajar'), true, true, false],
         [__('Vault dokumen'), false, true, false],
         [__('Checklist berkas per beasiswa'), false, true, false],
         [__('Reminder deadline lewat email (H-7, H-3, H-1)'), __('1 beasiswa'), true, false],
-        [__('Review esai dan CV oleh AI'), __('1 per bulan'), __('5/bln (1 bulan), 10/bln (12 bulan)'), true],
-        [__('Latihan wawancara AI'), __('1 sesi pratinjau'), __('3/bln (1 bulan), 6/bln (12 bulan)'), true],
-        [__('Video pembelajaran'), __('1 pratinjau'), true, true],
-        [__('Live class dan rekaman'), __('1 rekaman pratinjau'), true, true],
-        [__('Template dokumen'), __('1 contoh'), true, true],
+        [__('Live class khusus Pro dan rekamannya'), __('1 rekaman pratinjau'), true, false],
     ];
 
     $faqs = [
         [__('Worth it nggak sih?'), $year ? __('Hitung per bulan: paket 12 bulan hanya :price per bulan. Satu beasiswa yang lolos bernilai jauh lebih besar dari itu.', ['price' => Rupiah::format($year->monthly)]) : __('Hitung per bulan: paket 12 bulan jauh lebih murah dari paket 1 bulan.')],
-        [__('Bedanya Pro sama gratis apa?'), __('Info beasiswa tetap gratis, dan tiap fitur bisa dicoba sedikit. Pro membuka semuanya penuh: isi sekali untuk banyak beasiswa, review AI, latihan wawancara AI, video, live class, dan template.')],
-        [__('Paket yang lebih lama, fiturnya lebih banyak?'), __('Fitur sama. Bedanya di lama aktif, harga per bulan, dan kuota AI (review 5 vs 10, wawancara 3 vs 6 per bulan).')],
-        [__('Kalau aku nggak sempat nonton video?'), __('Video hanya pendukung: pendek dan dicari saat butuh. Fitur utama bekerja tanpa perlu menonton.')],
+        [__('Bedanya Pro sama gratis apa?'), __('Info beasiswa, profiling, rekomendasi, dan roadmap belajar tetap gratis. Pro membuka Vault dokumen, checklist berkas tiap beasiswa, pengingat deadline untuk semua beasiswa pilihanmu, serta live class khusus Pro dan rekamannya.')],
+        [__('Paket yang lebih lama, fiturnya lebih banyak?'), __('Fitur sama. Bedanya di lama aktif dan harga per bulan.')],
+        [__('Kalau aku nggak sempat ikut live class?'), __('Tenang, rekamannya bisa kamu tonton kapan saja di halaman Event selama Pro aktif.')],
         [__('Bayarnya gimana?'), __('Sekali bayar lewat QRIS, GoPay, virtual account, dan metode lain. Tanpa auto-renew. Pro aktif setelah pembayaran terkonfirmasi, biasanya langsung.').($normal_year ? ' '.__('Perpanjangan memakai harga normal :price untuk 12 bulan.', ['price' => Rupiah::format($normal_year)]) : '')],
         [__('Bisa dipakai di HP dan laptop?'), __('Bisa, lewat akun yang sama.')],
-        [__('Kalau ada fitur baru, harus bayar lagi?'), __('Tidak. Semua fitur Pro baru yang rilis selama paketmu aktif langsung terbuka. Kuota AI tetap berlaku.')],
+        [__('Kalau ada fitur baru, harus bayar lagi?'), __('Tidak. Semua fitur Pro baru yang rilis selama paketmu aktif langsung terbuka.')],
     ];
 @endphp
 
@@ -301,7 +295,9 @@
             {{-- What Pro unlocks: one card, one row per feature with its illustration as a thumbnail --}}
             <div class="lg:col-start-1 lg:row-start-2">
                 <h2 class="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">{{ __('Yang kebuka di Pro') }}</h2>
-                <p class="mt-1 text-sm text-zinc-600">{{ __('Fitur berlabel Coming Soon belum rilis, dan langsung terbuka saat rilis selama paketmu aktif.') }}</p>
+                @if ($has_coming_soon)
+                    <p class="mt-1 text-sm text-zinc-600">{{ __('Fitur berlabel Coming Soon belum rilis, dan langsung terbuka saat rilis selama paketmu aktif.') }}</p>
+                @endif
 
                 <ul class="mt-5 divide-y divide-zinc-100 rounded-3xl border border-zinc-200 bg-white">
                     @foreach ($benefits as $benefit)
