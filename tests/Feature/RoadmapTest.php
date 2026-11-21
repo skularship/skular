@@ -10,6 +10,7 @@ use App\Models\Scholarship;
 use App\Models\ScholarshipApplication;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 
 /**
@@ -170,6 +171,52 @@ test('a queued second scholarship is mentioned without showing its modules', fun
         ->assertOk()
         ->assertSee('+1 beasiswa lain di antreanmu')
         ->assertDontSee('Template Antre Rahasia');
+});
+
+test('the roadmap path shows mulai on the first module and a locked button without a link for the next one', function () {
+    $data = roadmapFixture();
+    [$first, $second] = $data['modules'][0];
+
+    $response = $this->actingAs($data['mentee'])->get(route('roadmap.show'))->assertOk();
+
+    $response->assertSee('data-test="roadmap-path"', false)
+        ->assertSee('data-test="roadmap-path-node"', false)
+        ->assertSee('0 dari 2 modul selesai')
+        ->assertSee('Mulai')
+        ->assertSee('Terkunci')
+        ->assertSee('Selesaikan modul sebelumnya')
+        ->assertSee('aria-current="step"', false)
+        ->assertSee('href="'.route('modules.show', $first->id).'"', false)
+        ->assertDontSee('href="'.route('modules.show', $second->id).'"', false);
+});
+
+test('the roadmap path labels finished, in-progress and locked modules without numeric scores', function () {
+    $data = roadmapFixture();
+    [$first, $second] = $data['modules'][0];
+    $third = Module::factory()->create([
+        'fase_id' => $data['fases'][0]->id,
+        'modul_order' => 3,
+        'category' => ModuleCategory::Inti,
+        'title' => 'Modul Fase Fondasi 3',
+    ]);
+
+    giveModuleFeedback($data['mentee'], $first);
+    app(ProgressServiceInterface::class)->completeModule($data['mentee'], $first, 87);
+    app(ProgressServiceInterface::class)->startModule($data['mentee'], $second);
+
+    $response = $this->actingAs($data['mentee'])->get(route('roadmap.show'))->assertOk();
+
+    $response->assertSee('1 dari 3 modul selesai')
+        ->assertSee('Ulangi')
+        ->assertSee('Lanjutkan')
+        ->assertSee('Terkunci')
+        ->assertSee('Sangat baik')
+        ->assertSee('href="'.route('modules.show', $first->id).'"', false)
+        ->assertSee('href="'.route('modules.show', $second->id).'"', false)
+        ->assertDontSee('href="'.route('modules.show', $third->id).'"', false);
+
+    // The path itself never prints the numeric score.
+    expect(Str::between($response->getContent(), 'data-test="roadmap-path"', '</ol>'))->not->toContain('87');
 });
 
 test('the dashboard links to the roadmap without listing every module', function () {
