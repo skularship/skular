@@ -112,8 +112,6 @@
 
                         <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-zinc-500">
                             <span class="font-semibold">{{ __('Modul :order', ['order' => $module->modul_order]) }}</span>
-                            <span aria-hidden="true">·</span>
-                            <x-ui.pill :variant="$module->isLocked() ? 'neutral' : 'info'" class="py-0.5">{{ $module->category->label() }}</x-ui.pill>
 
                             @if ($module->duration)
                                 <span class="inline-flex items-center gap-1">

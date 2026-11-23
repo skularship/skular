@@ -28,18 +28,6 @@
                     <x-ui.pill variant="brand" icon="flag">{{ $module->fase->title }}</x-ui.pill>
                 @endif
 
-                <x-ui.pill variant="info">{{ $module->type->label() }}</x-ui.pill>
-
-                @if ($module->category === \App\Enums\ModuleCategory::Inti)
-                    <x-ui.pill variant="success" icon="share">{{ __('Modul Inti · dipakai bersama') }}</x-ui.pill>
-                @elseif ($module->category === \App\Enums\ModuleCategory::Template)
-                    <x-ui.pill variant="warning" icon="academic-cap">
-                        {{ __('Template :name', ['name' => $module->scholarship?->scholarship_name ?? __('beasiswa')]) }}
-                    </x-ui.pill>
-                @else
-                    <x-ui.pill variant="neutral" icon="book-open">{{ __('Perpustakaan · opsional') }}</x-ui.pill>
-                @endif
-
                 @if ($module->duration)
                     <x-ui.pill icon="clock">{{ __(':minutes menit', ['minutes' => $module->duration]) }}</x-ui.pill>
                 @endif
