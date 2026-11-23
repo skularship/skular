@@ -43,6 +43,15 @@ test('a regular mentee without an admin role cannot access the admin panel', fun
         ->assertForbidden();
 });
 
+test('a staff modul user can open the admin panel and only the granted modules', function () {
+    $staff_modul = adminUser(AdminRole::StaffModul->value, ['ViewAny:Module', 'View:Module']);
+
+    $this->actingAs($staff_modul)->get('/admin')->assertOk();
+    $this->actingAs($staff_modul)->get(ModuleResource::getUrl('index'))->assertOk();
+
+    expect(Gate::forUser($staff_modul)->allows('delete', Module::factory()->create()))->toBeFalse();
+});
+
 test('a staff divisi user sees content but cannot delete it', function () {
     $staff = adminUser(AdminRole::StaffDivisi->value, [
         'ViewAny:Module', 'View:Module', 'Create:Module', 'Update:Module',

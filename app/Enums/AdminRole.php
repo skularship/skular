@@ -9,7 +9,8 @@ use Filament\Support\Contracts\HasLabel;
  * Roles of the Filament admin panel (spatie/laravel-permission via Shield).
  *
  * super_admin bypasses every policy; co_admin and staff_divisi only get the
- * permissions assigned by RoleSeeder.
+ * permissions assigned by RoleSeeder. staff_modul gets panel access, and its
+ * permissions are managed from the Shield role page.
  */
 enum AdminRole: string implements HasLabel
 {
@@ -18,6 +19,7 @@ enum AdminRole: string implements HasLabel
     case SuperAdmin = 'super_admin';
     case CoAdmin = 'co_admin';
     case StaffDivisi = 'staff_divisi';
+    case StaffModul = 'staff_modul';
 
     /**
      * Get the Indonesian label shown to mentees and in the Filament admin.
@@ -30,6 +32,7 @@ enum AdminRole: string implements HasLabel
             self::SuperAdmin => 'Super Admin',
             self::CoAdmin => 'Co-Admin',
             self::StaffDivisi => 'Staff Divisi',
+            self::StaffModul => 'Staff Modul',
         };
     }
 
