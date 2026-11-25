@@ -17,6 +17,8 @@
         ['image' => 'isi-sekali', 'title' => __('Isi sekali, daftar banyak'), 'text' => __('Satu profil dan satu tempat dokumen untuk semua beasiswa pilihanmu. Kamu tetap mengirim aplikasi di situs penyelenggara.'), 'soon' => false],
         ['image' => 'tracker', 'title' => __('Tracker dan pengingat deadline'), 'text' => __('Checklist berkas tiap beasiswa, plus pengingat email H-7, H-3, dan H-1.'), 'soon' => false],
         ['image' => 'video-live', 'title' => __('Live class dan rekaman'), 'text' => __('Ikut live class khusus Pro dan tonton semua rekamannya. Live class diadakan sesekali, jadwal diumumkan di halaman Event.'), 'soon' => false],
+        ['image' => 'tryout-ielts', 'title' => __('Try Out IELTS lengkap'), 'text' => __('Kunci jawaban dan pembahasan tiap soal, mentor AI, teori IELTS yang dibaca di website, dan bisa mengulang Try Out. Skor dan band estimasi tetap gratis.'), 'soon' => false],
+        ['image' => 'tes-iq', 'title' => __('Hasil Tes IQ Latihan'), 'text' => __('Skor dan kategori per subtes, kunci jawaban, pembahasan, materi, dan mentor AI. Soalnya tetap bisa kamu kerjakan gratis.'), 'soon' => false],
     ];
     $has_coming_soon = collect($benefits)->contains('soon', true);
 
@@ -35,12 +37,19 @@
         [__('Checklist berkas per beasiswa'), false, true, false],
         [__('Reminder deadline lewat email (H-7, H-3, H-1)'), __('1 beasiswa'), true, false],
         [__('Live class khusus Pro dan rekamannya'), __('1 rekaman pratinjau'), true, false],
+        [__('Try Out IELTS: skor, band estimasi, dan level'), true, true, false],
+        [__('Try Out IELTS: kunci jawaban, pembahasan, dan mentor AI'), false, true, false],
+        [__('Teori IELTS (dibaca di website)'), false, true, false],
+        [__('Mengulang Try Out IELTS'), __('1 kali per Try Out'), __('Tanpa batas'), false],
+        [__('Tes IQ Latihan: mengerjakan soal'), true, true, false],
+        [__('Tes IQ Latihan: skor, kategori, pembahasan, materi, dan mentor AI'), false, true, false],
     ];
 
     $faqs = [
         [__('Worth it nggak sih?'), $year ? __('Hitung per bulan: paket 12 bulan hanya :price per bulan. Satu beasiswa yang lolos bernilai jauh lebih besar dari itu.', ['price' => Rupiah::format($year->monthly)]) : __('Hitung per bulan: paket 12 bulan jauh lebih murah dari paket 1 bulan.')],
-        [__('Bedanya Pro sama gratis apa?'), __('Info beasiswa, profiling, rekomendasi, dan roadmap belajar tetap gratis. Pro membuka Vault dokumen, checklist berkas tiap beasiswa, pengingat deadline untuk semua beasiswa pilihanmu, serta live class khusus Pro dan rekamannya.')],
+        [__('Bedanya Pro sama gratis apa?'), __('Info beasiswa, profiling, rekomendasi, dan roadmap belajar tetap gratis. Pro membuka Vault dokumen, checklist berkas tiap beasiswa, pengingat deadline untuk semua beasiswa pilihanmu, live class khusus Pro dan rekamannya, pembahasan dan mentor AI Try Out IELTS, serta hasil lengkap Tes IQ Latihan.')],
         [__('Paket yang lebih lama, fiturnya lebih banyak?'), __('Fitur sama. Bedanya di lama aktif dan harga per bulan.')],
+        [__('Try Out IELTS dan Tes IQ bisa dicoba gratis?'), __('Bisa. Try Out IELTS bisa kamu kerjakan gratis sekali per Try Out lengkap dengan skor dan band estimasinya, dan soal Tes IQ Latihan bisa dikerjakan gratis. Pro membuka pembahasan, mentor AI, teori, mengulang Try Out, dan hasil lengkap Tes IQ. Semua skor adalah estimasi latihan, bukan skor resmi.')],
         [__('Kalau aku nggak sempat ikut live class?'), __('Tenang, rekamannya bisa kamu tonton kapan saja di halaman Event selama Pro aktif.')],
         [__('Bayarnya gimana?'), __('Sekali bayar lewat QRIS, GoPay, virtual account, dan metode lain. Tanpa auto-renew. Pro aktif setelah pembayaran terkonfirmasi, biasanya langsung.').($normal_year ? ' '.__('Perpanjangan memakai harga normal :price untuk 12 bulan.', ['price' => Rupiah::format($normal_year)]) : '')],
         [__('Bisa dipakai di HP dan laptop?'), __('Bisa, lewat akun yang sama.')],
@@ -302,15 +311,21 @@
                 <ul class="mt-5 divide-y divide-zinc-100 rounded-3xl border border-zinc-200 bg-white">
                     @foreach ($benefits as $benefit)
                         <li class="flex items-start gap-4 p-4 sm:items-center sm:gap-5 sm:px-5">
-                            <img
-                                src="{{ asset('images/pro/'.$benefit['image'].'.webp') }}"
-                                alt=""
-                                width="600"
-                                height="380"
-                                loading="lazy"
-                                decoding="async"
-                                class="aspect-[600/380] w-20 shrink-0 rounded-xl object-cover sm:w-24"
-                            />
+                            @if (isset($benefit['image']))
+                                <img
+                                    src="{{ asset('images/pro/'.$benefit['image'].'.webp') }}"
+                                    alt=""
+                                    width="600"
+                                    height="380"
+                                    loading="lazy"
+                                    decoding="async"
+                                    class="aspect-[600/380] w-20 shrink-0 rounded-xl object-cover sm:w-24"
+                                />
+                            @else
+                                <span class="flex aspect-[600/380] w-20 shrink-0 items-center justify-center rounded-xl bg-brand-teal-soft text-brand-teal sm:w-24" aria-hidden="true">
+                                    <x-icons.app-icon :name="$benefit['icon']" class="size-8" />
+                                </span>
+                            @endif
                             <div class="min-w-0">
                                 <h3 class="flex flex-wrap items-center gap-x-2 gap-y-1 text-base font-bold text-zinc-900">
                                     {{ $benefit['title'] }}

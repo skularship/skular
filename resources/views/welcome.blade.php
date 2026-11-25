@@ -665,11 +665,15 @@
                         [__('Vault dokumen dan checklist berkas tiap beasiswa'), false],
                         [__('Pengingat deadline email untuk semua beasiswa pilihanmu'), false],
                         [__('Live class khusus Pro dan semua rekamannya'), false],
+                        [__('Pembahasan, mentor AI, dan teori Try Out IELTS'), false],
+                        [__('Hasil lengkap Tes IQ Latihan'), false],
                     ];
                     $pro_peek = [
                         ['isi-sekali', __('Isi sekali, daftar banyak')],
                         ['tracker', __('Tracker beasiswa')],
                         ['video-live', __('Live class & rekaman')],
+                        ['tryout-ielts', __('Pembahasan Try Out IELTS')],
+                        ['tes-iq', __('Hasil Tes IQ Latihan')],
                     ];
                 @endphp
 
@@ -732,10 +736,16 @@
                                 <a href="{{ route('premium') }}" class="text-sm font-semibold text-brand-teal hover:underline">{{ __('Lihat semua manfaat dan perbandingan') }} &rarr;</a>
                             </div>
 
-                            <div class="-mx-4 mt-5 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0">
+                            <div class="-mx-4 mt-5 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 lg:grid-cols-5">
                                 @foreach ($pro_peek as [$image, $label])
                                     <a href="{{ route('premium') }}" class="group w-40 shrink-0 snap-start sm:w-auto">
-                                        <img src="{{ asset('images/pro/'.$image.'.webp') }}" alt="" width="600" height="380" loading="lazy" decoding="async" class="aspect-[600/380] w-full rounded-2xl object-cover transition group-hover:-translate-y-1" />
+                                        @if (str_starts_with($image, 'icon:'))
+                                            <span class="flex aspect-[600/380] w-full items-center justify-center rounded-2xl bg-brand-teal-soft text-brand-teal transition group-hover:-translate-y-1" aria-hidden="true">
+                                                <x-icons.app-icon :name="substr($image, 5)" class="size-10" />
+                                            </span>
+                                        @else
+                                            <img src="{{ asset('images/pro/'.$image.'.webp') }}" alt="" width="600" height="380" loading="lazy" decoding="async" class="aspect-[600/380] w-full rounded-2xl object-cover transition group-hover:-translate-y-1" />
+                                        @endif
                                         <span class="mt-2 block text-sm leading-snug font-bold text-zinc-800">{{ $label }}</span>
                                     </a>
                                 @endforeach
