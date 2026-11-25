@@ -13,6 +13,12 @@ import './product-tour';
 // Cookie consent banner and consent-gated GA4, see resources/js/cookie-consent.js.
 import './cookie-consent';
 
+// Read-only Try Out theory PDF viewer (Alpine "tryoutPdfViewer"); pdf.js itself is loaded lazily.
+import './pdf-viewer';
+
+// Try Out Speaking recorder: live transcription in the browser (Alpine "tryoutSpeechRecorder").
+import './speech-recorder';
+
 /**
  * Scroll reveal for the marketing landing page.
  *

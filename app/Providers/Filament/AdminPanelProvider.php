@@ -92,6 +92,7 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 NavigationGroup::make('Kurikulum'),
                 NavigationGroup::make('Materi & Latihan'),
+                NavigationGroup::make('Try Out'),
                 NavigationGroup::make('Beasiswa'),
                 NavigationGroup::make('Konten Publik'),
                 NavigationGroup::make('Pemantauan Mentee'),

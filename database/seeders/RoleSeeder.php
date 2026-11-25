@@ -72,6 +72,11 @@ class RoleSeeder extends Seeder
             // Events: full management incl. "Duplikat event"; participants are created by mentees, admins only mark attendance.
             'Event' => [...self::MANAGE, 'Replicate'],
             'EventRegistration' => self::REVIEW,
+            // Try Out: full content management; attempts are read, "Nilai ulang" and closing a stuck attempt need Update.
+            'Tryout' => [...self::MANAGE, 'Replicate'],
+            'TryoutUnit' => self::MANAGE,
+            'TryoutQuestion' => [...self::MANAGE, 'Replicate'],
+            'TryoutAttempt' => self::REVIEW,
         ],
         AdminRole::StaffDivisi->value => [
             'Fase' => self::WRITE,
@@ -92,6 +97,10 @@ class RoleSeeder extends Seeder
             'ModuleFeedback' => self::READ,
             'Event' => [...self::WRITE, 'Replicate'],
             'EventRegistration' => self::REVIEW,
+            'Tryout' => [...self::WRITE, 'Replicate'],
+            'TryoutUnit' => self::WRITE,
+            'TryoutQuestion' => [...self::WRITE, 'Replicate'],
+            'TryoutAttempt' => self::READ,
         ],
     ];
 

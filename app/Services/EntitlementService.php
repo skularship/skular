@@ -45,6 +45,16 @@ class EntitlementService implements EntitlementServiceInterface
     }
 
     /**
+     * How many attempts per Try Out the mentee may start, or null for unlimited.
+     */
+    public function tryoutAttemptLimit(User $user): ?int
+    {
+        $limit = config('plans.'.$this->plan($user).'.tryout_free_attempts');
+
+        return is_int($limit) ? $limit : null;
+    }
+
+    /**
      * Name of the plan the mentee is on right now.
      */
     private function plan(User $user): string

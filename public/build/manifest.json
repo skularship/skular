@@ -155,8 +155,26 @@
     "file": "assets/rubik-800-normal-Dq1miTTj.woff",
     "src": "_rubik-800-normal-Dq1miTTj.woff"
   },
+  "node_modules/pdfjs-dist/build/pdf.mjs": {
+    "file": "assets/pdf-CIkkVynp.js",
+    "name": "pdf",
+    "src": "node_modules/pdfjs-dist/build/pdf.mjs",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.js"
+    ]
+  },
+  "node_modules/pdfjs-dist/build/pdf.worker.min.mjs?worker": {
+    "file": "assets/pdf.worker.min-CLijz5Ze.js",
+    "name": "pdf.worker.min",
+    "src": "node_modules/pdfjs-dist/build/pdf.worker.min.mjs?worker",
+    "isDynamicEntry": true,
+    "assets": [
+      "assets/pdf.worker.min-BGDxK_8e.js"
+    ]
+  },
   "resources/css/app.css": {
-    "file": "assets/app-DYD3lrpZ.css",
+    "file": "assets/app-DVz1US0c.css",
     "name": "app",
     "names": [
       "app.css"
@@ -174,10 +192,14 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-4AaET5gK.js",
+    "file": "assets/app-2rEnxTTA.js",
     "name": "app",
     "src": "resources/js/app.js",
-    "isEntry": true
+    "isEntry": true,
+    "dynamicImports": [
+      "node_modules/pdfjs-dist/build/pdf.mjs",
+      "node_modules/pdfjs-dist/build/pdf.worker.min.mjs?worker"
+    ]
   },
   "resources/js/passkeys.js": {
     "file": "assets/passkeys-CsxEE3hN.js",

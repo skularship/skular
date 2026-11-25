@@ -67,6 +67,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read Collection<int, Order> $orders
  * @property-read Collection<int, UserConsent> $consents
  * @property-read Collection<int, EventRegistration> $eventRegistrations
+ * @property-read Collection<int, TryoutAttempt> $tryoutAttempts
  */
 #[Fillable([
     'name',
@@ -236,6 +237,16 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Pas
     public function eventRegistrations(): HasMany
     {
         return $this->hasMany(EventRegistration::class);
+    }
+
+    /**
+     * Get the mentee's Try Out attempts.
+     *
+     * @return HasMany<TryoutAttempt, $this>
+     */
+    public function tryoutAttempts(): HasMany
+    {
+        return $this->hasMany(TryoutAttempt::class);
     }
 
     /**

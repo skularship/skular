@@ -1,0 +1,1 @@
+function e(e){return new Worker(`/build/assets/pdf.worker.min-BGDxK_8e.js`,{name:e?.name})}export{e as default};

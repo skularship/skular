@@ -7,7 +7,7 @@ use Filament\Support\Contracts\HasLabel;
 
 /**
  * The guided product tours of the mentee journey, in journey order:
- * landing → Info Beasiswa → profiling → recommendation → dashboard → roadmap → module → Beasiswa Saya.
+ * landing → Info Beasiswa → profiling → recommendation → dashboard → roadmap → module → Beasiswa Saya, plus Event and Try Out.
  */
 enum ProductTour: string implements HasLabel
 {
@@ -22,6 +22,7 @@ enum ProductTour: string implements HasLabel
     case Module = 'module';
     case Tracker = 'tracker';
     case Events = 'events';
+    case Tryout = 'tryout';
 
     /**
      * Get the Indonesian label shown on the Panduan page.
@@ -40,6 +41,7 @@ enum ProductTour: string implements HasLabel
             self::Module => 'Kerjakan modul sampai checkpoint',
             self::Tracker => 'Daftar dan laporkan hasil',
             self::Events => 'Ikut event Skular',
+            self::Tryout => 'Kerjakan Try Out IELTS',
         };
     }
 
@@ -58,6 +60,7 @@ enum ProductTour: string implements HasLabel
             self::Module => 'Pembukaan, Pahami, Quick Question, Praktik dengan feedback AI, lalu Checkpoint.',
             self::Tracker => 'Unggah bukti pendaftaran, laporkan hasilnya, dan rayakan dengan twibbon kalau lolos.',
             self::Events => 'Daftar webinar, kelas intensif, atau mentoring. Link acara muncul H-1 dan pengingat dikirim lewat email.',
+            self::Tryout => 'Ukur kemampuan bahasa Inggrismu lewat Listening, Reading, Writing, dan Speaking. Band estimasi dan level bisa dilihat gratis.',
         };
     }
 
@@ -76,6 +79,7 @@ enum ProductTour: string implements HasLabel
             self::Module => 'book-open',
             self::Tracker => 'document-arrow-up',
             self::Events => 'video-camera',
+            self::Tryout => 'academic-cap',
         };
     }
 
@@ -96,6 +100,7 @@ enum ProductTour: string implements HasLabel
             self::Roadmap, self::Module => 'roadmap.show',
             self::Tracker => 'scholarships.tracker',
             self::Events => 'events.index',
+            self::Tryout => 'tryout.index',
         };
     }
 }

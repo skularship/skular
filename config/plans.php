@@ -17,12 +17,21 @@ return [
         'vault' => false,
         'checklist' => false,
         'reminder_applications' => 1,
+        // Try Out: score and level are free; key, explanation, theory and mentor are Pro.
+        'tryout_review' => false,
+        'tryout_mentor' => false,
+        'tryout_theory' => false,
+        'tryout_free_attempts' => 1,
     ],
 
     'pro' => [
         'vault' => true,
         'checklist' => true,
         'reminder_applications' => null,
+        'tryout_review' => true,
+        'tryout_mentor' => true,
+        'tryout_theory' => true,
+        'tryout_free_attempts' => null,
     ],
 
     'vault' => [

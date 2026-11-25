@@ -3,6 +3,9 @@
 use App\Ai\Agents\ModuleBrainstormingAgent;
 use App\Ai\Agents\ModuleMentorAgent;
 use App\Ai\Agents\PracticeFeedbackAgent;
+use App\Ai\Agents\SpeakingAssessmentAgent;
+use App\Ai\Agents\TryoutMentorAgent;
+use App\Ai\Agents\WritingAssessmentAgent;
 use App\Contracts\AiFeedbackServiceInterface;
 use App\Contracts\ModuleMentorServiceInterface;
 use App\Contracts\PracticeSubmissionServiceInterface;
@@ -42,6 +45,9 @@ test('no ai agent pins its own provider or model', function (string $agent) {
     ModuleMentorAgent::class,
     ModuleBrainstormingAgent::class,
     PracticeFeedbackAgent::class,
+    WritingAssessmentAgent::class,
+    SpeakingAssessmentAgent::class,
+    TryoutMentorAgent::class,
 ]);
 
 test('provider failures are classified for friendly messages', function (Throwable $exception, AiFailureReason $reason) {

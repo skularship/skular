@@ -6,6 +6,7 @@ use App\Http\Controllers\EventCalendarController;
 use App\Http\Controllers\HealthCheckController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SubmissionProofController;
+use App\Http\Controllers\TryoutTheoryPdfController;
 use App\Http\Controllers\VaultDownloadController;
 use App\Livewire\Checklist\Show as ChecklistShow;
 use App\Livewire\Cv\Show as CvShow;
@@ -28,6 +29,12 @@ use App\Livewire\Scholarships\Recommendation;
 use App\Livewire\Scholarships\Show as ScholarshipShow;
 use App\Livewire\Scholarships\Tracker;
 use App\Livewire\Support\Help;
+use App\Livewire\Tryout\Index as TryoutIndex;
+use App\Livewire\Tryout\Result as TryoutResult;
+use App\Livewire\Tryout\Review as TryoutReview;
+use App\Livewire\Tryout\Runner as TryoutRunner;
+use App\Livewire\Tryout\Show as TryoutShow;
+use App\Livewire\Tryout\Theory as TryoutTheory;
 use App\Livewire\Twibbon\Generator;
 use App\Livewire\Vault\Index as VaultIndex;
 use Illuminate\Support\Facades\Route;
@@ -96,6 +103,16 @@ Route::middleware($under_construction_middleware)->group(function () {
         Route::livewire('event/{event}', EventShow::class)->name('events.show');
         Route::get('event/{event}/kalender', EventCalendarController::class)->name('events.calendar');
         Route::get('scholarships/{application}/proof', [SubmissionProofController::class, 'show'])->name('applications.proof');
+
+        // Try Out (simulasi IELTS). Ownership and Pro access are checked in each component/controller.
+        Route::livewire('tryout', TryoutIndex::class)->name('tryout.index');
+        Route::livewire('tryout/sesi/{attempt}', TryoutRunner::class)->name('tryout.runner');
+        Route::livewire('tryout/hasil/{attempt}', TryoutResult::class)->name('tryout.result');
+        Route::livewire('tryout/hasil/{attempt}/pembahasan', TryoutReview::class)->name('tryout.review');
+        Route::livewire('tryout/{tryout}/teori', TryoutTheory::class)->name('tryout.theory');
+        // Masked bytes for the in-page PDF viewer only (Pro); the PDF is never downloadable.
+        Route::get('tryout/{tryout}/teori/berkas', TryoutTheoryPdfController::class)->middleware('throttle:30,1')->name('tryout.theory.pdf');
+        Route::livewire('tryout/{tryout}', TryoutShow::class)->name('tryout.show');
     });
 
     require __DIR__.'/settings.php';

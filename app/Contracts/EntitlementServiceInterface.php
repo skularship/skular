@@ -28,4 +28,9 @@ interface EntitlementServiceInterface
      * How many scholarships get deadline reminders, or null for all of them.
      */
     public function reminderLimit(User $user): ?int;
+
+    /**
+     * How many attempts per Try Out the mentee may start, or null for unlimited.
+     */
+    public function tryoutAttemptLimit(User $user): ?int;
 }

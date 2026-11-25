@@ -24,6 +24,13 @@ enum ActivityName: string
     case EventAttended = 'event_attended';
     case PremiumViewed = 'premium_viewed';
     case CheckoutStarted = 'checkout_started';
+    case TryoutStarted = 'tryout_started';
+    case TryoutCompleted = 'tryout_completed';
+    case TryoutReviewOpened = 'tryout_review_opened';
+    case TryoutMentorAsked = 'tryout_mentor_asked';
+    case TryoutTheoryOpened = 'tryout_theory_opened';
+    case TryoutTheoryPdfViewed = 'tryout_theory_pdf_viewed';
+    case TryoutMaterialsClicked = 'tryout_materials_clicked';
 
     /**
      * Indonesian label for the admin panel.
@@ -47,6 +54,13 @@ enum ActivityName: string
             self::EventAttended => 'Hadir di event',
             self::PremiumViewed => 'Lihat Premium',
             self::CheckoutStarted => 'Mulai checkout',
+            self::TryoutStarted => 'Mulai Try Out',
+            self::TryoutCompleted => 'Try Out selesai',
+            self::TryoutReviewOpened => 'Buka pembahasan Try Out',
+            self::TryoutMentorAsked => 'Tanya mentor Try Out',
+            self::TryoutTheoryOpened => 'Buka teori Try Out',
+            self::TryoutTheoryPdfViewed => 'Baca PDF teori Try Out',
+            self::TryoutMaterialsClicked => 'Klik beli materi Try Out',
         };
     }
 

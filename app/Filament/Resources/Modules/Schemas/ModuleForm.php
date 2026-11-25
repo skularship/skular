@@ -246,6 +246,11 @@ class ModuleForm
                             ->required()
                             ->live()
                             ->helperText('Inti: untuk semua mentee. Template: hanya untuk beasiswa tertentu. Perpustakaan: pelatihan tambahan lintas beasiswa.'),
+                        Toggle::make('is_tryout_theory')
+                            ->label('Modul teori Try Out (khusus Pro, disembunyikan dari Perpustakaan)')
+                            ->helperText('Hanya dibaca lewat halaman Teori Try Out dan oleh mentor AI Try Out. Tidak bisa dibuka sebagai modul biasa (tanpa Quick Question, praktik, atau checkpoint).')
+                            ->visible(fn (Get $get): bool => $get('category') === ModuleCategory::Perpustakaan || $get('category') === ModuleCategory::Perpustakaan->value)
+                            ->columnSpanFull(),
                         Select::make('scholarship_id')
                             ->label('Beasiswa terkait')
                             ->relationship('scholarship', 'scholarship_name')

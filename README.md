@@ -89,6 +89,7 @@ Nilai rahasia tidak pernah ditulis di dokumentasi. Daftar lengkap ada di [`.env.
 | `REDIS_*`, `MEMCACHED_HOST` | Bila memakai Redis/Memcached | Opsional |
 | `OPENROUTER_API_KEY` | Kunci AI untuk feedback praktik, AI Mentor, Brainstorming. Test tidak membutuhkannya (AI di-fake) | Wajib untuk fitur AI |
 | `AI_MODULE_CHAT_LIMIT` | Jumlah pertanyaan AI Mentor ke model per mentee per modul. Default `5` | Opsional |
+| `TRYOUT_MENTOR_LIMIT` | Pertanyaan mentor AI Try Out per attempt (Pro). Default `10` | Opsional |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | Login Google. Bila kosong, tombol Google mengembalikan ke halaman login | Opsional |
 | `PASSKEYS_USER_HANDLE_SECRET` | Secret user handle passkey. Default `APP_KEY`; biarkan dikomentari bila tidak dipakai | Opsional |
 | `ANALYTICS_PROPERTY_ID` | ID numerik property GA4 (bukan `G-XXXX`) untuk halaman Google Analytics admin (`SiteAnalyticsService`) + file kredensial `storage/app/analytics/service-account-credentials.json`. Email service account wajib ditambahkan sebagai **Viewer** di GA4 → Admin → Property access management; tanpa itu halaman menampilkan pesan "belum punya akses". Cache: hari ini 5 menit, periode lain 1 jam | Opsional |
@@ -170,7 +171,8 @@ public/build/              # Aset Vite hasil build (DI-COMMIT)
 | Komitmen akses gratis (sekali, setelah profiling atau saat pertama membuka modul) | `/akses-gratis` | `app/Livewire/Learning/FeedbackCommitment.php`, `users.feedback_commitment_at` |
 | Event: webinar, kelas intensif, mentoring personal (daftar + pertanyaan singkat pengganti Google Form, kapasitas, audiens Semua/Pro/Undangan lewat tag mentee, link acara hanya untuk peserta mulai H-1, file .ics, pengingat email H-1 hari & H-1 jam, masukan 1-5 setelah acara, rekaman; mentee Gratis bisa menonton satu rekaman event Pro yang ditandai admin "Pratinjau gratis", rekaman Pro lain tampil terkunci dengan tautan ke `/premium`) | `/event`, `/event/{slug}`, `/event/{slug}/kalender` | `app/Livewire/Events/*`, `app/Services/EventService.php`, `app/Console/Commands/DispatchEventReminders.php`, `app/Mail/EventReminderMail.php`, `app/Filament/Resources/Events/**` |
 | Tracking perilaku mentee (tanpa pihak ketiga) + widget admin "Funnel Mentee" 7/30 hari | (semua alur utama) | `app/Services/ActivityTracker.php`, `app/Enums/ActivityName.php`, `app/Filament/Widgets/MenteeFunnel.php` |
-| Perpustakaan (modul opsional) | `/library` | `app/Livewire/Learning/Library.php` |
+| Perpustakaan (modul opsional; modul `is_tryout_theory` disembunyikan) | `/library` | `app/Livewire/Learning/Library.php` |
+| Try Out IELTS: 4 subtes berurutan (Listening, Reading adaptif per soal dengan blok unit; Writing dan Speaking dinilai AI; Speaking ditranskripsi gratis di browser lewat Web Speech API, hanya Chrome/Edge/Safari), timer dari server, mode Latihan/Ujian, hasil gratis (band estimasi, skor mentah, level), pembahasan + mentor AI + teori + attempt ulang untuk Pro. Admin: *Try Out → Paket Try Out, Unit Teks & Audio, Bank Soal (impor/ekspor JSON), Hasil Mentee* + widget kesehatan bank soal | `/tryout`, `/tryout/{slug}`, `/tryout/sesi/{attempt}`, `/tryout/hasil/{attempt}`, `/tryout/hasil/{attempt}/pembahasan`, `/tryout/{slug}/teori` | `app/Livewire/Tryout/**`, `app/Services/Tryout*.php`, `AdaptiveQuestionSelector.php`, `AnswerChecker.php`, `WritingAssessmentService.php`, `SpeakingAssessmentService.php`, `IeltsScoringStrategy.php`, `config/tryout.php`, `app/Filament/Resources/Tryout*/**` |
 | CV otomatis dari jawaban praktik | `/cv` | `app/Livewire/Cv/Show.php`, `app/Services/CvService.php` |
 | Twibbon | `/scholarships/{application}/twibbon` | `app/Livewire/Twibbon/Generator.php`, `app/Services/TwibbonService.php` |
 | Pengaturan akun (profil, keamanan, passkey, 2FA) | `/settings/profile`, `/settings/security` | `app/Livewire/Settings/*` |
@@ -225,7 +227,7 @@ php artisan shield:generate --all --panel=admin
 php artisan db:seed --class=RoleSeeder
 ```
 
-Scheduler tidak diperlukan (tidak ada task terjadwal). Bila PHPStan kehabisan memori di mesin lokal, jalankan `vendor/bin/phpstan analyse --memory-limit=2G`.
+Scheduler dibutuhkan (`php artisan schedule:run` tiap menit) untuk task di `routes/console.php`, termasuk `tryout:close-expired` (tiap menit). Impor bank soal Try Out dari CLI: `php artisan tryout:import bank.json --dry-run`. Bila PHPStan kehabisan memori di mesin lokal, jalankan `vendor/bin/phpstan analyse --memory-limit=2G`.
 
 ---
 

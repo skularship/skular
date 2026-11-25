@@ -14,7 +14,7 @@
 
     $summary = [
         __('Kami mengumpulkan data yang kamu isi sendiri (akun, profil, jawaban latihan, dokumen) dan sedikit data teknis.'),
-        __('Jawaban latihan, pertanyaan ke AI Mentor, dan isi brainstorming dikirim ke penyedia AI (OpenRouter dan penyedia model di belakangnya, bisa di luar Indonesia) untuk dinilai atau dijawab. Data profilmu tidak ikut dikirim.'),
+        __('Jawaban latihan, pertanyaan ke AI Mentor, isi brainstorming, dan jawaban Writing Try Out dikirim ke penyedia AI (OpenRouter dan penyedia model di belakangnya, bisa di luar Indonesia) untuk dinilai atau dijawab. Jawaban Speaking Try Out diubah menjadi teks oleh fitur pengenalan suara browsermu; Skular hanya menerima teksnya. Data profilmu tidak ikut dikirim.'),
         __('Kami tidak menjual data pribadimu. Data hanya dibagikan dalam bentuk agregat atau anonim, kecuali kamu memberi persetujuan terpisah.'),
         __('Google Analytics hanya aktif kalau kamu mengizinkan lewat banner cookie.'),
         __('Pembayaran diproses Midtrans. Kami tidak menyimpan nomor kartu atau rekeningmu.'),
@@ -59,6 +59,7 @@
                         <tr><td>{{ __('Profil beasiswa') }}</td><td>{{ __('Usia, IPK atau nilai rata-rata, status SKTM, jenjang pendidikan sekarang dan tujuan, lokasi studi tujuan, bidang (klaster), dan nomor telepon bila kamu mengisinya.') }}</td></tr>
                         <tr><td>{{ __('Isi belajar') }}</td><td>{{ __('Jawaban latihan (termasuk esai dan cerita pribadi) dan file yang kamu lampirkan di latihan, sesi AI Brainstorming, progres modul, jawaban Quick Question, dan jumlah pemakaian AI Mentor. Percakapan AI Mentor tidak kami simpan di database; isinya hanya ada selama halaman modul terbuka.') }}</td></tr>
                         <tr><td>{{ __('Masukan') }}</td><td>{{ __('Persetujuanmu pada program akses gratis (dan waktunya), masukan di akhir setiap modul (skor seberapa membantu, bagian yang paling menyulitkan, jawaban pertanyaan terbuka, dan alasan bila skornya rendah), serta skor dan masukan setelah event.') }}</td></tr>
+                        <tr><td>{{ __('Try Out') }}</td><td>{{ __('Jawaban Listening dan Reading, esai Writing, transkrip jawaban Speaking (teks dari browsermu, tanpa rekaman suara) dan lama kamu berbicara, skor dan level hasil Try Out, mode yang kamu pilih, waktu mengerjakan, dan jumlah pertanyaan ke mentor AI Try Out. Percakapan mentor AI Try Out tidak kami simpan di database.') }}</td></tr>
                         <tr><td>{{ __('Event') }}</td><td>{{ __('Event yang kamu daftari, jawaban pertanyaan pendaftaran event, status kehadiran, dan catatan pengingat email yang sudah dikirim.') }}</td></tr>
                         <tr><td>{{ __('Aktivitas di Skular') }}</td><td>{{ __('Catatan langkah yang kamu lakukan di Skular, misalnya membuka halaman beasiswa, filter yang dipakai, menekan tombol cari beasiswa yang cocok, mulai dan menyelesaikan profiling atau modul, dan mendaftar event, beserta waktunya. Kata yang kamu ketik di kolom pencarian tidak dicatat. Catatan ini disimpan di server Skular sendiri, tanpa alamat IP dan tanpa layanan pihak ketiga.') }}</td></tr>
                         <tr><td>{{ __('Label akun') }}</td><td>{{ __('Label yang diberikan admin pada akunmu, misalnya alumni program tertentu, untuk mengundangmu ke event khusus dan memisahkan data masukan.') }}</td></tr>
@@ -91,6 +92,9 @@
                 <li>{{ __('Penilaian latihan: jawaban yang kamu kirim di form latihan, beserta soal dan materi modulnya.') }}</li>
                 <li>{{ __('AI Mentor: pertanyaanmu, beberapa pesan terakhir di percakapan itu, dan isi modul yang sedang kamu buka. Kuota pertanyaan ke AI saat ini :limit per modul.', ['limit' => $chatLimit]) }}</li>
                 <li>{{ __('AI Brainstorming: jawaban yang kamu tulis di sesi brainstorming.') }}</li>
+                <li>{{ __('Try Out Writing: esai yang kamu kirim, beserta soal dan panduan penilaiannya.') }}</li>
+                <li>{{ __('Try Out Speaking: transkrip jawabanmu (teks, bukan rekaman suara) dikirim lewat OpenRouter untuk dinilai.') }}</li>
+                <li>{{ __('Mentor AI Try Out (paket Pro): pertanyaanmu, beberapa pesan terakhir, soal yang kamu tanyakan beserta jawabanmu, kunci, dan pembahasannya, serta teks teori Try Out.') }}</li>
             </ul>
             <p>{{ __('Nama, email, dan data profil beasiswamu tidak ikut dikirim. Log Skular hanya mencatat data teknis permintaan AI (waktu, durasi, status), bukan isi jawabanmu. OpenRouter dan penyedia model memproses data sesuai kebijakan privasi mereka masing-masing.') }}</p>
             <p class="sk-legal-note">{{ __('Jangan menulis NIK, nomor rekening, password, data kesehatan, atau data pribadi orang lain di jawaban latihan atau chat AI. Tulis cerita pribadimu secukupnya untuk latihan.') }}</p>
@@ -101,6 +105,7 @@
                 <li>{{ __('Midtrans: memproses pembayaran. Menerima nama, email, nomor pesanan, paket, dan nominal.') }}</li>
                 <li>{{ __('Google: login dengan Google (bila kamu memilihnya) dan Google Analytics (hanya bila kamu mengizinkan).') }}</li>
                 <li>{{ __('OpenRouter dan penyedia model AI: lihat bagian 4.') }}</li>
+                <li>{{ __('Layanan pengenalan suara bawaan browsermu (Google untuk Chrome, Microsoft untuk Edge, Apple untuk Safari): saat kamu merekam jawaban Speaking Try Out, browsermu mengirim suaramu ke layanan ini untuk diubah menjadi teks, sesuai kebijakan privasi masing-masing. Skular tidak menerima maupun menyimpan rekaman suaramu.') }}</li>
                 <li>{{ __('Penyedia hosting (server di :location): menyimpan database, file, dan log.', ['location' => config('legal.hosting.server_location')]) }}</li>
                 <li>{{ __('Penyedia email (:provider): mengirim email verifikasi, reset password, dan pengingat (termasuk pengingat event).', ['provider' => config('legal.hosting.mail_provider')]) }}</li>
                 <li>{{ __('Tim Skular yang berwenang: admin hanya melihat data sesuai perannya di panel admin.') }}</li>
@@ -109,7 +114,7 @@
         </x-legal.section>
 
         <x-legal.section id="luar-negeri" number="6" :title="$sections[5]['title']">
-            <p>{{ __('Google dan OpenRouter, serta penyedia model AI yang dipakai OpenRouter, dapat memproses data di luar Indonesia. UU PDP (Pasal 56) membolehkan transfer ke luar Indonesia bila negara tujuan memberi pelindungan yang setara atau lebih tinggi, bila ada pelindungan yang memadai dan mengikat, atau dengan persetujuan subjek data.') }}</p>
+            <p>{{ __('Google, OpenRouter, penyedia model AI yang dipakai OpenRouter, serta layanan pengenalan suara browser, dapat memproses data di luar Indonesia. UU PDP (Pasal 56) membolehkan transfer ke luar Indonesia bila negara tujuan memberi pelindungan yang setara atau lebih tinggi, bila ada pelindungan yang memadai dan mengikat, atau dengan persetujuan subjek data.') }}</p>
             <p>{{ __('Kami meminta persetujuanmu untuk transfer ini saat kamu menyetujui Kebijakan Privasi. Kalau kamu tidak setuju data tulisanmu diproses di luar Indonesia, jangan memakai fitur AI. Fitur lain tetap bisa kamu pakai.') }}</p>
         </x-legal.section>
 
@@ -128,9 +133,9 @@
             <h3>{{ __('Saat kamu menghapus akun') }}</h3>
             <p>{{ __('Kamu bisa menghapus akun di Pengaturan dengan memasukkan password. Akun yang dibuat lewat Google belum punya password yang kamu ketahui, jadi minta penghapusan lewat :email.', ['email' => $privacyEmail]) }}</p>
             <ul>
-                <li>{{ __('Yang langsung terhapus dari database: akun, profil, passkey, progres modul, jawaban latihan, sesi brainstorming, masukan modul, pendaftaran dan masukan event, catatan aktivitas, label akun, beasiswa pilihan, checklist, data Vault, langganan Pro, kode referral, dan riwayat pesanan.') }}</li>
+                <li>{{ __('Yang langsung terhapus dari database: akun, profil, passkey, progres modul, jawaban latihan, jawaban dan hasil Try Out, sesi brainstorming, masukan modul, pendaftaran dan masukan event, catatan aktivitas, label akun, beasiswa pilihan, checklist, data Vault, langganan Pro, kode referral, dan riwayat pesanan.') }}</li>
                 <li>{{ __('Yang tetap tersimpan tanpa tautan ke akunmu: tiket bantuan dan laporan info beasiswa yang pernah kamu kirim, serta notifikasi status pembayaran dari Midtrans.') }}</li>
-                <li>{{ __('File yang kamu unggah (lampiran latihan, bukti pendaftaran, dokumen Vault, screenshot tiket) saat ini belum terhapus otomatis dari server. Minta penghapusannya lewat :email dan kami hapus secara manual.', ['email' => $privacyEmail]) }}</li>
+                <li>{{ __('File yang kamu unggah (lampiran latihan, bukti pendaftaran, dokumen Vault, screenshot tiket) saat ini belum terhapus otomatis dari server saat akun dihapus. Minta penghapusannya lewat :email dan kami hapus secara manual.', ['email' => $privacyEmail]) }}</li>
                 <li>{{ __('Catatan transaksi di Midtrans dan data di Google mengikuti kebijakan masing-masing.') }}</li>
             </ul>
         </x-legal.section>

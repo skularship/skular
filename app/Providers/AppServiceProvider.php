@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Contracts\ActivityTrackerInterface;
+use App\Contracts\AdaptiveQuestionSelectorInterface;
 use App\Contracts\AiFeedbackServiceInterface;
+use App\Contracts\AnswerCheckerInterface;
 use App\Contracts\BrainstormingSessionServiceInterface;
 use App\Contracts\CheckoutServiceInterface;
 use App\Contracts\ConsentServiceInterface;
@@ -35,14 +37,27 @@ use App\Contracts\ScholarshipMatchingServiceInterface;
 use App\Contracts\ScholarshipPathServiceInterface;
 use App\Contracts\ScholarshipReportServiceInterface;
 use App\Contracts\SiteAnalyticsServiceInterface;
+use App\Contracts\SpeakingAssessmentServiceInterface;
 use App\Contracts\SubscriptionServiceInterface;
 use App\Contracts\SupportTicketServiceInterface;
+use App\Contracts\TryoutAnswerServiceInterface;
+use App\Contracts\TryoutAttemptServiceInterface;
+use App\Contracts\TryoutBankImportServiceInterface;
+use App\Contracts\TryoutCatalogServiceInterface;
+use App\Contracts\TryoutMentorQuotaServiceInterface;
+use App\Contracts\TryoutMentorServiceInterface;
+use App\Contracts\TryoutReadinessServiceInterface;
+use App\Contracts\TryoutResultServiceInterface;
+use App\Contracts\TryoutScoringServiceInterface;
 use App\Contracts\TwibbonServiceInterface;
 use App\Contracts\VaultServiceInterface;
+use App\Contracts\WritingAssessmentServiceInterface;
 use App\Filament\RichEditor\FontFamilyPlugin;
 use App\Filament\RichEditor\FontSizePlugin;
 use App\Services\ActivityTracker;
+use App\Services\AdaptiveQuestionSelector;
 use App\Services\AiFeedbackService;
+use App\Services\AnswerChecker;
 use App\Services\BrainstormingSessionService;
 use App\Services\CheckoutService;
 use App\Services\ConsentService;
@@ -74,10 +89,21 @@ use App\Services\ScholarshipMatchingService;
 use App\Services\ScholarshipPathService;
 use App\Services\ScholarshipReportService;
 use App\Services\SiteAnalyticsService;
+use App\Services\SpeakingAssessmentService;
 use App\Services\SubscriptionService;
 use App\Services\SupportTicketService;
+use App\Services\TryoutAnswerService;
+use App\Services\TryoutAttemptService;
+use App\Services\TryoutBankImportService;
+use App\Services\TryoutCatalogService;
+use App\Services\TryoutMentorQuotaService;
+use App\Services\TryoutMentorService;
+use App\Services\TryoutReadinessService;
+use App\Services\TryoutResultService;
+use App\Services\TryoutScoringService;
 use App\Services\TwibbonService;
 use App\Services\VaultService;
+use App\Services\WritingAssessmentService;
 use App\Support\MaterialStyles;
 use Carbon\CarbonImmutable;
 use Filament\Support\Assets\Js;
@@ -253,6 +279,21 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ScholarshipReportServiceInterface::class, ScholarshipReportService::class);
         $this->app->bind(SupportTicketServiceInterface::class, SupportTicketService::class);
         $this->app->bind(TwibbonServiceInterface::class, TwibbonService::class);
+
+        // Try Out (simulasi IELTS): domain separate from the module flow.
+        $this->app->bind(AdaptiveQuestionSelectorInterface::class, AdaptiveQuestionSelector::class);
+        $this->app->bind(AnswerCheckerInterface::class, AnswerChecker::class);
+        $this->app->bind(SpeakingAssessmentServiceInterface::class, SpeakingAssessmentService::class);
+        $this->app->bind(TryoutAnswerServiceInterface::class, TryoutAnswerService::class);
+        $this->app->bind(TryoutAttemptServiceInterface::class, TryoutAttemptService::class);
+        $this->app->bind(TryoutBankImportServiceInterface::class, TryoutBankImportService::class);
+        $this->app->bind(TryoutCatalogServiceInterface::class, TryoutCatalogService::class);
+        $this->app->bind(TryoutMentorQuotaServiceInterface::class, TryoutMentorQuotaService::class);
+        $this->app->bind(TryoutMentorServiceInterface::class, TryoutMentorService::class);
+        $this->app->bind(TryoutReadinessServiceInterface::class, TryoutReadinessService::class);
+        $this->app->bind(TryoutResultServiceInterface::class, TryoutResultService::class);
+        $this->app->bind(TryoutScoringServiceInterface::class, TryoutScoringService::class);
+        $this->app->bind(WritingAssessmentServiceInterface::class, WritingAssessmentService::class);
     }
 
     /**

@@ -74,6 +74,11 @@ class ProductTourService implements ProductTourServiceInterface
                 ['[data-tour="event-tabs"]', 'Akan datang dan rekaman', 'Lihat acara yang akan datang, atau tonton rekaman acara yang sudah lewat.'],
                 [null, 'Link muncul H-1', 'Setelah daftar, link acara muncul di halaman acara mulai H-1. Kami juga mengirim pengingat ke emailmu.'],
             ],
+            ProductTour::Tryout => [
+                ['[data-tour="tryout-hero"]', 'Try Out IELTS', 'Simulasi empat subtes: Listening, Reading, Writing, dan Speaking. Kerjakan berurutan dalam satu sesi.'],
+                ['[data-test="tryout-list"]', 'Pilih Try Out', 'Buka kartunya, pilih mode Latihan atau Ujian, lalu mulai. Waktu berjalan dari server, jadi kamu bisa lanjut kalau koneksi putus.'],
+                [null, 'Hasilnya gratis', 'Setelah selesai, kamu langsung melihat band estimasi dan level per subtes. Ini estimasi latihan, bukan skor resmi.'],
+            ],
             ProductTour::Tracker => [
                 ['[data-test="application-card"]', 'Beasiswa Saya', 'Pantau status setiap beasiswa yang kamu pilih, dari persiapan sampai hasil.'],
                 ['[data-test="open-confirm"]', 'Konfirmasi pendaftaran', 'Sudah mendaftar di situs penyelenggara? Unggah bukti pendaftarannya di sini.'],

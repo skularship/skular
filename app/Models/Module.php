@@ -39,6 +39,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property array<int, array<string, mixed>>|null $brainstorming_questions
  * @property array<int, mixed>|null $mentor_suggestions
  * @property string|null $feedback_question Admin's open question for the module feedback; empty = rotating default.
+ * @property bool $is_tryout_theory Try Out theory: hidden from the Perpustakaan and the module player, read only (Pro) on the Try Out theory page.
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read int|null $practice_forms_count
@@ -71,6 +72,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'brainstorming_questions',
     'mentor_suggestions',
     'feedback_question',
+    'is_tryout_theory',
 ])]
 class Module extends Model
 {
@@ -91,6 +93,7 @@ class Module extends Model
             'type' => ModuleType::class,
             'content_status' => ContentStatus::class,
             'category' => ModuleCategory::class,
+            'is_tryout_theory' => 'boolean',
             'modul_order' => 'integer',
             'duration' => 'integer',
         ];

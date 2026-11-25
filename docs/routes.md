@@ -78,6 +78,13 @@ Saat `UNDER_CONSTRUCTION=true` (`config('app.under_construction')`, berlaku sete
 | GET | `/event` | events.index | `Livewire\Events\Index (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/event/{event}` | events.show | `Livewire\Events\Show (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/event/{event}/kalender` | events.calendar | `EventCalendarController` | `auth`, `verified`, `legal.consent` |
+| GET | `/tryout` | tryout.index | `Livewire\Tryout\Index (Livewire page)` | `auth`, `verified`, `legal.consent` |
+| GET | `/tryout/{tryout}` | tryout.show | `Livewire\Tryout\Show (intro, pilih mode, mulai)` | `auth`, `verified`, `legal.consent` |
+| GET | `/tryout/sesi/{attempt}` | tryout.runner | `Livewire\Tryout\Runner` (layout `layouts.tryout`, hanya pemilik) | `auth`, `verified`, `legal.consent` |
+| GET | `/tryout/hasil/{attempt}` | tryout.result | `Livewire\Tryout\Result (hanya pemilik)` | `auth`, `verified`, `legal.consent` |
+| GET | `/tryout/hasil/{attempt}/pembahasan` | tryout.review | `Livewire\Tryout\Review` (Pro; Gratis melihat halaman terkunci) | `auth`, `verified`, `legal.consent` |
+| GET | `/tryout/{tryout}/teori` | tryout.theory | `Livewire\Tryout\Theory` (modul teori Pro, link materi untuk semua) | `auth`, `verified`, `legal.consent` |
+| GET | `/tryout/{tryout}/teori/berkas` | tryout.theory.pdf | `TryoutTheoryPdfController`: byte PDF ter-masking (XOR) untuk viewer di halaman Teori saja; wajib header `X-Skular-Viewer` (dibuka langsung = 404), Pro (Gratis 403), `no-store`, tidak bisa diunduh | `auth`, `verified`, `legal.consent`, `throttle:30,1` |
 | GET | `/profiling/recommendation` | profiling.recommendation | `Livewire\Scholarships\Recommendation (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/profiling` | profiling | `Livewire\Profiling\Wizard (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/scholarships/saya` | scholarships.tracker | `Livewire\Scholarships\Tracker (Livewire page)` | `auth`, `verified`, `legal.consent` |

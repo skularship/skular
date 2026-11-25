@@ -146,6 +146,10 @@ class ModulePlayer extends Component
         // even when they guess the URL.
         abort_unless($module->isPublished(), 404);
 
+        // Try Out theory modules are read (Pro only) on the Try Out theory page;
+        // they never run the Quick Question, practice and checkpoint flow.
+        abort_if($module->is_tryout_theory, 404);
+
         $user = $this->user();
 
         // checkpointFor resolves the derived unlock state without writing a

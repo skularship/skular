@@ -126,7 +126,9 @@ class LearningPathService implements LearningPathServiceInterface
         return $this->cachedModules(
             'library',
             fn (): Builder => $this->orderedQuery()
-                ->where('modules.category', ModuleCategory::Perpustakaan->value),
+                ->where('modules.category', ModuleCategory::Perpustakaan->value)
+                // Try Out theory modules are Pro only and read on the Try Out theory page.
+                ->where('modules.is_tryout_theory', false),
         );
     }
 
