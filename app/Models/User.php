@@ -69,6 +69,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read Collection<int, UserConsent> $consents
  * @property-read Collection<int, EventRegistration> $eventRegistrations
  * @property-read Collection<int, TryoutAttempt> $tryoutAttempts
+ * @property-read Collection<int, IqAttempt> $iqAttempts
  */
 #[Fillable([
     'name',
@@ -259,6 +260,16 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
     public function tryoutAttempts(): HasMany
     {
         return $this->hasMany(TryoutAttempt::class);
+    }
+
+    /**
+     * Get the mentee's Tes IQ attempts.
+     *
+     * @return HasMany<IqAttempt, $this>
+     */
+    public function iqAttempts(): HasMany
+    {
+        return $this->hasMany(IqAttempt::class);
     }
 
     /**

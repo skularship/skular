@@ -44,8 +44,8 @@ return [
     */
     'documents' => [
         'privacy' => [
-            'version' => '1.2',
-            'effective_at' => '2026-11-24',
+            'version' => '1.3',
+            'effective_at' => '2026-11-26',
         ],
         'terms' => [
             'version' => '1.0',

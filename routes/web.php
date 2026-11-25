@@ -4,6 +4,7 @@ use App\Enums\LegalDocument;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\EventCalendarController;
 use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\IqMaterialPdfController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SubmissionProofController;
 use App\Http\Controllers\TryoutTheoryPdfController;
@@ -14,6 +15,10 @@ use App\Livewire\Dashboard;
 use App\Livewire\Events\Index as EventsIndex;
 use App\Livewire\Events\Show as EventShow;
 use App\Livewire\Faq\Index as FaqIndex;
+use App\Livewire\Iq\Index as IqIndex;
+use App\Livewire\Iq\Material as IqMaterial;
+use App\Livewire\Iq\Result as IqResult;
+use App\Livewire\Iq\Runner as IqRunner;
 use App\Livewire\Learning\FeedbackCommitment;
 use App\Livewire\Learning\Library;
 use App\Livewire\Learning\ModulePlayer;
@@ -113,6 +118,14 @@ Route::middleware($under_construction_middleware)->group(function () {
         // Masked bytes for the in-page PDF viewer only (Pro); the PDF is never downloadable.
         Route::get('tryout/{tryout}/teori/berkas', TryoutTheoryPdfController::class)->middleware('throttle:30,1')->name('tryout.theory.pdf');
         Route::livewire('tryout/{tryout}', TryoutShow::class)->name('tryout.show');
+
+        // Tes IQ Latihan: questions free; score, review, material and mentor need paid access (checked in each component).
+        Route::livewire('tes-iq', IqIndex::class)->name('iq.index');
+        Route::livewire('tes-iq/sesi/{attempt}', IqRunner::class)->name('iq.runner');
+        Route::livewire('tes-iq/hasil/{attempt}', IqResult::class)->name('iq.result');
+        Route::livewire('tes-iq/materi', IqMaterial::class)->name('iq.material');
+        // Masked bytes for the in-page PDF viewer only; the slides are never downloadable.
+        Route::get('tes-iq/materi/berkas', IqMaterialPdfController::class)->middleware('throttle:30,1')->name('iq.material.pdf');
     });
 
     require __DIR__.'/settings.php';

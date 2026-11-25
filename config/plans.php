@@ -22,6 +22,8 @@ return [
         'tryout_mentor' => false,
         'tryout_theory' => false,
         'tryout_free_attempts' => 1,
+        // Tes IQ: questions are free; score, key, explanation, material and mentor need one paid access.
+        'iq_premium' => false,
     ],
 
     'pro' => [
@@ -32,6 +34,7 @@ return [
         'tryout_mentor' => true,
         'tryout_theory' => true,
         'tryout_free_attempts' => null,
+        'iq_premium' => true,
     ],
 
     'vault' => [

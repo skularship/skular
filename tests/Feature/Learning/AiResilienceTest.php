@@ -1,5 +1,6 @@
 <?php
 
+use App\Ai\Agents\IqMentorAgent;
 use App\Ai\Agents\ModuleBrainstormingAgent;
 use App\Ai\Agents\ModuleMentorAgent;
 use App\Ai\Agents\PracticeFeedbackAgent;
@@ -48,6 +49,7 @@ test('no ai agent pins its own provider or model', function (string $agent) {
     WritingAssessmentAgent::class,
     SpeakingAssessmentAgent::class,
     TryoutMentorAgent::class,
+    IqMentorAgent::class,
 ]);
 
 test('provider failures are classified for friendly messages', function (Throwable $exception, AiFailureReason $reason) {

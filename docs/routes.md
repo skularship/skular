@@ -85,6 +85,11 @@ Saat `UNDER_CONSTRUCTION=true` (`config('app.under_construction')`, berlaku sete
 | GET | `/tryout/hasil/{attempt}/pembahasan` | tryout.review | `Livewire\Tryout\Review` (Pro; Gratis melihat halaman terkunci) | `auth`, `verified`, `legal.consent` |
 | GET | `/tryout/{tryout}/teori` | tryout.theory | `Livewire\Tryout\Theory` (modul teori Pro, link materi untuk semua) | `auth`, `verified`, `legal.consent` |
 | GET | `/tryout/{tryout}/teori/berkas` | tryout.theory.pdf | `TryoutTheoryPdfController`: byte PDF ter-masking (XOR) untuk viewer di halaman Teori saja; wajib header `X-Skular-Viewer` (dibuka langsung = 404), Pro (Gratis 403), `no-store`, tidak bisa diunduh | `auth`, `verified`, `legal.consent`, `throttle:30,1` |
+| GET | `/tes-iq` | iq.index | `Livewire\Iq\Index` (halaman awal, disclaimer, Mulai/Lanjutkan) | `auth`, `verified`, `legal.consent` |
+| GET | `/tes-iq/sesi/{attempt}` | iq.runner | `Livewire\Iq\Runner` (layout `layouts.tryout`, hanya pemilik; timer dari server) | `auth`, `verified`, `legal.consent` |
+| GET | `/tes-iq/hasil/{attempt}` | iq.result | `Livewire\Iq\Result` (hanya pemilik; tanpa akses berbayar hanya jumlah soal dikerjakan) | `auth`, `verified`, `legal.consent` |
+| GET | `/tes-iq/materi` | iq.material | `Livewire\Iq\Material` (PDF materi di viewer, akses berbayar) | `auth`, `verified`, `legal.consent` |
+| GET | `/tes-iq/materi/berkas` | iq.material.pdf | `IqMaterialPdfController`: byte PDF ter-masking untuk viewer saja (header `X-Skular-Viewer`, akses berbayar, `no-store`) | `auth`, `verified`, `legal.consent`, `throttle:30,1` |
 | GET | `/profiling/recommendation` | profiling.recommendation | `Livewire\Scholarships\Recommendation (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/profiling` | profiling | `Livewire\Profiling\Wizard (Livewire page)` | `auth`, `verified`, `legal.consent` |
 | GET | `/scholarships/saya` | scholarships.tracker | `Livewire\Scholarships\Tracker (Livewire page)` | `auth`, `verified`, `legal.consent` |

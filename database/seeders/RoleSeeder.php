@@ -77,6 +77,9 @@ class RoleSeeder extends Seeder
             'TryoutUnit' => self::MANAGE,
             'TryoutQuestion' => [...self::MANAGE, 'Replicate'],
             'TryoutAttempt' => self::REVIEW,
+            // Tes IQ: full management of tests and the question bank (keys, explanations, images).
+            'IqTest' => self::MANAGE,
+            'IqQuestion' => self::MANAGE,
         ],
         AdminRole::StaffDivisi->value => [
             'Fase' => self::WRITE,
@@ -101,6 +104,8 @@ class RoleSeeder extends Seeder
             'TryoutUnit' => self::WRITE,
             'TryoutQuestion' => [...self::WRITE, 'Replicate'],
             'TryoutAttempt' => self::READ,
+            'IqTest' => self::WRITE,
+            'IqQuestion' => self::WRITE,
         ],
     ];
 

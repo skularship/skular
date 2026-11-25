@@ -1,0 +1,605 @@
+{
+  "tes": {
+    "kode": "IQ-V01",
+    "judul": "Tes IQ Latihan",
+    "durasi_menit": 20,
+    "pengantar": null
+  },
+  "soal": [
+    {
+      "nomor": 1,
+      "subtes": "numerik",
+      "bacaan": null,
+      "soal": "20, 17, 14, 11, ?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "7",
+        "B": "8",
+        "C": "9",
+        "D": "10"
+      },
+      "kunci": "B",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 2,
+      "subtes": "numerik",
+      "bacaan": null,
+      "soal": "3, 6, 12, 24, ?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "36",
+        "B": "40",
+        "C": "42",
+        "D": "48"
+      },
+      "kunci": "D",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 3,
+      "subtes": "numerik",
+      "bacaan": null,
+      "soal": "1, 4, 9, 16, ?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "20",
+        "B": "24",
+        "C": "25",
+        "D": "27"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 4,
+      "subtes": "numerik",
+      "bacaan": null,
+      "soal": "Rata-rata dari 4, 6, 8, 10, 12 adalah?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "6",
+        "B": "7",
+        "C": "8",
+        "D": "9"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 5,
+      "subtes": "numerik",
+      "bacaan": null,
+      "soal": "50% dari 60 adalah?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "20",
+        "B": "30",
+        "C": "35",
+        "D": "40"
+      },
+      "kunci": "B",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 6,
+      "subtes": "numerik",
+      "bacaan": null,
+      "soal": "3 pensil harganya Rp 6.000. Berapa harga 5 pensil?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "Rp 8.000",
+        "B": "Rp 9.000",
+        "C": "Rp 10.000",
+        "D": "Rp 12.000"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 7,
+      "subtes": "numerik",
+      "bacaan": null,
+      "soal": "2, 5, 8, 11, ?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "12",
+        "B": "13",
+        "C": "14",
+        "D": "15"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 8,
+      "subtes": "visuospasial",
+      "bacaan": null,
+      "soal": "Pilih bentuk yang tepat untuk menggantikan tanda tanya pada gambar.",
+      "gambar": null,
+      "alt_gambar": "Tiga baris bentuk. Baris 1: lingkaran, segitiga, persegi. Baris 2: lingkaran, segitiga, persegi. Baris 3: lingkaran, segitiga, tanda tanya.",
+      "pilihan": {
+        "A": "●",
+        "B": "▲",
+        "C": "■",
+        "D": "◆"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 9,
+      "subtes": "visuospasial",
+      "bacaan": null,
+      "soal": "Pilih bentuk yang tepat untuk menggantikan tanda tanya pada gambar.",
+      "gambar": null,
+      "alt_gambar": "Tiga baris. Baris 1: satu, dua, tiga lingkaran. Baris 2: satu, dua, tiga persegi. Baris 3: satu segitiga, dua segitiga, tanda tanya.",
+      "pilihan": {
+        "A": "▲",
+        "B": "▲▲",
+        "C": "▲▲▲",
+        "D": "▲▲▲▲"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 10,
+      "subtes": "visuospasial",
+      "bacaan": null,
+      "soal": "Pilih warna yang tepat untuk menggantikan tanda tanya pada gambar.",
+      "gambar": null,
+      "alt_gambar": "Tiga baris kotak berwarna. Baris 1: merah, biru, hijau. Baris 2: hijau, merah, biru. Baris 3: biru, hijau, tanda tanya.",
+      "pilihan": {
+        "A": "merah",
+        "B": "biru",
+        "C": "hijau",
+        "D": "kuning"
+      },
+      "kunci": "A",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 11,
+      "subtes": "visuospasial",
+      "bacaan": null,
+      "soal": "Pilih bentuk yang tepat untuk menggantikan tanda tanya pada gambar.",
+      "gambar": null,
+      "alt_gambar": "Deretan bentuk: lingkaran kosong, lingkaran penuh, lingkaran kosong, lingkaran penuh, lingkaran kosong, tanda tanya.",
+      "pilihan": {
+        "A": "○",
+        "B": "●",
+        "C": "□",
+        "D": "▲"
+      },
+      "kunci": "B",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 12,
+      "subtes": "visuospasial",
+      "bacaan": null,
+      "soal": "Pilih bentuk yang tepat untuk menggantikan tanda tanya pada gambar.",
+      "gambar": null,
+      "alt_gambar": "Deretan bentuk: segitiga, persegi, lingkaran, segitiga, persegi, tanda tanya.",
+      "pilihan": {
+        "A": "▲",
+        "B": "■",
+        "C": "●",
+        "D": "◆"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 13,
+      "subtes": "visuospasial",
+      "bacaan": null,
+      "soal": "Pilih bentuk yang tepat untuk menggantikan tanda tanya pada gambar.",
+      "gambar": null,
+      "alt_gambar": "Tiga baris bentuk. Baris 1: lingkaran penuh, lingkaran kosong, persegi kosong. Baris 2: lingkaran kosong, persegi kosong, lingkaran penuh. Baris 3: persegi kosong, lingkaran penuh, tanda tanya.",
+      "pilihan": {
+        "A": "□",
+        "B": "●",
+        "C": "○",
+        "D": "▲"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 14,
+      "subtes": "visuospasial",
+      "bacaan": null,
+      "soal": "Berapa jumlah titik pada kotak berikutnya?",
+      "gambar": null,
+      "alt_gambar": "Empat kotak berurutan: kotak 1 berisi satu titik, kotak 2 dua titik, kotak 3 tiga titik, kotak 4 berisi tanda tanya.",
+      "pilihan": {
+        "A": "3 titik",
+        "B": "4 titik",
+        "C": "5 titik",
+        "D": "6 titik"
+      },
+      "kunci": "B",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 15,
+      "subtes": "verbal",
+      "bacaan": null,
+      "soal": "Sinonim dari CERIA adalah?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "sedih",
+        "B": "gembira",
+        "C": "marah",
+        "D": "lelah"
+      },
+      "kunci": "B",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 16,
+      "subtes": "verbal",
+      "bacaan": null,
+      "soal": "Antonim dari TERANG adalah?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "cerah",
+        "B": "gelap",
+        "C": "silau",
+        "D": "lampu"
+      },
+      "kunci": "B",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 17,
+      "subtes": "verbal",
+      "bacaan": null,
+      "soal": "DOKTER : RUMAH SAKIT = GURU : ?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "murid",
+        "B": "sekolah",
+        "C": "buku",
+        "D": "kelas"
+      },
+      "kunci": "B",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 18,
+      "subtes": "verbal",
+      "bacaan": null,
+      "soal": "PANAS : DINGIN = SIANG : ?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "pagi",
+        "B": "matahari",
+        "C": "malam",
+        "D": "bulan"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 19,
+      "subtes": "verbal",
+      "bacaan": null,
+      "soal": "Sinonim dari RAJIN adalah?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "malas",
+        "B": "tekun",
+        "C": "lambat",
+        "D": "pintar"
+      },
+      "kunci": "B",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 20,
+      "subtes": "logika",
+      "bacaan": null,
+      "soal": "Semua kucing adalah mamalia. Semua mamalia bernapas. Kesimpulan yang benar adalah?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "Semua kucing bernapas",
+        "B": "Semua mamalia adalah kucing",
+        "C": "Tidak ada kucing yang bernapas",
+        "D": "Sebagian kucing tidak bernapas"
+      },
+      "kunci": "A",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 21,
+      "subtes": "logika",
+      "bacaan": null,
+      "soal": "Jika hari ini Senin, 3 hari lagi adalah hari?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "Rabu",
+        "B": "Kamis",
+        "C": "Jumat",
+        "D": "Sabtu"
+      },
+      "kunci": "B",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 22,
+      "subtes": "logika",
+      "bacaan": null,
+      "soal": "Jika besok hari Sabtu, 2 hari yang lalu adalah hari?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "Selasa",
+        "B": "Rabu",
+        "C": "Kamis",
+        "D": "Minggu"
+      },
+      "kunci": "B",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 23,
+      "subtes": "logika",
+      "bacaan": null,
+      "soal": "1 pensil = 2 buku. 1 buku = 3 penghapus. 1 pensil = ? penghapus",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "3",
+        "B": "5",
+        "C": "6",
+        "D": "9"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 24,
+      "subtes": "logika",
+      "bacaan": null,
+      "soal": "2 apel = 4 jeruk. 3 jeruk = 6 mangga. 1 apel = ? mangga",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "2",
+        "B": "3",
+        "C": "4",
+        "D": "6"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 25,
+      "subtes": "logika",
+      "bacaan": null,
+      "soal": "Semua siswa yang lulus ujian mendapat sertifikat. Budi lulus ujian. Kesimpulan yang benar adalah?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "Budi mendapat sertifikat",
+        "B": "Budi tidak lulus",
+        "C": "Semua yang dapat sertifikat lulus",
+        "D": "Tidak ada kesimpulan"
+      },
+      "kunci": "A",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 26,
+      "subtes": "logika",
+      "bacaan": null,
+      "soal": "Andi lebih tinggi dari Budi. Budi lebih tinggi dari Cici. Siapa yang paling pendek?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "Andi",
+        "B": "Budi",
+        "C": "Cici",
+        "D": "Tidak bisa ditentukan"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 27,
+      "subtes": "logika",
+      "bacaan": null,
+      "soal": "Jika hari ini Rabu, 7 hari lagi adalah hari?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "Kamis",
+        "B": "Rabu",
+        "C": "Selasa",
+        "D": "Minggu"
+      },
+      "kunci": "B",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 28,
+      "subtes": "teks",
+      "bacaan": "Rina pergi ke pasar pagi hari. Ia membeli 2 kg tomat dan 1 kg bawang. Tomat Rp 10.000 per kg. Bawang Rp 15.000 per kg.",
+      "soal": "Berapa kg total belanjaan Rina?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "2",
+        "B": "3",
+        "C": "4",
+        "D": "5"
+      },
+      "kunci": "B",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 29,
+      "subtes": "teks",
+      "bacaan": "Rina pergi ke pasar pagi hari. Ia membeli 2 kg tomat dan 1 kg bawang. Tomat Rp 10.000 per kg. Bawang Rp 15.000 per kg.",
+      "soal": "Berapa harga tomat yang dibeli Rina?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "Rp 10.000",
+        "B": "Rp 15.000",
+        "C": "Rp 20.000",
+        "D": "Rp 25.000"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 30,
+      "subtes": "teks",
+      "bacaan": "Rina pergi ke pasar pagi hari. Ia membeli 2 kg tomat dan 1 kg bawang. Tomat Rp 10.000 per kg. Bawang Rp 15.000 per kg.",
+      "soal": "Berapa total yang Rina bayar?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "Rp 25.000",
+        "B": "Rp 30.000",
+        "C": "Rp 35.000",
+        "D": "Rp 40.000"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 31,
+      "subtes": "teks",
+      "bacaan": "Rina pergi ke pasar pagi hari. Ia membeli 2 kg tomat dan 1 kg bawang. Tomat Rp 10.000 per kg. Bawang Rp 15.000 per kg.",
+      "soal": "Ke mana Rina pergi?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "sekolah",
+        "B": "pasar",
+        "C": "kantor",
+        "D": "rumah sakit"
+      },
+      "kunci": "B",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 32,
+      "subtes": "teks",
+      "bacaan": "Perpustakaan buka Senin sampai Sabtu. Pada hari Minggu perpustakaan tutup. Jam buka pukul 08.00 dan tutup pukul 15.00.",
+      "soal": "Pada hari apa perpustakaan tutup?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "Senin",
+        "B": "Sabtu",
+        "C": "Minggu",
+        "D": "Jumat"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 33,
+      "subtes": "teks",
+      "bacaan": "Perpustakaan buka Senin sampai Sabtu. Pada hari Minggu perpustakaan tutup. Jam buka pukul 08.00 dan tutup pukul 15.00.",
+      "soal": "Jam berapa perpustakaan tutup?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "08.00",
+        "B": "12.00",
+        "C": "15.00",
+        "D": "17.00"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 34,
+      "subtes": "teks",
+      "bacaan": "Perpustakaan buka Senin sampai Sabtu. Pada hari Minggu perpustakaan tutup. Jam buka pukul 08.00 dan tutup pukul 15.00.",
+      "soal": "Berapa jam perpustakaan buka per hari?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "5",
+        "B": "6",
+        "C": "7",
+        "D": "8"
+      },
+      "kunci": "C",
+      "pembahasan": null,
+      "aktif": true
+    },
+    {
+      "nomor": 35,
+      "subtes": "teks",
+      "bacaan": "Perpustakaan buka Senin sampai Sabtu. Pada hari Minggu perpustakaan tutup. Jam buka pukul 08.00 dan tutup pukul 15.00.",
+      "soal": "Berapa hari perpustakaan buka per minggu?",
+      "gambar": null,
+      "alt_gambar": null,
+      "pilihan": {
+        "A": "5",
+        "B": "6",
+        "C": "7",
+        "D": "8"
+      },
+      "kunci": "B",
+      "pembahasan": null,
+      "aktif": true
+    }
+  ]
+}

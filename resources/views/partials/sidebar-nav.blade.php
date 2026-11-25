@@ -14,6 +14,7 @@
                 ['route' => 'library.index', 'label' => __('Perpustakaan'), 'icon' => 'book-open', 'pattern' => 'library.*'],
                 ['route' => 'events.index', 'label' => __('Event'), 'icon' => 'video-camera', 'pattern' => 'events.*'],
                 ['route' => 'tryout.index', 'label' => __('Try Out IELTS'), 'icon' => 'academic-cap', 'pattern' => 'tryout.*'],
+                ['route' => 'iq.index', 'label' => __('Tes IQ Latihan'), 'icon' => 'light-bulb', 'pattern' => 'iq.*'],
             ],
         ],
         [

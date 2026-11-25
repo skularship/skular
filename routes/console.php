@@ -14,3 +14,4 @@ Schedule::command('reminders:dispatch')->dailyAt('07:00')->timezone('Asia/Jakart
 Schedule::command('events:remind')->everyFifteenMinutes()->withoutOverlapping();
 Schedule::command('subscriptions:remind-expiry')->dailyAt('07:10')->timezone('Asia/Jakarta')->withoutOverlapping();
 Schedule::command('tryout:close-expired')->everyMinute()->withoutOverlapping();
+Schedule::command('iq:close-expired')->everyFiveMinutes()->withoutOverlapping();

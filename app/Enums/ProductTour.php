@@ -7,7 +7,7 @@ use Filament\Support\Contracts\HasLabel;
 
 /**
  * The guided product tours of the mentee journey, in journey order:
- * landing → Info Beasiswa → profiling → recommendation → dashboard → roadmap → module → Beasiswa Saya, plus Event and Try Out.
+ * landing → Info Beasiswa → profiling → recommendation → dashboard → roadmap → module → Beasiswa Saya, plus Event, Try Out and Tes IQ.
  */
 enum ProductTour: string implements HasLabel
 {
@@ -23,6 +23,7 @@ enum ProductTour: string implements HasLabel
     case Tracker = 'tracker';
     case Events = 'events';
     case Tryout = 'tryout';
+    case Iq = 'iq';
 
     /**
      * Get the Indonesian label shown on the Panduan page.
@@ -42,6 +43,7 @@ enum ProductTour: string implements HasLabel
             self::Tracker => 'Daftar dan laporkan hasil',
             self::Events => 'Ikut event Skular',
             self::Tryout => 'Kerjakan Try Out IELTS',
+            self::Iq => 'Coba Tes IQ Latihan',
         };
     }
 
@@ -61,6 +63,7 @@ enum ProductTour: string implements HasLabel
             self::Tracker => 'Unggah bukti pendaftaran, laporkan hasilnya, dan rayakan dengan twibbon kalau lolos.',
             self::Events => 'Daftar webinar, kelas intensif, atau mentoring. Link acara muncul H-1 dan pengingat dikirim lewat email.',
             self::Tryout => 'Ukur kemampuan bahasa Inggrismu lewat Listening, Reading, Writing, dan Speaking. Band estimasi dan level bisa dilihat gratis.',
+            self::Iq => 'Kerjakan soal Numerik, Visuospasial, Verbal, Logika, dan Teks dalam waktu terbatas. Ini latihan, bukan tes IQ resmi.',
         };
     }
 
@@ -80,6 +83,7 @@ enum ProductTour: string implements HasLabel
             self::Tracker => 'document-arrow-up',
             self::Events => 'video-camera',
             self::Tryout => 'academic-cap',
+            self::Iq => 'light-bulb',
         };
     }
 
@@ -101,6 +105,7 @@ enum ProductTour: string implements HasLabel
             self::Tracker => 'scholarships.tracker',
             self::Events => 'events.index',
             self::Tryout => 'tryout.index',
+            self::Iq => 'iq.index',
         };
     }
 }

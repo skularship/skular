@@ -31,6 +31,10 @@ enum ActivityName: string
     case TryoutTheoryOpened = 'tryout_theory_opened';
     case TryoutTheoryPdfViewed = 'tryout_theory_pdf_viewed';
     case TryoutMaterialsClicked = 'tryout_materials_clicked';
+    case IqStarted = 'iq_started';
+    case IqCompleted = 'iq_completed';
+    case IqMentorAsked = 'iq_mentor_asked';
+    case IqMaterialViewed = 'iq_material_viewed';
 
     /**
      * Indonesian label for the admin panel.
@@ -61,6 +65,10 @@ enum ActivityName: string
             self::TryoutTheoryOpened => 'Buka teori Try Out',
             self::TryoutTheoryPdfViewed => 'Baca PDF teori Try Out',
             self::TryoutMaterialsClicked => 'Klik beli materi Try Out',
+            self::IqStarted => 'Mulai Tes IQ',
+            self::IqCompleted => 'Tes IQ selesai',
+            self::IqMentorAsked => 'Tanya mentor Tes IQ',
+            self::IqMaterialViewed => 'Baca materi Tes IQ',
         };
     }
 

@@ -80,6 +80,11 @@ class ProductTourService implements ProductTourServiceInterface
                 ['[data-test="tryout-list"]', 'Pilih Try Out', 'Buka kartunya, pilih mode Latihan atau Ujian, lalu mulai. Waktu berjalan dari server, jadi kamu bisa lanjut kalau koneksi putus.'],
                 [null, 'Hasilnya gratis', 'Setelah selesai, kamu langsung melihat band estimasi dan level per subtes. Ini estimasi latihan, bukan skor resmi.'],
             ],
+            ProductTour::Iq => [
+                ['[data-tour="iq-hero"]', 'Tes IQ Latihan', 'Soal Numerik, Visuospasial, Verbal, Logika, dan Teks dalam waktu terbatas. Ini latihan, bukan tes IQ resmi.'],
+                ['[data-test="iq-start"]', 'Mulai kapan saja', 'Waktu dihitung dari server sejak kamu menekan Mulai. Jawabanmu tersimpan setiap kali kamu memilih, jadi aman kalau koneksi putus.'],
+                [null, 'Hasilnya', 'Soalnya gratis. Skor per subtes, kategori, pembahasan, materi, dan mentor AI terbuka setelah kamu membuka akses.'],
+            ],
             ProductTour::Tracker => [
                 ['[data-test="application-card"]', 'Beasiswa Saya', 'Pantau status setiap beasiswa yang kamu pilih, dari persiapan sampai hasil.'],
                 ['[data-test="open-confirm"]', 'Konfirmasi pendaftaran', 'Sudah mendaftar di situs penyelenggara? Unggah bukti pendaftarannya di sini.'],
