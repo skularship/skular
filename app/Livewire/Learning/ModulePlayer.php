@@ -3,10 +3,12 @@
 namespace App\Livewire\Learning;
 
 use App\Contracts\ActivityTrackerInterface;
+use App\Contracts\CvServiceInterface;
 use App\Contracts\ModuleFeedbackServiceInterface;
 use App\Contracts\ModuleOutlineServiceInterface;
 use App\Contracts\PracticeSubmissionServiceInterface;
 use App\Contracts\ProgressServiceInterface;
+use App\Data\CvSectionData;
 use App\Data\ModuleProgressData;
 use App\Data\PracticeFieldData;
 use App\Enums\ActivityName;
@@ -44,6 +46,7 @@ use Livewire\WithFileUploads;
  * @property-read int $progress
  * @property-read int $practicePending
  * @property-read ModuleProgressData|null $nextModule
+ * @property-read Collection<int, CvSectionData> $cvSources
  */
 #[Title('Belajar Modul')]
 class ModulePlayer extends Component
@@ -124,6 +127,16 @@ class ModulePlayer extends Component
      */
     #[Locked]
     public bool $module_started = false;
+
+    /**
+     * Practice form id of the CV reference source opened in the "Data dirimu" panel.
+     *
+     * Only changed through toggleCvSource(), which checks the id against this
+     * module's sources; locked so the browser cannot set it directly. The
+     * panel is read only and never touches $answers.
+     */
+    #[Locked]
+    public ?int $open_cv_source = null;
 
     /**
      * Practice responses for this module, loaded at most once per request.
@@ -297,6 +310,27 @@ class ModulePlayer extends Component
         $index = $index === false ? 0 : (int) $index;
 
         $this->goToSection($keys[max($index - 1, 0)]);
+    }
+
+    /**
+     * Open or close one CV reference source in the "Data dirimu" panel.
+     *
+     * Only one source is open at a time. An id that is not a visible source
+     * of this module is ignored (and closes the panel), so the browser can
+     * never open anything outside the module's sources. Read only: answers,
+     * practice responses and the checkpoint gate are not touched.
+     *
+     * @param  int  $form_id  Practice form id sent by the browser.
+     */
+    public function toggleCvSource(int $form_id): void
+    {
+        if (! $this->cvSources->contains(fn (CvSectionData $source): bool => $source->practice_form_id === $form_id)) {
+            $this->open_cv_source = null;
+
+            return;
+        }
+
+        $this->open_cv_source = $this->open_cv_source === $form_id ? null : $form_id;
     }
 
     /**
@@ -572,6 +606,24 @@ class ModulePlayer extends Component
             ->filter(fn (QuickQuestion $question): bool => $question->is_active)
             ->sortBy(['ordering', 'id'])
             ->values();
+    }
+
+    /**
+     * The CV reference sources of this module, with the signed-in mentee's answers.
+     *
+     * Only resolved on the Praktik step, the only place the panel is shown;
+     * every other step skips the query.
+     *
+     * @return Collection<int, CvSectionData>
+     */
+    #[Computed]
+    public function cvSources(): Collection
+    {
+        if ($this->section !== 'praktik') {
+            return collect();
+        }
+
+        return app(CvServiceInterface::class)->sectionsForModule($this->user(), $this->module);
     }
 
     /**
@@ -881,6 +933,7 @@ class ModulePlayer extends Component
             'evaluating' => $this->responses()->contains(fn (UserPracticeResponse $response): bool => $response->isEvaluating()),
             'evaluation_poll_seconds' => self::EVALUATION_POLL_SECONDS,
             'practice_pending' => $this->practicePending,
+            'cv_sources' => $this->cvSources,
             // Resolving the next module walks the whole learning path; only the
             // checkpoint section shows it, so other sections skip that work.
             'next_module' => $this->section === 'checkpoint' ? $this->nextModule : null,

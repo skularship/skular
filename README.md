@@ -102,7 +102,7 @@ Nilai rahasia tidak pernah ditulis di dokumentasi. Daftar lengkap ada di [`.env.
 | `PRICING_LAUNCHING_UNTIL` | Akhir promo launching (ISO 8601). Kosong atau lewat = harga normal | Opsional |
 | `BLAZE_ENABLED` | Default `true`. `false` hanya untuk debugging komponen Blade, lalu `php artisan view:clear` | Opsional |
 | `PERFORMANCE_LOG_SLOW_REQUESTS`, `PERFORMANCE_SLOW_REQUEST_MS`, `PERFORMANCE_LOG_SLOW_QUERIES`, `PERFORMANCE_SLOW_QUERY_MS` | Log request/query lambat (`config/performance.php`) | Opsional |
-| `MAIL_*` | Pengiriman email (verifikasi, reset password) | Wajib di production |
+| `MAIL_*` | Pengiriman email (verifikasi, reset password, pengingat). Semua email berbahasa Indonesia lewat `User::preferredLocale()` + `lang/id.json` | Wajib di production |
 | `FILESYSTEM_DISK`, `AWS_*` | Penyimpanan file bila memakai S3 | Opsional |
 | `LOG_*`, `BCRYPT_ROUNDS`, `BROADCAST_CONNECTION`, `VITE_APP_NAME` | Default framework | Opsional |
 
@@ -173,7 +173,8 @@ public/build/              # Aset Vite hasil build (DI-COMMIT)
 | Tracking perilaku mentee (tanpa pihak ketiga) + widget admin "Funnel Mentee" 7/30 hari | (semua alur utama) | `app/Services/ActivityTracker.php`, `app/Enums/ActivityName.php`, `app/Filament/Widgets/MenteeFunnel.php` |
 | Perpustakaan (modul opsional; modul `is_tryout_theory` disembunyikan) | `/library` | `app/Livewire/Learning/Library.php` |
 | Try Out IELTS: 4 subtes berurutan (Listening, Reading adaptif per soal dengan blok unit; Writing dan Speaking dinilai AI; Speaking ditranskripsi gratis di browser lewat Web Speech API, hanya Chrome/Edge/Safari), timer dari server, mode Latihan/Ujian, hasil gratis (band estimasi, skor mentah, level), pembahasan + mentor AI + teori + attempt ulang untuk Pro. Admin: *Try Out → Paket Try Out, Unit Teks & Audio, Bank Soal (impor/ekspor JSON), Hasil Mentee* + widget kesehatan bank soal | `/tryout`, `/tryout/{slug}`, `/tryout/sesi/{attempt}`, `/tryout/hasil/{attempt}`, `/tryout/hasil/{attempt}/pembahasan`, `/tryout/{slug}/teori` | `app/Livewire/Tryout/**`, `app/Services/Tryout*.php`, `AdaptiveQuestionSelector.php`, `AnswerChecker.php`, `WritingAssessmentService.php`, `SpeakingAssessmentService.php`, `IeltsScoringStrategy.php`, `config/tryout.php`, `app/Filament/Resources/Tryout*/**` |
-| CV otomatis dari jawaban praktik | `/cv` | `app/Livewire/Cv/Show.php`, `app/Services/CvService.php` |
+| CV otomatis dari jawaban praktik (hanya latihan aktif di modul terbit, mengikuti urutan pertanyaan, tanpa file unggahan) | `/cv` | `app/Livewire/Cv/Show.php`, `app/Services/CvService.php` |
+| Panel "Data dirimu" di langkah Praktik: tombol "Tampilkan ..." membuka jawaban CV mentee dari modul lain sebagai referensi + tombol Salin + tautan "Perbaiki di modul asal"; tidak pernah mengisi jawaban otomatis; sumber dipilih admin di editor modul (section 6) | (di langkah Praktik) | `CvService::sectionsForModule()`, `ModulePlayer::toggleCvSource()`, `partials/cv-reference-panel.blade.php`, tabel `module_cv_sources`, `practice_forms.cv_button_label` |
 | Twibbon | `/scholarships/{application}/twibbon` | `app/Livewire/Twibbon/Generator.php`, `app/Services/TwibbonService.php` |
 | Pengaturan akun (profil, keamanan, passkey, 2FA) | `/settings/profile`, `/settings/security` | `app/Livewire/Settings/*` |
 | Panel admin (kurikulum, beasiswa, pemantauan mentee, pengguna) | `/admin/*` | `app/Filament/**`, `app/Policies/*` |

@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -52,6 +53,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read Collection<int, UserPracticeResponse> $practiceResponses
  * @property-read Collection<int, UserBrainstormingSession> $brainstormingSessions
  * @property-read Collection<int, ModuleFeedback> $feedbacks
+ * @property-read Collection<int, PracticeForm> $cvSources
  */
 #[Fillable([
     'fase_id',
@@ -425,6 +427,23 @@ class Module extends Model
     public function practiceForms(): HasMany
     {
         return $this->hasMany(PracticeForm::class)->orderBy('ordering')->orderBy('id');
+    }
+
+    /**
+     * Get the "include in CV" practice forms (of other modules) the mentee may
+     * open as a read-only reference on this module's Praktik step.
+     *
+     * Chosen by the admin in the module editor. Attaching or detaching rows
+     * fires no model event, so the editor bumps ContentCache itself.
+     *
+     * @return BelongsToMany<PracticeForm, $this>
+     */
+    public function cvSources(): BelongsToMany
+    {
+        return $this->belongsToMany(PracticeForm::class, 'module_cv_sources')
+            ->withTimestamps()
+            ->orderBy('practice_forms.cv_ordering')
+            ->orderBy('practice_forms.id');
     }
 
     /**

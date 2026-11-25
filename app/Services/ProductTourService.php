@@ -67,6 +67,7 @@ class ProductTourService implements ProductTourServiceInterface
                 ['[data-module-steps]', '5 langkah di setiap modul', 'Pembukaan, Pahami, Quick Question, Praktik, lalu Checkpoint. Ikuti urutannya supaya pemahamanmu utuh.'],
                 [null, 'Pahami dan Quick Question', 'Baca materinya dulu, lalu jawab kuis Benar/Salah singkat untuk mengecek pemahamanmu.'],
                 [null, 'Praktik dengan feedback AI', 'Tulis jawabanmu sendiri. AI menilainya dengan label dan saran perbaikan, tapi tidak menuliskan jawaban untukmu. AI Mentor siap menjawab pertanyaan, maksimal '.$this->mentorLimit().' pertanyaan per modul.'],
+                ['[data-tour="cv-reference-panel"]', 'Data dirimu', 'Di modul tertentu, langkah Praktik punya tombol "Tampilkan ..." untuk membuka jawaban yang sudah kamu isi di modul lain. Pakai sebagai bahan, lalu tulis jawabanmu sendiri. Tidak ada yang terisi otomatis.'],
                 [null, 'Checkpoint', 'Checkpoint terbuka setelah semua latihan tersimpan dan selesai dinilai. Isi masukan singkat, lalu tekan "Kirim masukan & lanjut" untuk membuka modul berikutnya.'],
             ],
             ProductTour::Events => [

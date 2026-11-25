@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -24,11 +25,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $is_active
  * @property bool $include_in_cv
  * @property int $cv_ordering
+ * @property string|null $cv_button_label Short text for the "Tampilkan ..." CV reference button; empty = form title.
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read Module|null $module
  * @property-read Collection<int, UserPracticeResponse> $responses
  * @property-read Collection<int, UserBrainstormingSession> $brainstormingSessions
+ * @property-read Collection<int, Module> $cvSourceFor
  */
 #[Fillable([
     'module_id',
@@ -39,6 +42,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'is_active',
     'include_in_cv',
     'cv_ordering',
+    'cv_button_label',
 ])]
 class PracticeForm extends Model
 {
@@ -88,14 +92,22 @@ class PracticeForm extends Model
     }
 
     /**
-     * Scope the query to forms that feed the mentee CV.
+     * Scope the query to forms that feed the mentee CV, in CV order.
+     *
+     * Only forms a mentee can still see count: the form must be active and its
+     * module published, so a draft module or a hidden form never leaks into
+     * the CV page or the CV reference panel of another module.
      *
      * @param  Builder<$this>  $query
      */
     #[Scope]
     protected function cvSources(Builder $query): void
     {
-        $query->where('include_in_cv', true)->orderBy('cv_ordering')->orderBy('id');
+        $query->where('practice_forms.include_in_cv', true)
+            ->where('practice_forms.is_active', true)
+            ->whereHas('module', fn (Builder $module): Builder => $module->published())
+            ->orderBy('practice_forms.cv_ordering')
+            ->orderBy('practice_forms.id');
     }
 
     /**
@@ -106,6 +118,19 @@ class PracticeForm extends Model
     public function module(): BelongsTo
     {
         return $this->belongsTo(Module::class);
+    }
+
+    /**
+     * Get the modules that show this form's answers as a CV reference.
+     *
+     * The pivot rows cascade when either side is deleted, so removing a form
+     * or a module never leaves a dangling reference behind.
+     *
+     * @return BelongsToMany<Module, $this>
+     */
+    public function cvSourceFor(): BelongsToMany
+    {
+        return $this->belongsToMany(Module::class, 'module_cv_sources')->withTimestamps();
     }
 
     /**

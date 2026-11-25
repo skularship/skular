@@ -39,7 +39,7 @@ class ModulesTable
     {
         return $table
             ->defaultSort('fase_id', 'modul_order')
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['fase', 'scholarship', 'practiceForms', 'quickQuestions']))
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['fase', 'scholarship', 'practiceForms', 'quickQuestions', 'cvSources.module:id,content_status']))
             ->columns([
                 TextColumn::make('title')
                     ->label('Judul modul')

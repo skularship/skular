@@ -37,7 +37,7 @@ class CurriculumOverview extends StatsOverviewWidget
     protected function getStats(): array
     {
         $modules = Module::query()
-            ->with(['practiceForms', 'quickQuestions'])
+            ->with(['practiceForms', 'quickQuestions', 'cvSources.module:id,content_status'])
             ->get();
 
         $published = $modules->where('content_status', ContentStatus::Published)->count();

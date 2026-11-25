@@ -6,6 +6,7 @@ use App\Filament\Actions\PublishModuleAction;
 use App\Filament\Actions\UnpublishModuleAction;
 use App\Filament\Resources\Modules\ModuleResource;
 use App\Services\BrainstormingConfigService;
+use App\Services\ContentCache;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
@@ -47,6 +48,17 @@ class EditModule extends EditRecord
         }
 
         return $data;
+    }
+
+    /**
+     * Invalidate cached curriculum after the CV sources were synced.
+     *
+     * Attaching or detaching module_cv_sources rows fires no model event, so
+     * the version is bumped here once the relationships are stored.
+     */
+    protected function afterSave(): void
+    {
+        ContentCache::bump();
     }
 
     protected function getSavedNotificationTitle(): ?string

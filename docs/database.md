@@ -17,6 +17,8 @@ erDiagram
     modules ||--o{ module_core_sections : "inti materi"
     modules ||--o{ quick_questions : punya
     modules ||--o{ practice_forms : punya
+    modules ||--o{ module_cv_sources : "referensi CV"
+    practice_forms ||--o{ module_cv_sources : "sumber CV"
     users ||--o{ checkpoints : progres
     modules ||--o{ checkpoints : progres
     fases ||--o{ checkpoints : progres
@@ -49,10 +51,11 @@ Role & permission memakai tabel spatie/laravel-permission: `roles`, `permissions
 | `support_tickets` | Tiket dari halaman Bantuan (`/bantuan`): `category` = `SupportTicketCategory` (bug, error, akun, modul, AI, beasiswa, lainnya), `status` = `SupportTicketStatus` (`new`/`in_progress`/`resolved`/`closed`). Teks disimpan polos; `screenshot_path` di disk `local` (privat, hanya bisa diunduh admin); `user_agent` dicatat dari request. Maks 5 tiket per mentee per 24 jam (`SupportTicketService`). `user_id`/`handled_by` di-*null*-kan saat akun dihapus. `admin_note` tidak pernah tampil ke mentee. |
 | `scholarship_applications` | Pilihan beasiswa mentee: maks 5 per user (`ScholarshipApplicationService::MAX_SELECTIONS`), unique `(user_id, scholarship_id)`, satu `is_primary`. Status `selected → submitted → result_reported` + `result`. Bukti pendaftaran di disk `local` (privat). |
 | `fases` | Pengelompokan modul; urutan fase menentukan roadmap. Menolak `delete()` bila salah satu modulnya punya histori mentee. |
-| `modules` | `is_tryout_theory` (bool): modul teori Try Out, disembunyikan dari Perpustakaan dan 404 di `ModulePlayer`, hanya dibaca Pro di `/tryout/{slug}/teori` dan oleh mentor AI Try Out. Tiga atribut berbeda: `type` (format penyajian, kolom lama), `category` (`inti`/`template`/`perpustakaan`), `content_status` (`draft`/`published`). `scholarship_id` hanya untuk `template` (dikosongkan otomatis untuk kategori lain). JSON: `insights` (list string), `brainstorming_questions`, `mentor_suggestions` (`[{question, answer|null}]`, maks 5). `inti_material` = teks Inti Materi lama (fallback bila belum ada `module_core_sections`). `ai_knowledge` = rubrik/basis pengetahuan untuk AI. Menolak `delete()` bila punya checkpoint/jawaban praktik. |
+| `modules` | `is_tryout_theory` (bool): modul teori Try Out, disembunyikan dari Perpustakaan dan 404 di `ModulePlayer`, hanya dibaca Pro di `/tryout/{slug}/teori` dan oleh mentor AI Try Out. Tiga atribut berbeda: `type` (format penyajian, kolom lama), `category` (`inti`/`template`/`perpustakaan`), `content_status` (`draft`/`published`). `scholarship_id` hanya untuk `template` (dikosongkan otomatis untuk kategori lain). JSON: `insights` (list string), `brainstorming_questions`, `mentor_suggestions` (`[{question, answer|null}]`, maks 5). `inti_material` = teks Inti Materi lama (fallback bila belum ada `module_core_sections`). `ai_knowledge` = rubrik/basis pengetahuan untuk AI. Menolak `delete()` bila punya checkpoint/jawaban praktik. Sumber data diri CV untuk panel "Data dirimu" di langkah Praktik lewat `module_cv_sources` (`Module::cvSources()`). |
 | `module_core_sections` | Kolom Inti Materi (subjudul + isi), urut `ordering`. Dikelola lewat Repeater di editor modul. `body_format` (`App\Enums\MaterialFormat`): `markdown` untuk data lama, `html` setelah disimpan dari editor WYSIWYG (RichEditor). Body HTML tanpa teks (`<p></p>`) dianggap kosong (`ModuleCoreSection::hasBody()`). |
 | `quick_questions` | Pernyataan Benar/Salah (`answer` boolean) + `explanation`, dikoreksi sistem di langkah Quick Question. |
-| `practice_forms` | Latihan praktik. `fields` = skema JSON pertanyaan (`name`, `label`, `type`, `required`, `placeholder`, `help_text`, `options`). `include_in_cv` + `cv_ordering` untuk halaman CV. |
+| `practice_forms` | Latihan praktik. `fields` = skema JSON pertanyaan (`name`, `label`, `type`, `required`, `placeholder`, `help_text`, `options`). `include_in_cv` + `cv_ordering` untuk halaman CV. Halaman CV dan panel referensi hanya membaca form `is_active` milik modul `published` (`PracticeForm::cvSources()`), mengikuti urutan `fields` saat ini, dan melewati field `file`. `cv_button_label` (maks 60, nullable) = teks tombol "Tampilkan {label}" di modul lain; kosong = judul form. |
+| `module_cv_sources` | Pivot modul ↔ latihan `include_in_cv` (bukan milik modul itu sendiri) yang jawabannya ditampilkan ke mentee sebagai **referensi saja** di langkah Praktik; tidak pernah mengisi atau mengirim jawaban. Unique `(module_id, practice_form_id)`, cascade dari kedua sisi. Dipilih admin di editor modul (section "6. Data diri dari CV mentee"); aturan sumber divalidasi di server. Sync pivot tidak memicu event model, jadi halaman Create/Edit Modul memanggil `ContentCache::bump()`. |
 | `user_practice_responses` | Jawaban praktik, **satu baris per (user, practice_form)** (unique). Resubmit memperbarui baris dan menambah `attempts`. `ai_status` (`pending`/`processing`/`completed`/`failed`), `ai_feedback` (JSON), `ai_score` (0–100, hanya untuk admin; mentee melihat label), `ai_error`. |
 | `checkpoints` | Progres modul per mentee (`locked`/`available`/`in_progress`/`completed`), `score` = rata-rata skor AI saat modul diselesaikan. Progres modul Inti dibagi lintas beasiswa. |
 | `module_feedbacks` | Masukan mentee untuk modul, satu per user per modul. Form wajib (sejak Nov 2026): `helpful_score` 1-5, `difficulty` = `FeedbackDifficulty`, `open_question` (teks pertanyaan yang ditampilkan), `open_answer`, `low_score_reason` (wajib bila skor 1-3). Baris lama hanya berisi checklist `ratings` JSON + `suggestion` dan `helpful_score` null. Modul tidak bisa diselesaikan tanpa baris ber-`helpful_score` (`ProgressService::assertFeedbackSubmitted()`). Nama tabel di-set manual (`$table`). |
@@ -249,6 +252,20 @@ FK: `module_id` → `modules.id` (on delete cascade); `user_id` → `users.id` (
 
 Unique: `(user_id, module_id)`
 
+### `module_cv_sources`
+
+| Kolom | Tipe | Null | Default |
+|---|---|---|---|
+| `id` | integer |  |  |
+| `module_id` | integer |  |  |
+| `practice_form_id` | integer |  |  |
+| `created_at` | datetime | ya |  |
+| `updated_at` | datetime | ya |  |
+
+FK: `module_id` → `modules.id` (on delete cascade); `practice_form_id` → `practice_forms.id` (on delete cascade)
+
+Unique: `(module_id, practice_form_id)` (`module_cv_sources_module_form_unique`)
+
 ### `module_mentor_usages`
 
 | Kolom | Tipe | Null | Default |
@@ -335,6 +352,7 @@ Unique: `(name, guard_name)`
 | `cv_ordering` | integer |  | '0' |
 | `created_at` | datetime | ya |  |
 | `updated_at` | datetime | ya |  |
+| `cv_button_label` | varchar(60) | ya |  |
 
 FK: `module_id` → `modules.id` (on delete cascade)
 

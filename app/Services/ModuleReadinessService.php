@@ -94,6 +94,22 @@ class ModuleReadinessService implements ModuleReadinessServiceInterface
             );
         }
 
+        $cv_sources = $module->relationLoaded('cvSources')
+            ? $module->cvSources
+            : $module->cvSources()->with('module:id,content_status')->get();
+
+        if ($cv_sources->isNotEmpty()) {
+            // Never blocks publishing: a hidden source only means the mentee
+            // sees one reference button less on the Praktik step.
+            $checks[] = new ModuleReadinessCheckData(
+                key: 'cv_sources',
+                label: 'Sumber data diri CV tampil ke mentee',
+                hint: 'Ada sumber yang tidak tampil ke mentee: latihannya nonaktif, tidak lagi bertanda "Tampilkan di halaman CV", atau modul asalnya masih draf.',
+                passed: $cv_sources->every(fn (PracticeForm $form): bool => $this->cvSourceIsVisible($form)),
+                required: false,
+            );
+        }
+
         if ($module->type === ModuleType::Video || filled($module->link_video)) {
             $checks[] = new ModuleReadinessCheckData(
                 key: 'video',
@@ -173,6 +189,16 @@ class ModuleReadinessService implements ModuleReadinessServiceInterface
         return $forms
             ->where('is_active', true)
             ->every(fn (PracticeForm $form): bool => PracticeFieldData::collectFromSchema($form->fields ?? []) !== []);
+    }
+
+    /**
+     * Determine whether a CV source is shown to mentees (same rule as PracticeForm::cvSources()).
+     */
+    private function cvSourceIsVisible(PracticeForm $form): bool
+    {
+        return $form->include_in_cv
+            && $form->is_active
+            && $form->module?->isPublished() === true;
     }
 
     /**

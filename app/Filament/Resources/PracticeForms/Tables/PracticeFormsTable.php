@@ -57,6 +57,11 @@ class PracticeFormsTable
                     ->numeric()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('cv_source_for_count')
+                    ->label('Dipakai di modul lain')
+                    ->counts('cvSourceFor')
+                    ->badge()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
                     ->label('Diperbarui')
                     ->dateTime()

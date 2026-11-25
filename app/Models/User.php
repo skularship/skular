@@ -9,6 +9,7 @@ use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Collection;
@@ -89,10 +90,21 @@ use Spatie\Permission\Traits\HasRoles;
     'tags',
 ])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail, PasskeyUser
+class User extends Authenticatable implements FilamentUser, HasLocalePreference, MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+
+    /**
+     * Locale every email and notification to this user is rendered in.
+     *
+     * Emails are always Indonesian (Laravel's built-in strings live in lang/id.json, dates use
+     * Indonesian month names) without changing the app locale used by the admin panel.
+     */
+    public function preferredLocale(): string
+    {
+        return 'id';
+    }
 
     /**
      * Get the mentee's Pro subscription row, if they ever bought Pro.

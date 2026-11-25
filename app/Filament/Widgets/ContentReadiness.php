@@ -47,7 +47,7 @@ class ContentReadiness extends TableWidget
             ->description('Daftar ini diambil dari modul berstatus draf. Kolom kelengkapan dihitung dari isi modul, bukan centang manual.')
             ->query(fn (): Builder => Module::query()
                 ->where('content_status', ContentStatus::Draft->value)
-                ->with(['fase', 'scholarship', 'practiceForms', 'quickQuestions'])
+                ->with(['fase', 'scholarship', 'practiceForms', 'quickQuestions', 'cvSources.module:id,content_status'])
                 ->orderByDesc('updated_at'))
             ->columns([
                 TextColumn::make('title')

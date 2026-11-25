@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Modules\Pages;
 
 use App\Filament\Resources\Modules\ModuleResource;
 use App\Services\BrainstormingConfigService;
+use App\Services\ContentCache;
 use Filament\Resources\Pages\CreateRecord;
 
 /**
@@ -27,6 +28,17 @@ class CreateModule extends CreateRecord
         }
 
         return $data;
+    }
+
+    /**
+     * Invalidate cached curriculum after the CV sources were synced.
+     *
+     * Attaching module_cv_sources rows fires no model event, so the version
+     * is bumped here once the relationships are stored.
+     */
+    protected function afterCreate(): void
+    {
+        ContentCache::bump();
     }
 
     /**

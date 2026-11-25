@@ -85,6 +85,7 @@ class LearningSeeder extends Seeder
                         'description' => 'Ceritakan pengalaman organisasi atau kepemimpinanmu. Data ini juga otomatis muncul di halaman CV.',
                         'include_in_cv' => true,
                         'cv_ordering' => 1,
+                        'cv_button_label' => 'pengalaman organisasiku',
                         'fields' => [
                             [
                                 'name' => 'peran',
@@ -375,12 +376,15 @@ class LearningSeeder extends Seeder
      * scholarship name and institution, so each scholarship gets its own
      * tailored copy of the module instead of generic shared content.
      *
-     * @var array<int, array{fase_order: int, title: string, type: string, modul_order: int, duration: int, goal: string, introduction: string, summary_material: string, insights: array<int, string>, inti_material: string, ai_knowledge: string, quick_questions: array<int, array{question: string, answer: bool, explanation: string}>, practice_form: array{title: string, description: string, fields: array<int, array{name: string, label: string, type: string, required: bool, placeholder: string|null, help_text: string|null, options: array<int, string>}>}}>
+     * @var array<int, array{fase_order: int, title: string, type: string, modul_order: int, duration: int, goal: string, introduction: string, summary_material: string, insights: array<int, string>, inti_material: string, ai_knowledge: string, quick_questions: array<int, array{question: string, answer: bool, explanation: string}>, practice_form: array{title: string, description: string, fields: array<int, array{name: string, label: string, type: string, required: bool, placeholder: string|null, help_text: string|null, options: array<int, string>}>}, cv_sources?: array<int, string>}>
      */
     public const TEMPLATE_MODULES = [
         [
             'fase_order' => 2,
             'title' => 'Esai Khusus :beasiswa',
+            // Demo of the "Data dirimu" panel: the mentee's answer to this
+            // "include in CV" exercise is shown as reference on Praktik.
+            'cv_sources' => ['Pengalaman Organisasi'],
             'type' => 'mixed',
             'modul_order' => 4,
             'duration' => 30,
@@ -484,7 +488,7 @@ class LearningSeeder extends Seeder
     /**
      * Get the curriculum with an explicit shape so optional module sections stay visible.
      *
-     * @return array<int, array{title: string, subtitle: string, fase_order: int, short_description: string, modules: array<int, array{title: string, modul_order: int, type: string, category?: string, duration: int, goal: string, summary_material: string, insights: array<int, string>, inti_material: string, ai_knowledge: string, link_video?: string, quick_questions?: array<int, array{question: string, answer: bool, explanation: string}>, practice_form?: array{title: string, description: string, include_in_cv?: bool, cv_ordering?: int, fields?: array<int, array{name: string, label: string, type: string, required: bool, placeholder: string|null, help_text: string|null, options: array<int, string>}>}}>}>
+     * @return array<int, array{title: string, subtitle: string, fase_order: int, short_description: string, modules: array<int, array{title: string, modul_order: int, type: string, category?: string, duration: int, goal: string, summary_material: string, insights: array<int, string>, inti_material: string, ai_knowledge: string, link_video?: string, quick_questions?: array<int, array{question: string, answer: bool, explanation: string}>, practice_form?: array{title: string, description: string, include_in_cv?: bool, cv_ordering?: int, cv_button_label?: string, fields?: array<int, array{name: string, label: string, type: string, required: bool, placeholder: string|null, help_text: string|null, options: array<int, string>}>}}>}>
      */
     public static function curriculum(): array
     {
@@ -590,8 +594,34 @@ class LearningSeeder extends Seeder
                     'description' => $this->templateText($module_data['practice_form']['description'], $scholarship),
                     'fields' => $module_data['practice_form']['fields'],
                 ]);
+
+                $this->seedCvSources($module, $module_data['cv_sources'] ?? []);
             }
         }
+    }
+
+    /**
+     * Link a module to the "include in CV" exercises it shows as reference.
+     *
+     * Additive (never detaches what an admin linked) and skips titles that
+     * are missing or not flagged for the CV.
+     *
+     * @param  array<int, string>  $form_titles  Titles of the source practice forms.
+     */
+    private function seedCvSources(Module $module, array $form_titles): void
+    {
+        if ($form_titles === []) {
+            return;
+        }
+
+        $form_ids = PracticeForm::query()
+            ->whereIn('title', $form_titles)
+            ->where('include_in_cv', true)
+            ->where('module_id', '!=', $module->id)
+            ->pluck('id')
+            ->all();
+
+        $module->cvSources()->syncWithoutDetaching($form_ids);
     }
 
     /**
@@ -628,7 +658,7 @@ class LearningSeeder extends Seeder
     /**
      * Seed the written exercise of a module.
      *
-     * @param  array{title: string, description: string, include_in_cv?: bool, cv_ordering?: int, fields?: array<int, array{name: string, label: string, type: string, required: bool, placeholder: string|null, help_text: string|null, options: array<int, string>}>}|null  $form_data
+     * @param  array{title: string, description: string, include_in_cv?: bool, cv_ordering?: int, cv_button_label?: string, fields?: array<int, array{name: string, label: string, type: string, required: bool, placeholder: string|null, help_text: string|null, options: array<int, string>}>}|null  $form_data
      */
     private function seedPracticeForm(Module $module, ?array $form_data): void
     {
@@ -655,6 +685,7 @@ class LearningSeeder extends Seeder
                 'is_active' => true,
                 'include_in_cv' => $form_data['include_in_cv'] ?? false,
                 'cv_ordering' => $form_data['cv_ordering'] ?? 0,
+                'cv_button_label' => $form_data['cv_button_label'] ?? null,
             ],
         );
     }

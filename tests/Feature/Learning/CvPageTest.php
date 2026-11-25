@@ -189,3 +189,109 @@ test('checkbox answers are rendered as a readable list on the cv', function () {
         ->assertSee('Daftar prestasi')
         ->assertSee('Juara 1 Olimpiade, Juara 2 Debat');
 });
+
+test('file uploads never appear on the cv', function () {
+    $module = Module::factory()->create();
+
+    $form = PracticeForm::factory()->includeInCv(1)->create([
+        'module_id' => $module->id,
+        'title' => 'Sertifikat Prestasi',
+        'fields' => [
+            ['name' => 'nama', 'label' => 'Nama prestasi', 'type' => 'text', 'required' => true, 'placeholder' => null, 'help_text' => null, 'options' => []],
+            ['name' => 'bukti', 'label' => 'Bukti sertifikat', 'type' => 'file', 'required' => false, 'placeholder' => null, 'help_text' => null, 'options' => []],
+        ],
+    ]);
+
+    $this->mentee->practiceResponses()->create([
+        'module_id' => $module->id,
+        'practice_form_id' => $form->id,
+        'answers' => ['nama' => 'Juara Debat Nasional', 'bukti' => 'practice-uploads/7/rahasia.pdf'],
+        'ai_status' => AiFeedbackStatus::Completed,
+        'ai_score' => 80,
+        'attempts' => 1,
+        'submitted_at' => now(),
+    ]);
+
+    $this->actingAs($this->mentee)
+        ->get(route('cv.show'))
+        ->assertOk()
+        ->assertSee('Juara Debat Nasional')
+        ->assertDontSee('Bukti sertifikat')
+        ->assertDontSee('practice-uploads/7/rahasia.pdf');
+});
+
+test('inactive forms and forms of draft modules stay off the cv', function () {
+    $draft_module = Module::factory()->draft()->create();
+    $published_module = Module::factory()->create();
+    $fields = [['name' => 'isi', 'label' => 'Isi', 'type' => 'text', 'required' => true, 'placeholder' => null, 'help_text' => null, 'options' => []]];
+
+    $draft_form = PracticeForm::factory()->includeInCv(1)->create([
+        'module_id' => $draft_module->id,
+        'title' => 'Bagian Modul Draf',
+        'fields' => $fields,
+    ]);
+
+    $inactive_form = PracticeForm::factory()->includeInCv(2)->create([
+        'module_id' => $published_module->id,
+        'title' => 'Bagian Nonaktif',
+        'is_active' => false,
+        'fields' => $fields,
+    ]);
+
+    foreach ([$draft_form, $inactive_form] as $form) {
+        $this->mentee->practiceResponses()->create([
+            'module_id' => $form->module_id,
+            'practice_form_id' => $form->id,
+            'answers' => ['isi' => 'Isi tersembunyi '.$form->id],
+            'ai_status' => AiFeedbackStatus::Completed,
+            'ai_score' => 80,
+            'attempts' => 1,
+            'submitted_at' => now(),
+        ]);
+    }
+
+    $this->actingAs($this->mentee)
+        ->get(route('cv.show'))
+        ->assertOk()
+        ->assertDontSee('Bagian Modul Draf')
+        ->assertDontSee('Bagian Nonaktif')
+        ->assertSee('Belum ada isi CV');
+});
+
+test('cv entries follow the current form schema and never show internal answer codes', function () {
+    $module = Module::factory()->create();
+
+    $form = PracticeForm::factory()->includeInCv(1)->create([
+        'module_id' => $module->id,
+        'title' => 'Pengalaman Organisasi',
+        'fields' => [
+            ['name' => 'deskripsi', 'label' => 'Deskripsi Singkat', 'type' => 'textarea', 'required' => true, 'placeholder' => null, 'help_text' => null, 'options' => []],
+            ['name' => 'peran', 'label' => 'Peran / Jabatan', 'type' => 'text', 'required' => true, 'placeholder' => null, 'help_text' => null, 'options' => []],
+            ['name' => 'tanpa_label_xyz', 'type' => 'text', 'required' => false],
+        ],
+    ]);
+
+    $this->mentee->practiceResponses()->create([
+        'module_id' => $module->id,
+        'practice_form_id' => $form->id,
+        'answers' => [
+            'peran' => 'Ketua Himpunan',
+            'kode_lama_dihapus' => 'Jawaban field yang sudah dihapus',
+            'deskripsi' => 'Memimpin 40 anggota.',
+            'tanpa_label_xyz' => 'Isi tanpa label',
+        ],
+        'ai_status' => AiFeedbackStatus::Completed,
+        'ai_score' => 80,
+        'attempts' => 1,
+        'submitted_at' => now(),
+    ]);
+
+    $this->actingAs($this->mentee)
+        ->get(route('cv.show'))
+        ->assertOk()
+        ->assertSeeInOrder(['Deskripsi Singkat', 'Memimpin 40 anggota.', 'Peran / Jabatan', 'Ketua Himpunan'])
+        ->assertSee('Isi tanpa label')
+        ->assertDontSee('Jawaban field yang sudah dihapus')
+        ->assertDontSee('kode_lama_dihapus')
+        ->assertDontSee('tanpa_label_xyz');
+});

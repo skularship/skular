@@ -1,4 +1,4 @@
-{{-- Praktik step: practice forms (dynamic fields), in-request grading status (submit and "Nilai ulang" wait for the AI), AI result label and feedback, re-assessment button, brainstorming, AI Mentor chat, and the gated "Lanjut ke checkpoint" button. --}}
+{{-- Praktik step: the read-only "Data dirimu" CV reference panel (when the admin linked sources), practice forms (dynamic fields), in-request grading status (submit and "Nilai ulang" wait for the AI), AI result label and feedback, re-assessment button, brainstorming, AI Mentor chat, and the gated "Lanjut ke checkpoint" button. --}}
 @php
     $submitted_forms = $forms->filter(fn ($form) => $responses->has($form->id))->count();
 @endphp
@@ -32,6 +32,10 @@
 
     @if (filled($module->introduction))
         @include('livewire.learning.partials.module-introduction', ['variant' => 'practice'])
+    @endif
+
+    @if ($cv_sources->isNotEmpty())
+        @include('livewire.learning.partials.cv-reference-panel')
     @endif
 
     @forelse ($forms as $form)

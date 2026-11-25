@@ -162,6 +162,14 @@ class PracticeFormForm
                     ->default(0)
                     ->visible(fn (Get $get): bool => (bool) $get('include_in_cv'))
                     ->helperText('Angka lebih kecil tampil lebih atas.'),
+                TextInput::make('cv_button_label')
+                    ->label('Teks tombol di modul lain (opsional)')
+                    ->placeholder('Contoh: pengalamanku')
+                    ->maxLength(60)
+                    ->nullable()
+                    ->visible(fn (Get $get): bool => (bool) $get('include_in_cv'))
+                    ->helperText('Contoh "pengalamanku": tombol di langkah Praktik modul lain menjadi "Tampilkan pengalamanku". Bila kosong, tombol memakai judul latihan.')
+                    ->columnSpanFull(),
             ])
             ->columns(2);
     }

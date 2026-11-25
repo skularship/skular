@@ -14,6 +14,7 @@ use App\Filament\RichEditor\FontSizePlugin;
 use App\Filament\Schemas\ListRepeater;
 use App\Models\Module;
 use App\Models\ModuleCoreSection;
+use App\Models\PracticeForm;
 use App\Services\BrainstormingConfigService;
 use App\Support\MaterialStyles;
 use Closure;
@@ -32,6 +33,7 @@ use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\UnorderedList;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 /**
@@ -484,6 +486,38 @@ class ModuleForm
                     ])
                     ->collapsible(),
 
+                Section::make('6. Data diri dari CV mentee')
+                    ->description('Pilih latihan bertanda "Tampilkan di halaman CV" dari modul lain. Di langkah Praktik, mentee melihat tombol untuk menampilkan jawaban yang sudah ia isi di sana, sehingga tidak perlu mengisi ulang data dirinya.')
+                    ->hidden(fn (Get $get): bool => (bool) $get('is_tryout_theory'))
+                    ->schema([
+                        Select::make('cvSources')
+                            ->label('Sumber data diri')
+                            ->relationship(
+                                'cvSources',
+                                'title',
+                                modifyQueryUsing: fn (Builder $query, ?Module $record): Builder => self::cvSourceOptionsQuery($query, $record),
+                            )
+                            ->getOptionLabelFromRecordUsing(fn (PracticeForm $record): string => self::cvSourceOptionLabel($record))
+                            ->multiple()
+                            ->searchable()
+                            ->preload()
+                            ->rules([
+                                fn (?Module $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($record): void {
+                                    $message = self::invalidCvSourceMessage($value, $record);
+
+                                    if ($message !== null) {
+                                        $fail($message);
+                                    }
+                                },
+                            ])
+                            ->helperText(fn (Get $get): string => (self::isTemplate($get)
+                                ? 'Paling berguna untuk modul Template: mentee memakai pengalamannya sebagai bahan jawaban beasiswa ini. '
+                                : 'Paling berguna untuk modul Template, tapi bisa dipakai di kategori apa pun. ')
+                                .'Data hanya tampil sebagai referensi: tidak ada yang terisi otomatis ke kolom jawaban, dan mentee mengubahnya di modul asal. Sumber dari modul draf atau latihan nonaktif tidak tampil ke mentee.')
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible(),
+
                 Section::make('Masukan modul')
                     ->description('Mentee wajib mengisi masukan singkat di akhir modul sebelum modul berikutnya terbuka. Pertanyaan terbuka bergilir otomatis; isi kolom ini bila modul ini butuh pertanyaan khusus.')
                     ->schema([
@@ -509,6 +543,68 @@ class ModuleForm
                     ->collapsible()
                     ->collapsed(),
             ]);
+    }
+
+    /**
+     * Limit the CV source options to "include in CV" forms of other modules.
+     *
+     * Filament also applies this to the relationship query when it syncs, so
+     * the columns are qualified for the pivot join.
+     *
+     * @param  Builder<PracticeForm>  $query
+     * @return Builder<PracticeForm>
+     */
+    private static function cvSourceOptionsQuery(Builder $query, ?Module $record): Builder
+    {
+        return $query
+            ->where('practice_forms.include_in_cv', true)
+            ->when($record?->exists, fn (Builder $query): Builder => $query->where('practice_forms.module_id', '!=', $record?->id))
+            ->with('module:id,title');
+    }
+
+    /**
+     * Label a CV source option as "Form title (Source module title)".
+     */
+    private static function cvSourceOptionLabel(PracticeForm $form): string
+    {
+        $module_title = $form->module?->title;
+
+        return filled($module_title) ? $form->title.' ('.$module_title.')' : $form->title;
+    }
+
+    /**
+     * Validate the selected CV sources on the server, not only through the options list.
+     *
+     * @param  mixed  $value  Selected practice form ids from the browser.
+     * @param  Module|null  $record  The module being edited (null on create).
+     * @return string|null The error message, or null when every id is allowed.
+     */
+    public static function invalidCvSourceMessage(mixed $value, ?Module $record): ?string
+    {
+        $ids = array_values(array_filter(
+            is_array($value) ? $value : [],
+            fn (mixed $id): bool => is_numeric($id),
+        ));
+
+        if ($ids === []) {
+            return null;
+        }
+
+        $forms = PracticeForm::query()->whereKey($ids)->get(['id', 'module_id', 'include_in_cv']);
+
+        if ($forms->count() !== count(array_unique(array_map(intval(...), $ids)))) {
+            return 'Ada sumber data diri yang tidak ditemukan. Muat ulang halaman lalu pilih lagi.';
+        }
+
+        if ($forms->contains(fn (PracticeForm $form): bool => ! $form->include_in_cv)) {
+            return 'Sumber data diri harus latihan yang bertanda "Tampilkan di halaman CV".';
+        }
+
+        if ($record?->exists && $forms->contains(fn (PracticeForm $form): bool => $form->module_id === $record->id)) {
+            return 'Sumber data diri tidak boleh berasal dari modul ini sendiri.';
+        }
+
+        return null;
     }
 
     /**
