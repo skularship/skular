@@ -12,7 +12,10 @@ use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 
 /**
  * Create/edit form schema of the Pengguna resource.
@@ -41,9 +44,24 @@ class UserForm
                     ->dehydrated(fn (?string $state): bool => filled($state))
                     ->required(fn (string $operation): bool => $operation === 'create')
                     ->maxLength(255),
+                // Only roles listed in AdminRole open the panel (User::canAccessPanel()),
+                // so other roles (e.g. made on the Shield role page) are not offered:
+                // they would create an "admin" account that cannot sign in.
                 Select::make('roles')
                     ->label('Role admin')
-                    ->relationship('roles', 'name')
+                    ->relationship(
+                        'roles',
+                        'name',
+                        fn (Builder $query): Builder => $query->whereIn('name', AdminRole::values()),
+                    )
+                    ->getOptionLabelFromRecordUsing(fn (Role $record): string => AdminRole::tryFrom($record->name)?->getLabel() ?? $record->name)
+                    ->helperText('Hanya role yang terdaftar di AdminRole yang bisa masuk panel admin.')
+                    ->nestedRecursiveRules([
+                        Rule::exists('roles', 'id')->whereIn('name', AdminRole::values()),
+                    ])
+                    ->validationMessages([
+                        'exists' => 'Role ini tidak bisa masuk panel admin.',
+                    ])
                     ->multiple()
                     ->preload()
                     ->searchable()

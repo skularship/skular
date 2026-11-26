@@ -205,7 +205,7 @@ Detail lengkap: [`AGENTS.md`](AGENTS.md) dan [`docs/architecture.md`](docs/archi
 3. Tambah Quick Question dan Latihan praktik dari tabel di halaman modul.
 4. Buka **Pratinjau**, perbaiki item merah di checklist kelengkapan, lalu **Terbitkan**.
 
-Menu admin dikelompokkan: Kurikulum, Materi & Latihan, Beasiswa, Pemantauan Mentee, Pendaftaran Beasiswa, Pembayaran, Administrasi Sistem. Role: `super_admin` (melewati semua cek izin), `co_admin`, `staff_divisi` (izin dari `RoleSeeder`), `staff_modul` (izin diatur di halaman Role Shield). Role baru hanya bisa masuk panel bila namanya terdaftar di `App\Enums\AdminRole`.
+Menu admin dikelompokkan: Kurikulum, Materi & Latihan, Beasiswa, Pemantauan Mentee, Pendaftaran Beasiswa, Pembayaran, Administrasi Sistem. Role: `super_admin` (melewati semua cek izin), `co_admin`, `staff_divisi` (izin dari `RoleSeeder`), `staff_modul` (izin diatur di halaman Role Shield). Role baru hanya bisa masuk panel bila namanya terdaftar di `App\Enums\AdminRole`; field "Role admin" di form Pengguna hanya menawarkan (dan memvalidasi di server) role tersebut.
 
 ---
 
